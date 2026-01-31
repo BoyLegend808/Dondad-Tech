@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="cart-page">
+            <h1>Your Cart</h1>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-summary">
+                <h3>Order Summary</h3>
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">₦0</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Delivery</span>
+                    <span>Calculated at checkout</span>
+                </div>
+                <div class="cart-summary-row cart-summary-total">
+                    <span>Total</span>
+                    <span id="cart-total">₦0</span>
+                </div>
+                <a href="checkout.html" class="btn" style="display:block; text-align:center; margin-top:1.5rem;">Proceed to Checkout</a>
+                <a href="shop.html" class="btn" style="display:block; text-align:center; margin-top:1rem; background-color: transparent; border:1px solid var(--border);">Continue Shopping</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Check if user is logged in before showing cart
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                // Redirect to login if not logged in
+                alert('Please login to view your cart.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is logged in - initialize page
+            initCartPage();
+            initHamburger();
+            updateAuthUI();
+            updateCartCount();
+        });
+        
+        function initHamburger() {
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+            }
+        }
+        
+        function initCartPage() {
+            // Load products from localStorage or use default
+            let productsData;
+            const stored = localStorage.getItem('dondad_products');
+            if (stored) {
+                productsData = JSON.parse(stored);
+            } else if (typeof products !== 'undefined') {
+                productsData = products;
+            } else {
+                productsData = [];
+            }
+            
+            // Get cart items
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartItems = cart.map(item => {
+                const product = productsData.find(p => p.id === item.id);
+                return product ? { ...product, qty: item.qty } : null;
+            }).filter(item => item !== null);
+            
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            const subtotalEl = document.getElementById('cart-subtotal');
+
+            if (cartItems.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 2rem; color: var(--text-muted); font-size: 1.2rem;">🛒 Your cart is empty</p>';
+                totalEl.textContent = '₦0';
+                subtotalEl.textContent = '₦0';
+                document.querySelector('.cart-summary').style.display = 'none';
+                return;
+            }
+            
+            // Show order summary
+            document.querySelector('.cart-summary').style.display = 'block';
+            
+            // Render cart items with item totals
+            container.innerHTML = cartItems.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="cart-item-info">
+                        <h3>${item.name}</h3>
+                        <p>₦${item.price.toLocaleString()} × ${item.qty}</p>
+                        <p style="color: var(--primary); font-weight: 600;">₦${(item.price * item.qty).toLocaleString()}</p>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button onclick="updateCartQty(${item.id}, ${item.qty - 1})">-</button>
+                        <span>${item.qty}</span>
+                        <button onclick="updateCartQty(${item.id}, ${item.qty + 1})">+</button>
+                    </div>
+                    <button class="cart-item-remove" onclick="removeFromCart(${item.id})">×</button>
+                </div>
+            `).join('');
+
+            // Calculate total
+            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const delivery = 0; // Free delivery for now
+            const total = subtotal + delivery;
+            
+            subtotalEl.textContent = '₦' + subtotal.toLocaleString();
+            totalEl.textContent = '₦' + total.toLocaleString();
+        }
+        
+        // Update cart quantity
+        function updateCartQty(productId, qty) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.qty = qty;
+                if (item.qty <= 0) {
+                    cart = cart.filter(item => item.id !== productId);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                location.reload();
+            }
+        }
+        
+        // Remove from cart
+        function removeFromCart(productId) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart = cart.filter(item => item.id !== productId);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            location.reload();
+        }
+    </script>
+</body>
+</html>

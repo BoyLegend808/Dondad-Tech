@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="login.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="form-page">
+            <div class="form-container">
+                <h1>Login</h1>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="btn" id="login-btn">Login</button>
+                </form>
+                <p>Don't have an account? <a href="register.html">Register</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+      // Define loginUser function inline as backup
+      function loginUser(email, password) {
+        const USERS_KEY = 'dondad_users';
+        const CURRENT_USER_KEY = 'dondad_currentUser';
+        
+        function getUsers() {
+          return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+        }
+        
+        function setUsers(users) {
+          localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+        
+        function setCurrentUser(user) {
+          localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        }
+        
+        // Initialize default accounts first
+        let users = getUsers();
+        if (!Array.isArray(users)) {
+          users = [];
+        }
+        
+        // Check if admin exists
+        const adminExists = users.find((u) => u.email === 'admin@dondadtech.com');
+        if (!adminExists) {
+          users.push({
+            name: 'Admin',
+            email: 'admin@dondadtech.com',
+            phone: '08000000000',
+            password: 'admin123',
+            role: 'admin'
+          });
+        }
+        
+        // Check if customer exists
+        const customerExists = users.find((u) => u.email === 'ugwunekejohn5@gmail.com');
+        if (!customerExists) {
+          users.push({
+            name: 'John',
+            email: 'ugwunekejohn5@gmail.com',
+            phone: '08012345678',
+            password: 'customer123',
+            role: 'customer'
+          });
+        }
+        
+        setUsers(users);
+        
+        // Now try login
+        const user = users.find((u) => u.email === email && u.password === password);
+        if (user) {
+          setCurrentUser({ name: user.name, email: user.email, phone: user.phone, role: user.role });
+          return true;
+        }
+        return false;
+      }
+      
+      // Direct login handler
+      document.getElementById('login-btn').onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        console.log('Direct login attempt:', email);
+        
+        if (loginUser(email, password)) {
+          const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+          if (user && user.role === 'admin') {
+            alert('Admin login successful! Redirecting to admin panel...');
+            window.location.href = 'admin.html';
+          } else {
+            alert('Login successful!');
+            window.location.href = 'index.html';
+          }
+        } else {
+          alert('Invalid email or password!');
+        }
+        
+        return false;
+      };
+    </script>
+</body>
+</html>

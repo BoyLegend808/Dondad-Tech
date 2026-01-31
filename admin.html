@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Pajay Gadgets</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        .admin-sidebar {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+
+        .admin-sidebar h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .admin-sidebar ul {
+            list-style: none;
+        }
+
+        .admin-sidebar li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .admin-sidebar li:hover,
+        .admin-sidebar li.active {
+            color: var(--primary);
+        }
+
+        .admin-content {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h2 {
+            margin: 0;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary);
+            color: var(--bg-color);
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .product-table th,
+        .product-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .product-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .product-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            margin-left: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Admin Login Overlay */
+        .admin-login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .admin-login-overlay.hidden {
+            display: none;
+        }
+
+        .admin-login-box {
+            background-color: var(--card-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .admin-login-box h2 {
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        .admin-login-box input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 1rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .nav-link {
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+        }
+
+        .admin-login-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .admin-login-box .btn {
+            width: 100%;
+        }
+
+        .admin-login-box .error {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .admin-content-wrapper {
+            display: none;
+        }
+
+        .admin-content-wrapper.visible {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                display: none;
+            }
+
+            .admin-sidebar.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="admin.html" class="active">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <a href="index.html" class="nav-link" id="view-site-link">View Site</a>
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Admin Login Overlay -->
+    <div class="admin-login-overlay" id="adminLogin">
+        <div class="admin-login-box">
+            <h2>Admin Login</h2>
+            <p class="error" id="loginError">Invalid credentials</p>
+            <input type="email" id="adminEmail" placeholder="Admin email">
+            <input type="password" id="adminPassword" placeholder="Password">
+            <button class="btn" onclick="checkAdminPassword()">Login</button>
+            <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                Admin: <strong>admin@dondadtech.com</strong> / <strong>admin123</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
+    <main class="admin-content-wrapper" id="adminContent">
+        <section style="padding-top: 6rem;">
+            <div class="admin-grid">
+                <aside class="admin-sidebar">
+                    <h3>Dashboard</h3>
+                    <ul>
+                        <li class="active" onclick="showSection('products')">Products</li>
+                        <li onclick="showSection('orders')">Orders</li>
+                        <li onclick="showSection('add')">Add Product</li>
+                        <li onclick="logoutAdmin()">Logout</li>
+                    </ul>
+                </aside>
+                <div class="admin-content" id="admin-content">
+                    <!-- Products Section -->
+                    <div id="section-products">
+                        <div class="admin-header">
+                            <h2>All Products</h2>
+                            <button class="btn-secondary" onclick="showSection('add')">+ Add Product</button>
+                        </div>
+                        <table class="product-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-list"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Orders Section -->
+                    <div id="section-orders" style="display: none;">
+                        <div class="admin-header">
+                            <h2>Recent Orders</h2>
+                        </div>
+                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">
+                            No orders yet. Orders will appear here when customers place them.
+                        </p>
+                    </div>
+
+                    <!-- Add Product Section -->
+                    <div id="section-add" style="display: none;">
+                        <div class="admin-header">
+                            <button class="btn-secondary" onclick="showSection('products')">← Back to Products</button>
+                            <h2>Add New Product</h2>
+                        </div>
+                        <form id="add-product-form">
+                            <div class="form-group">
+                                <label for="prod-name">Product Name</label>
+                                <input type="text" id="prod-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-category">Category</label>
+                                <select id="prod-category" required>
+                                    <option value="phones">Phones</option>
+                                    <option value="laptops">Laptops</option>
+                                    <option value="tablets">Tablets</option>
+                                    <option value="accessories">Accessories</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-price">Price (₦)</label>
+                                <input type="number" id="prod-price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-desc">Description</label>
+                                <textarea id="prod-desc" rows="3" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="prod-image">Product Image</label>
+                                <input type="file" id="prod-image" accept="image/*" onchange="previewImage(this, 'prod-image-preview')">
+                                <img id="prod-image-preview" style="max-width: 100px; margin-top: 10px; display: none;">
+                            </div>
+                            <button type="submit" class="btn">Add Product</button>
+                        </form>
+                    </div>
+
+                    <!-- Edit Product Section -->
+                    <div id="section-edit" style="display: none;">
+                        <div class="admin-header">
+                            <button class="btn-secondary" onclick="showSection('products')">← Back to Products</button>
+                            <h2>Edit Product</h2>
+                        </div>
+                        <form id="edit-product-form">
+                            <input type="hidden" id="edit-prod-id">
+                            <div class="form-group">
+                                <label for="edit-prod-name">Product Name</label>
+                                <input type="text" id="edit-prod-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-prod-category">Category</label>
+                                <select id="edit-prod-category" required>
+                                    <option value="phones">Phones</option>
+                                    <option value="laptops">Laptops</option>
+                                    <option value="tablets">Tablets</option>
+                                    <option value="accessories">Accessories</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-prod-price">Price (₦)</label>
+                                <input type="number" id="edit-prod-price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-prod-desc">Description</label>
+                                <textarea id="edit-prod-desc" rows="3" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-prod-image">Product Image</label>
+                                <input type="file" id="edit-prod-image" accept="image/*" onchange="previewImage(this, 'edit-image-preview')">
+                                <img id="edit-image-preview" style="max-width: 100px; margin-top: 10px; display: none;">
+                            </div>
+                            <button type="submit" class="btn">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script>
+        // Define login functions inline
+        const USERS_KEY = 'dondad_users';
+        const CURRENT_USER_KEY = 'dondad_currentUser';
+        
+        function getUsers() {
+            return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+        }
+        
+        function setUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+        
+        function setCurrentUser(user) {
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        }
+        
+        function initializeDefaultAccounts() {
+            let users = getUsers();
+            if (!Array.isArray(users)) {
+                users = [];
+            }
+            
+            // Check if admin exists
+            const adminExists = users.find((u) => u.email === 'admin@dondadtech.com');
+            if (!adminExists) {
+                users.push({
+                    name: 'Admin',
+                    email: 'admin@dondadtech.com',
+                    phone: '08000000000',
+                    password: 'admin123',
+                    role: 'admin'
+                });
+            }
+            
+            // Check if customer exists
+            const customerExists = users.find((u) => u.email === 'ugwunekejohn5@gmail.com');
+            if (!customerExists) {
+                users.push({
+                    name: 'John',
+                    email: 'ugwunekejohn5@gmail.com',
+                    phone: '08012345678',
+                    password: 'customer123',
+                    role: 'customer'
+                });
+            }
+            
+            setUsers(users);
+        }
+        
+        function loginUser(email, password) {
+            const users = getUsers();
+            const user = users.find((u) => u.email === email && u.password === password);
+            if (user) {
+                setCurrentUser({ name: user.name, email: user.email, phone: user.phone, role: user.role });
+                return true;
+            }
+            return false;
+        }
+        
+        function logoutUser() {
+            localStorage.removeItem(CURRENT_USER_KEY);
+            alert('You have been logged out successfully!');
+            window.location.href = 'index.html';
+        }
+        
+        // Product persistence key
+        const PRODUCTS_KEY = 'dondad_products';
+
+        // Load products from localStorage or use default
+        function loadProducts() {
+            const stored = localStorage.getItem(PRODUCTS_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return products;
+        }
+
+        // Save products to localStorage
+        function saveProducts(productsData) {
+            localStorage.setItem(PRODUCTS_KEY, JSON.stringify(productsData));
+        }
+
+        // Initialize products
+        let adminProducts = loadProducts();
+
+        // Check if admin is logged in (via main login system)
+        function checkAdminAuth() {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (currentUser && currentUser.role === 'admin') {
+                document.getElementById('adminLogin').classList.add('hidden');
+                document.getElementById('adminContent').classList.add('visible');
+                // Show logout button, hide auth links
+                document.getElementById('auth-links').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'inline-block';
+                document.getElementById('user-greeting').style.display = 'inline';
+                document.getElementById('user-greeting').textContent = 'Hi, Admin';
+                // Auto-refresh products from localStorage
+                adminProducts = loadProducts();
+                renderAdminProducts();
+            } else {
+                document.getElementById('adminLogin').classList.remove('hidden');
+                document.getElementById('adminContent').classList.remove('visible');
+                // Show auth links, hide logout button
+                document.getElementById('auth-links').style.display = 'flex';
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('user-greeting').style.display = 'none';
+            }
+        }
+
+        function checkAdminPassword() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            // Use main login system
+            if (loginUser(email, password)) {
+                const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+                if (user.role === 'admin') {
+                    checkAdminAuth();
+                } else {
+                    document.getElementById('loginError').textContent = 'This account is not an admin';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid email or password';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function logoutAdmin() {
+            logoutUser();
+        }
+
+        // Image preview function
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Admin functions
+        function showSection(section) {
+            document.getElementById('section-products').style.display = section === 'products' ? 'block' : 'none';
+            document.getElementById('section-orders').style.display = section === 'orders' ? 'block' : 'none';
+            document.getElementById('section-add').style.display = section === 'add' ? 'block' : 'none';
+            document.getElementById('section-edit').style.display = section === 'edit' ? 'block' : 'none';
+
+            document.querySelectorAll('.admin-sidebar li').forEach(li => li.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function renderAdminProducts() {
+            const tbody = document.getElementById('product-list');
+            tbody.innerHTML = adminProducts.map(p => `
+                <tr>
+                    <td><img src="${p.image}" alt="${p.name}"></td>
+                    <td>${p.name}</td>
+                    <td>${p.category}</td>
+                    <td>₦${p.price.toLocaleString()}</td>
+                    <td>
+                        <button class="action-btn" onclick="editProduct(${p.id})">Edit</button>
+                        <button class="action-btn" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function editProduct(id) {
+            const product = adminProducts.find(p => p.id === id);
+            if (product) {
+                document.getElementById('edit-prod-id').value = product.id;
+                document.getElementById('edit-prod-name').value = product.name;
+                document.getElementById('edit-prod-category').value = product.category;
+                document.getElementById('edit-prod-price').value = product.price;
+                document.getElementById('edit-prod-desc').value = product.desc;
+                // Set image preview
+                const editPreview = document.getElementById('edit-image-preview');
+                if (product.image && product.image.startsWith('data:')) {
+                    editPreview.src = product.image;
+                    editPreview.style.display = 'block';
+                } else {
+                    editPreview.style.display = 'none';
+                }
+                showSection('edit');
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Delete this product?')) {
+                const index = adminProducts.findIndex(p => p.id === id);
+                if (index > -1) {
+                    adminProducts.splice(index, 1);
+                    saveProducts(adminProducts);
+                    renderAdminProducts();
+                    alert('Product deleted!');
+                }
+            }
+        }
+
+        // Form handlers
+        document.getElementById('add-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newProduct = {
+                id: Date.now(),
+                name: document.getElementById('prod-name').value,
+                category: document.getElementById('prod-category').value,
+                price: parseFloat(document.getElementById('prod-price').value),
+                desc: document.getElementById('prod-desc').value,
+                image: document.getElementById('prod-image-preview').src || 'logo.png'
+            };
+            adminProducts.push(newProduct);
+            saveProducts(adminProducts);
+            renderAdminProducts();
+            alert('Product added successfully!');
+            this.reset();
+            document.getElementById('prod-image-preview').style.display = 'none';
+            showSection('products');
+        });
+
+        document.getElementById('edit-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-prod-id').value);
+            const index = adminProducts.findIndex(p => p.id === id);
+            if (index > -1) {
+                adminProducts[index] = {
+                    id: id,
+                    name: document.getElementById('edit-prod-name').value,
+                    category: document.getElementById('edit-prod-category').value,
+                    price: parseFloat(document.getElementById('edit-prod-price').value),
+                    desc: document.getElementById('edit-prod-desc').value,
+                    image: document.getElementById('edit-image-preview').src || adminProducts[index].image
+                };
+                saveProducts(adminProducts);
+                renderAdminProducts();
+                alert('Product updated successfully!');
+                showSection('products');
+            }
+        });
+
+        // Initialize on load
+        initializeDefaultAccounts();
+        checkAdminAuth();
+    </script>
+</body>
+</html>

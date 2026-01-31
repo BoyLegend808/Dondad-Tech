@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="login.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="checkout-page">
+            <h1>Checkout</h1>
+            <div class="checkout-grid">
+                <form id="checkout-form" class="checkout-form">
+                    <h3>Delivery Information</h3>
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Delivery Address</label>
+                        <textarea id="address" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery">Delivery Method</label>
+                        <select id="delivery" required>
+                            <option value="">Select delivery option</option>
+                            <option value="pickup">Pickup from Store</option>
+                            <option value="dispatch">Dispatch Rider (Contact for pricing)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="payment">Payment Method</label>
+                        <select id="payment" required>
+                            <option value="">Select payment option</option>
+                            <option value="cash">Cash on Delivery</option>
+                            <option value="transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Order Notes (Optional)</label>
+                        <textarea id="notes" rows="2"></textarea>
+                    </div>
+                </form>
+                <div class="cart-summary">
+                    <h3>Order Summary</h3>
+                    <div id="checkout-items"></div>
+                    <div class="cart-summary-row">
+                        <span>Subtotal</span>
+                        <span id="checkout-subtotal">₦0</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Delivery</span>
+                        <span>To be confirmed</span>
+                    </div>
+                    <div class="cart-summary-row cart-summary-total">
+                        <span>Total</span>
+                        <span id="checkout-total">₦0</span>
+                    </div>
+                    <button type="submit" form="checkout-form" class="btn" style="width:100%; margin-top:1.5rem;">Place Order</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Check if user is logged in before showing checkout
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                alert('Please login to proceed to checkout.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // User is logged in - initialize page
+            initCheckoutPage();
+            initHamburger();
+            updateAuthUI();
+            updateCartCount();
+        });
+        
+        function initHamburger() {
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+            }
+        }
+        
+        function initCheckoutPage() {
+            const cartItems = getCartItems();
+            const itemsContainer = document.getElementById('checkout-items');
+            const totalEl = document.getElementById('checkout-total');
+            const subtotalEl = document.getElementById('checkout-subtotal');
+
+            if (cartItems.length === 0) {
+                window.location.href = 'shop.html';
+                return;
+            }
+
+            itemsContainer.innerHTML = cartItems.map(item => `
+                <div class="cart-summary-row">
+                    <span>${item.name} x${item.qty}</span>
+                    <span>₦${(item.price * item.qty).toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            const total = getCartTotal();
+            totalEl.textContent = '₦' + total.toLocaleString();
+            subtotalEl.textContent = '₦' + total.toLocaleString();
+
+            document.getElementById('checkout-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Thank you for your order! We will contact you shortly to confirm.');
+                cart = [];
+                saveCart();
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>

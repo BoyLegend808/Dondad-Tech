@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Database - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .database-container { max-width: 800px; margin: 100px auto 50px; padding: 20px; }
+        .database-section { background: var(--card-bg); padding: 20px; margin-bottom: 20px; border-radius: 10px; }
+        .database-section h3 { color: var(--primary); margin-bottom: 10px; }
+        .database-section pre { background: var(--bg-color); padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .btn { display: inline-block; padding: 10px 20px; background: var(--primary); color: var(--bg-color); border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="login.html">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="database-container">
+        <h1>Local Database</h1>
+        <a href="index.html" class="btn">← Back to Home</a>
+        
+        <div class="database-section">
+            <h3>Users</h3>
+            <pre id="users-data">Loading...</pre>
+        </div>
+
+        <div class="database-section">
+            <h3>Current User</h3>
+            <pre id="current-user-data">Loading...</pre>
+        </div>
+
+        <div class="database-section">
+            <h3>Products</h3>
+            <pre id="products-data">Loading...</pre>
+        </div>
+
+        <div class="database-section">
+            <h3>Cart</h3>
+            <pre id="cart-data">Loading...</pre>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        document.getElementById('users-data').textContent = JSON.stringify(JSON.parse(localStorage.getItem('dondad_users') || '[]'), null, 2);
+        document.getElementById('current-user-data').textContent = JSON.stringify(JSON.parse(localStorage.getItem('dondad_currentUser') || 'null'), null, 2);
+        document.getElementById('products-data').textContent = JSON.stringify(JSON.parse(localStorage.getItem('dondad_products') || '[]'), null, 2);
+        document.getElementById('cart-data').textContent = JSON.stringify(JSON.parse(localStorage.getItem('cart') || '[]'), null, 2);
+    </script>
+</body>
+</html>

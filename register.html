@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="login.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="form-page">
+            <div class="form-container">
+                <h1>Create Account</h1>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm">Confirm Password</label>
+                        <input type="password" id="confirm" required>
+                    </div>
+                    <button type="submit" class="btn">Register</button>
+                </form>
+                <p>Already have an account? <a href="login.html">Login</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dondad Tech - Premium Devices</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Dondad<br><span>Tech</span></h1>
+                <p>Premium devices - Phones, Laptops, Tablets & Accessories</p>
+                <a href="shop.html" class="btn">Shop Now</a>
+            </div>
+            <div class="hero-image">
+                <img src="hero img.png" alt="Tech Devices">
+            </div>
+        </section>
+
+        <section class="categories">
+            <h2>Browse Categories</h2>
+            <div class="category-grid">
+                <a href="shop.html?category=phones" class="category-card">
+                    <img src="xs.png" alt="Phones">
+                    <h3>Phones</h3>
+                </a>
+                <a href="shop.html?category=laptops" class="category-card">
+                    <img src="hero img.png" alt="Laptops">
+                    <h3>Laptops</h3>
+                </a>
+                <a href="shop.html?category=tablets" class="category-card">
+                    <img src="xs.png" alt="Tablets">
+                    <h3>Tablets</h3>
+                </a>
+                <a href="shop.html?category=accessories" class="category-card">
+                    <img src="xs.png" alt="Accessories">
+                    <h3>Accessories</h3>
+                </a>
+            </div>
+        </section>
+
+        <section class="featured">
+            <h2>Featured Products</h2>
+            <div class="featured-scroll" id="featured-products"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        // Check if admin is logged in and update nav
+        function updateAdminNav() {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (currentUser && currentUser.role === 'admin') {
+                // Admin logged in
+                document.getElementById('auth-links').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'inline-block';
+                document.getElementById('user-greeting').style.display = 'inline';
+                document.getElementById('user-greeting').textContent = 'Hi, Admin';
+                document.getElementById('cart-link').style.display = 'flex';
+                document.getElementById('admin-link').style.display = 'block';
+            } else if (currentUser) {
+                // Regular user logged in
+                document.getElementById('auth-links').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'inline-block';
+                document.getElementById('user-greeting').style.display = 'inline';
+                document.getElementById('user-greeting').textContent = 'Hi, ' + currentUser.name;
+                document.getElementById('cart-link').style.display = 'flex';
+                document.getElementById('admin-link').style.display = 'none';
+            } else {
+                // Not logged in - show only login/register and hamburger
+                document.getElementById('auth-links').style.display = 'flex';
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('user-greeting').style.display = 'none';
+                document.getElementById('cart-link').style.display = 'none';
+                document.getElementById('admin-link').style.display = 'none';
+            }
+        }
+        
+        // Logout function
+        function logoutUser() {
+            localStorage.removeItem('dondad_currentUser');
+            alert('You have been logged out successfully!');
+            window.location.href = 'index.html';
+        }
+        
+        // Toggle hamburger menu
+        function toggleHamburger() {
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            console.log('toggleHamburger called');
+            console.log('hamburger:', hamburger);
+            console.log('navLinks:', navLinks);
+            if (hamburger && navLinks) {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+                console.log('Classes after toggle - hamburger:', hamburger.classList);
+                console.log('Classes after toggle - navLinks:', navLinks.classList);
+            }
+        }
+        
+        // Add to cart function
+        function addToCart(productId, qty = 1) {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                alert('Please login to add items to cart. Redirecting to login page...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            let productsData;
+            const stored = localStorage.getItem('dondad_products');
+            if (stored) {
+                productsData = JSON.parse(stored);
+            } else if (typeof products !== 'undefined') {
+                productsData = products;
+            } else {
+                productsData = [];
+            }
+            
+            const product = productsData.find(p => p.id === productId);
+            if (!product) return;
+            
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.qty += qty;
+            } else {
+                cart.push({ id: productId, qty: qty });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            alert(product.name + ' added to cart!');
+        }
+        
+        // Update cart count
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+                cartCount.textContent = totalItems;
+            }
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAdminNav();
+            updateCartCount();
+        });
+    </script>
+</html>

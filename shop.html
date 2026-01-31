@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Dondad Tech</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html" class="active">Shop</a></li>
+                <li><a href="admin.html" id="admin-link">Admin Panel</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <span id="user-greeting" class="user-greeting"></span>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="shop-header">
+            <h1>Shop All Products</h1>
+            <div class="shop-filters">
+                <button class="filter-btn active" data-category="all">All</button>
+                <button class="filter-btn" data-category="phones">Phones</button>
+                <button class="filter-btn" data-category="laptops">Laptops</button>
+                <button class="filter-btn" data-category="tablets">Tablets</button>
+                <button class="filter-btn" data-category="accessories">Accessories</button>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search products...">
+            </div>
+        </section>
+
+        <section>
+            <div class="product-grid" id="product-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hamburger is handled by script.js setupHamburger()
+            
+            // Check if admin is logged in and update nav
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (currentUser && currentUser.role === 'admin') {
+                document.getElementById('auth-links').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'inline-block';
+                document.getElementById('user-greeting').style.display = 'inline';
+                document.getElementById('user-greeting').textContent = 'Hi, Admin';
+                document.getElementById('admin-link').style.display = 'block';
+            } else if (currentUser) {
+                // Regular user logged in
+                document.getElementById('auth-links').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'inline-block';
+                document.getElementById('user-greeting').style.display = 'inline';
+                document.getElementById('user-greeting').textContent = 'Hi, ' + currentUser.name;
+                document.getElementById('admin-link').style.display = 'none';
+                document.getElementById('cart-link').style.display = 'flex';
+            }
+            
+            // Load products
+            loadProducts();
+            updateCartCount();
+        });
+        
+        // Logout function inline
+        function logoutUser() {
+            localStorage.removeItem('dondad_currentUser');
+            alert('You have been logged out successfully!');
+            window.location.href = 'index.html';
+        }
+        
+        // Load products and render
+        function loadProducts() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            
+            const stored = localStorage.getItem('dondad_products');
+            let productsData;
+            if (stored) {
+                productsData = JSON.parse(stored);
+            } else if (typeof products !== 'undefined') {
+                productsData = products;
+            } else {
+                productsData = [];
+            }
+            
+            renderProducts(productsData);
+        }
+        
+        // Render products
+        function renderProducts(products) {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.image}" alt="${p.name}">
+                    <h3>${p.name}</h3>
+                    <p class="desc">${p.desc}</p>
+                    <p class="price">₦${p.price.toLocaleString()}</p>
+                    <a href="product.html?id=${p.id}" class="btn">View Details</a>
+                    <button onclick="addToCart(${p.id})" class="btn" style="background-color: var(--accent); margin-top: 0.5rem;">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+        
+        // Filter products
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const category = this.dataset.category;
+                const stored = localStorage.getItem('dondad_products');
+                let productsData;
+                if (stored) {
+                    productsData = JSON.parse(stored);
+                } else if (typeof products !== 'undefined') {
+                    productsData = products;
+                } else {
+                    productsData = [];
+                }
+                
+                if (category === 'all') {
+                    renderProducts(productsData);
+                } else {
+                    const filtered = productsData.filter(p => p.category === category);
+                    renderProducts(filtered);
+                }
+            });
+        });
+        
+        // Search products
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const term = this.value.toLowerCase();
+            const stored = localStorage.getItem('dondad_products');
+            let productsData;
+            if (stored) {
+                productsData = JSON.parse(stored);
+            } else if (typeof products !== 'undefined') {
+                productsData = products;
+            } else {
+                productsData = [];
+            }
+            
+            const filtered = productsData.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.desc.toLowerCase().includes(term)
+            );
+            renderProducts(filtered);
+        });
+        
+        // Add to cart function
+        function addToCart(productId, qty = 1) {
+            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                alert('Please login to add items to cart. Redirecting to login page...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            let productsData;
+            const stored = localStorage.getItem('dondad_products');
+            if (stored) {
+                productsData = JSON.parse(stored);
+            } else if (typeof products !== 'undefined') {
+                productsData = products;
+            } else {
+                productsData = [];
+            }
+            
+            const product = productsData.find(p => p.id === productId);
+            if (!product) return;
+            
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.qty += qty;
+            } else {
+                cart.push({ id: productId, qty: qty });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            alert(product.name + ' added to cart!');
+        }
+        
+        // Update cart count
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+                cartCount.textContent = totalItems;
+            }
+        }
+        
+        // Initialize cart count
+        document.addEventListener('DOMContentLoaded', updateCartCount);
+    </script>
+</body>
+</html>
