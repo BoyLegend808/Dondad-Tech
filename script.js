@@ -7,6 +7,42 @@ let cart = JSON.parse(localStorage.getItem("cart")) || [];
 const USERS_KEY = "dondad_users";
 const CURRENT_USER_KEY = "dondad_currentUser";
 
+// Product persistence key
+const PRODUCTS_KEY = "dondad_products";
+
+// Load products from localStorage or use default from products.js
+function getAllProducts() {
+  const stored = localStorage.getItem(PRODUCTS_KEY);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return products; // Fallback to products.js
+}
+
+// Get products by category
+function getProductsByCategory(category) {
+  const allProducts = getAllProducts();
+  if (category === "all") return allProducts;
+  return allProducts.filter((p) => p.category === category);
+}
+
+// Get product by ID
+function getProductById(id) {
+  const allProducts = getAllProducts();
+  return allProducts.find((p) => p.id === parseInt(id));
+}
+
+// Search products
+function searchProducts(query) {
+  const allProducts = getAllProducts();
+  const term = query.toLowerCase();
+  return allProducts.filter(
+    (p) =>
+      p.name.toLowerCase().includes(term) ||
+      p.desc.toLowerCase().includes(term),
+  );
+}
+
 // Initialize default user accounts
 function initializeDefaultAccounts() {
   let users = getUsers();
@@ -361,7 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
   updateAuthUI();
 
   // Homepage featured products
-  renderProducts(products.slice(0, 8), "featured-products");
+  const allProducts = getAllProducts();
+  renderProducts(allProducts.slice(0, 8), "featured-products");
 
   // Shop page
   const productGrid = document.getElementById("product-grid");

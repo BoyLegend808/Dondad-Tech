@@ -66,6 +66,15 @@
     <script src="products.js"></script>
     <script src="script.js"></script>
     <script>
+        // Load products from localStorage or use default from products.js
+        function getAllProducts() {
+            const stored = localStorage.getItem('dondad_products');
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return typeof products !== 'undefined' ? products : [];
+        }
+        
         // Check if user is logged in before showing cart
         document.addEventListener('DOMContentLoaded', function() {
             const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
@@ -137,15 +146,7 @@
         
         function initCartPage() {
             // Load products from localStorage or use default
-            let productsData;
-            const stored = localStorage.getItem('dondad_products');
-            if (stored) {
-                productsData = JSON.parse(stored);
-            } else if (typeof products !== 'undefined') {
-                productsData = products;
-            } else {
-                productsData = [];
-            }
+            let productsData = getAllProducts();
             
             // Get cart items
             let cart = JSON.parse(localStorage.getItem('cart')) || [];

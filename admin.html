@@ -342,8 +342,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="prod-image">Product Image</label>
-                                <input type="file" id="prod-image" accept="image/*" onchange="previewImage(this, 'prod-image-preview')">
-                                <img id="prod-image-preview" style="max-width: 100px; margin-top: 10px; display: none;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Paste image URL OR upload a file:</p>
+                                <input type="url" id="prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">OR</span>
+                                <input type="file" id="prod-image" accept="image/*" onchange="previewImage(this, 'prod-image-preview')" style="margin-top: 10px;">
+                                <img id="prod-image-preview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;">
                             </div>
                             <button type="submit" class="btn">Add Product</button>
                         </form>
@@ -380,8 +383,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="edit-prod-image">Product Image</label>
-                                <input type="file" id="edit-prod-image" accept="image/*" onchange="previewImage(this, 'edit-image-preview')">
-                                <img id="edit-image-preview" style="max-width: 100px; margin-top: 10px; display: none;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Paste image URL OR upload a file:</p>
+                                <input type="url" id="edit-prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">OR</span>
+                                <input type="file" id="edit-prod-image" accept="image/*" onchange="previewImage(this, 'edit-image-preview')" style="margin-top: 10px;">
+                                <img id="edit-image-preview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;">
                             </div>
                             <button type="submit" class="btn">Save Changes</button>
                         </form>
@@ -542,6 +548,16 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+        
+        // Handle image URL input
+        function handleImageUrl(urlInputId, previewId) {
+            const urlInput = document.getElementById(urlInputId);
+            const preview = document.getElementById(previewId);
+            if (urlInput && urlInput.value) {
+                preview.src = urlInput.value;
+                preview.style.display = 'block';
+            }
+        }
 
         // Admin functions
         function showSection(section) {
@@ -578,9 +594,11 @@
                 document.getElementById('edit-prod-category').value = product.category;
                 document.getElementById('edit-prod-price').value = product.price;
                 document.getElementById('edit-prod-desc').value = product.desc;
+                // Set current image URL in input
+                document.getElementById('edit-prod-image-url').value = product.image.startsWith('data:') ? '' : product.image;
                 // Set image preview
                 const editPreview = document.getElementById('edit-image-preview');
-                if (product.image && product.image.startsWith('data:')) {
+                if (product.image && (product.image.startsWith('data:') || product.image.startsWith('http'))) {
                     editPreview.src = product.image;
                     editPreview.style.display = 'block';
                 } else {
@@ -605,13 +623,22 @@
         // Form handlers
         document.getElementById('add-product-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            // Get image - prefer URL over file upload
+            let image = 'logo.png';
+            const imageUrl = document.getElementById('prod-image-url').value;
+            const imagePreview = document.getElementById('prod-image-preview');
+            if (imageUrl) {
+                image = imageUrl;
+            } else if (imagePreview.src && imagePreview.style.display !== 'none') {
+                image = imagePreview.src;
+            }
             const newProduct = {
                 id: Date.now(),
                 name: document.getElementById('prod-name').value,
                 category: document.getElementById('prod-category').value,
                 price: parseFloat(document.getElementById('prod-price').value),
                 desc: document.getElementById('prod-desc').value,
-                image: document.getElementById('prod-image-preview').src || 'logo.png'
+                image: image
             };
             adminProducts.push(newProduct);
             saveProducts(adminProducts);
@@ -627,13 +654,22 @@
             const id = parseInt(document.getElementById('edit-prod-id').value);
             const index = adminProducts.findIndex(p => p.id === id);
             if (index > -1) {
+                // Get image - prefer URL over file upload
+                let image = adminProducts[index].image;
+                const imageUrl = document.getElementById('edit-prod-image-url').value;
+                const imagePreview = document.getElementById('edit-image-preview');
+                if (imageUrl) {
+                    image = imageUrl;
+                } else if (imagePreview.src && imagePreview.style.display !== 'none') {
+                    image = imagePreview.src;
+                }
                 adminProducts[index] = {
                     id: id,
                     name: document.getElementById('edit-prod-name').value,
                     category: document.getElementById('edit-prod-category').value,
                     price: parseFloat(document.getElementById('edit-prod-price').value),
                     desc: document.getElementById('edit-prod-desc').value,
-                    image: document.getElementById('edit-image-preview').src || adminProducts[index].image
+                    image: image
                 };
                 saveProducts(adminProducts);
                 renderAdminProducts();
