@@ -342,11 +342,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="prod-image">Product Image</label>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Paste image URL OR upload a file:</p>
-                                <input type="url" id="prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
-                                <span style="color: var(--text-muted); font-size: 0.9rem;">OR</span>
-                                <input type="file" id="prod-image" accept="image/*" onchange="previewImage(this, 'prod-image-preview')" style="margin-top: 10px;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Tap to upload OR paste URL below:</p>
+                                <input type="file" id="prod-image" accept="image/*" capture="environment" onchange="handleAddImageUpload(this)" style="width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
                                 <img id="prod-image-preview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">OR paste image URL:</p>
+                                <input type="url" id="prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
                             </div>
                             <button type="submit" class="btn">Add Product</button>
                         </form>
@@ -383,11 +383,11 @@
                             </div>
                             <div class="form-group">
                                 <label for="edit-prod-image">Product Image</label>
-                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Paste image URL OR upload a file:</p>
-                                <input type="url" id="edit-prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
-                                <span style="color: var(--text-muted); font-size: 0.9rem;">OR</span>
-                                <input type="file" id="edit-prod-image" accept="image/*" onchange="previewImage(this, 'edit-image-preview')" style="margin-top: 10px;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Tap to upload OR paste URL below:</p>
+                                <input type="file" id="edit-prod-image" accept="image/*" capture="environment" onchange="handleEditImageUpload(this)" style="width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
                                 <img id="edit-image-preview" style="max-width: 100px; margin-top: 10px; display: none; border-radius: 8px;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">OR paste image URL:</p>
+                                <input type="url" id="edit-prod-image-url" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
                             </div>
                             <button type="submit" class="btn">Save Changes</button>
                         </form>
@@ -549,6 +549,18 @@
             }
         }
         
+        // Track if file was uploaded for edit form
+        let editImageUploaded = false;
+        
+        function handleEditImageUpload(input) {
+            editImageUploaded = true;
+            previewImage(input, 'edit-image-preview');
+        }
+        
+        function handleAddImageUpload(input) {
+            previewImage(input, 'prod-image-preview');
+        }
+        
         // Handle image URL input
         function handleImageUrl(urlInputId, previewId) {
             const urlInput = document.getElementById(urlInputId);
@@ -587,6 +599,7 @@
         }
 
         function editProduct(id) {
+            editImageUploaded = false; // Reset flag for new edit
             const product = adminProducts.find(p => p.id === id);
             if (product) {
                 document.getElementById('edit-prod-id').value = product.id;
@@ -654,15 +667,17 @@
             const id = parseInt(document.getElementById('edit-prod-id').value);
             const index = adminProducts.findIndex(p => p.id === id);
             if (index > -1) {
-                // Get image - prefer URL over file upload
+                // Get image - prefer uploaded file, then URL, then keep current
                 let image = adminProducts[index].image;
                 const imageUrl = document.getElementById('edit-prod-image-url').value;
                 const imagePreview = document.getElementById('edit-image-preview');
-                if (imageUrl) {
-                    image = imageUrl;
-                } else if (imagePreview.src && imagePreview.style.display !== 'none') {
+                
+                if (editImageUploaded && imagePreview.src && imagePreview.style.display !== 'none') {
                     image = imagePreview.src;
+                } else if (imageUrl) {
+                    image = imageUrl;
                 }
+                
                 adminProducts[index] = {
                     id: id,
                     name: document.getElementById('edit-prod-name').value,
@@ -675,6 +690,7 @@
                 renderAdminProducts();
                 alert('Product updated successfully!');
                 showSection('products');
+                editImageUploaded = false; // Reset flag
             }
         });
 
