@@ -550,6 +550,13 @@ section h2 {
     padding-top: 6rem;
 }
 
+/* Mobile Cart Page */
+@media (max-width: 768px) {
+    .cart-page {
+        padding-top: 9rem;
+    }
+}
+
 .cart-items {
     margin: 2rem 0;
 }

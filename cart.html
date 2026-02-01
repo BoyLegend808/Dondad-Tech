@@ -87,9 +87,28 @@
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
             if (hamburger && navLinks) {
-                hamburger.addEventListener('click', function() {
+                hamburger.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     hamburger.classList.toggle('active');
                     navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (navLinks.classList.contains('active') && 
+                        !navLinks.contains(e.target) && 
+                        !hamburger.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+                
+                // Close menu when clicking on a nav link
+                navLinks.querySelectorAll('a').forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    });
                 });
             }
         }

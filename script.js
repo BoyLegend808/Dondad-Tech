@@ -318,12 +318,23 @@ function setupHamburger() {
   console.log("Hamburger setup - navLinks:", navLinks);
 
   if (hamburger && navLinks) {
-    hamburger.addEventListener("click", () => {
+    hamburger.addEventListener("click", (e) => {
+      e.stopPropagation();
       console.log("Hamburger clicked!");
       hamburger.classList.toggle("active");
       navLinks.classList.toggle("active");
       console.log("Hamburger classes:", hamburger.classList);
       console.log("NavLinks classes:", navLinks.classList);
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener("click", (e) => {
+      if (navLinks.classList.contains("active") && 
+          !navLinks.contains(e.target) && 
+          !hamburger.contains(e.target)) {
+        hamburger.classList.remove("active");
+        navLinks.classList.remove("active");
+      }
     });
 
     navLinks.querySelectorAll("a").forEach((link) => {
