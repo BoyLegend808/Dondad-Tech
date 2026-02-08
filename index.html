@@ -25,7 +25,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
                 <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
@@ -80,109 +80,7 @@
     </footer>
 
     <script src="products.js"></script>
-    <script src="script.js"></script>
-    <script>
-
-        // Check if admin is logged in and update nav
-        function updateAdminNav() {
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
-            if (currentUser && currentUser.role === 'admin') {
-                // Admin logged in
-                document.getElementById('auth-links').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'inline-block';
-                document.getElementById('user-greeting').style.display = 'inline';
-                document.getElementById('user-greeting').textContent = 'Hi, Admin';
-                document.getElementById('cart-link').style.display = 'flex';
-                document.getElementById('admin-link').style.display = 'block';
-            } else if (currentUser) {
-                // Regular user logged in
-                document.getElementById('auth-links').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'inline-block';
-                document.getElementById('user-greeting').style.display = 'inline';
-                document.getElementById('user-greeting').textContent = 'Hi, ' + currentUser.name;
-                document.getElementById('cart-link').style.display = 'flex';
-                document.getElementById('admin-link').style.display = 'none';
-            } else {
-                // Not logged in - show only login/register and hamburger
-                document.getElementById('auth-links').style.display = 'flex';
-                document.getElementById('logout-btn').style.display = 'none';
-                document.getElementById('user-greeting').style.display = 'none';
-                document.getElementById('cart-link').style.display = 'none';
-                document.getElementById('admin-link').style.display = 'none';
-            }
-        }
-        
-        // Logout function
-        function logoutUser() {
-            localStorage.removeItem('dondad_currentUser');
-            alert('You have been logged out successfully!');
-            window.location.href = 'index.html';
-        }
-        
-        // Toggle hamburger menu
-        function toggleHamburger() {
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            console.log('toggleHamburger called');
-            console.log('hamburger:', hamburger);
-            console.log('navLinks:', navLinks);
-            if (hamburger && navLinks) {
-                hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                console.log('Classes after toggle - hamburger:', hamburger.classList);
-                console.log('Classes after toggle - navLinks:', navLinks.classList);
-            }
-        }
-        
-        // Add to cart function
-        function addToCart(productId, qty = 1) {
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
-            if (!currentUser) {
-                alert('Please login to add items to cart. Redirecting to login page...');
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            let productsData;
-            const stored = localStorage.getItem('dondad_products');
-            if (stored) {
-                productsData = JSON.parse(stored);
-            } else if (typeof products !== 'undefined') {
-                productsData = products;
-            } else {
-                productsData = [];
-            }
-            
-            const product = productsData.find(p => p.id === productId);
-            if (!product) return;
-            
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const existingItem = cart.find(item => item.id === productId);
-            if (existingItem) {
-                existingItem.qty += qty;
-            } else {
-                cart.push({ id: productId, qty: qty });
-            }
-            
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
-            alert(product.name + ' added to cart!');
-        }
-        
-        // Update cart count
-        function updateCartCount() {
-            const cartCount = document.getElementById('cart-count');
-            if (cartCount) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-                cartCount.textContent = totalItems;
-            }
-        }
-        
-        // Run on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAdminNav();
-            updateCartCount();
-        });
-    </script>
+    <script src="auth.js"></script>
+    <script src="index.js"></script>
+</body>
 </html>

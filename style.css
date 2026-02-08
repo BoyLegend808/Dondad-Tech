@@ -389,19 +389,19 @@ section h2 {
     background-color: #0ea5e9;
 }
 
-/* Featured Products with Vertical Scroll */
+/* Featured Products with Horizontal Scroll */
 .featured-scroll {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
     gap: 1.5rem;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 1rem 0.5rem 1rem 0;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
 .featured-scroll::-webkit-scrollbar {
-    width: 6px;
+    height: 8px;
 }
 
 .featured-scroll::-webkit-scrollbar-track {
@@ -418,8 +418,45 @@ section h2 {
     background: #0ea5e9;
 }
 
-.featured-scroll .product-card {
-    margin-bottom: 0;
+.featured-card {
+    flex: 0 0 220px;
+    background-color: var(--card-bg);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid var(--border);
+}
+
+.featured-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+    border-color: var(--primary);
+}
+
+.featured-card img {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.featured-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.featured-card .desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.featured-card .price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
 }
 
 /* Shop Page */
@@ -733,6 +770,18 @@ section h2 {
     color: var(--primary);
 }
 
+.error-message {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    text-align: center;
+    display: none;
+}
+
+.error-message.visible {
+    display: block;
+}
+
 /* Footer */
 footer {
     background-color: var(--card-bg);
@@ -924,4 +973,50 @@ footer {
 .logout-btn:hover {
     background-color: var(--accent);
     color: var(--text);
+}
+
+/* Password Toggle Styles */
+.password-group {
+    position: relative;
+}
+
+.password-input-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    flex: 1;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: var(--primary);
+}
+
+/* Error Messages */
+.error-message {
+    color: var(--accent);
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 1rem;
+    display: none;
+}
+
+.error-message.visible {
+    display: block;
 }

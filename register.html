@@ -25,7 +25,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
+                <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
                 <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
@@ -37,7 +37,7 @@
 
     <main>
         <section class="form-page">
-            <div class="form-container">
+            <article class="form-container">
                 <h1>Create Account</h1>
                 <form id="register-form">
                     <div class="form-group">
@@ -52,18 +52,35 @@
                         <label for="phone">Phone Number</label>
                         <input type="tel" id="phone" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group password-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" required>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group password-group">
                         <label for="confirm">Confirm Password</label>
-                        <input type="password" id="confirm" required>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirm" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirm', this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" class="btn">Register</button>
                 </form>
+                <p class="error-message" id="register-error"></p>
                 <p>Already have an account? <a href="login.html">Login</a></p>
-            </div>
+            </article>
         </section>
     </main>
 
@@ -71,6 +88,18 @@
         <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+            } else {
+                input.type = 'password';
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+            }
+        }
+    </script>
 </body>
 </html>

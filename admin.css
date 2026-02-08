@@ -1,0 +1,485 @@
+/* Admin Panel Styles */
+
+/* Admin Section */
+.admin-section {
+    padding: 6rem 2rem 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 100px);
+}
+
+/* Login Box */
+.admin-login-box {
+    max-width: 450px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.admin-login-box h2 {
+    margin-bottom: 10px;
+    color: var(--primary);
+}
+
+.admin-login-box p {
+    color: var(--text-muted);
+    margin-bottom: 25px;
+}
+
+.login-message {
+    margin-top: 15px;
+    color: var(--accent) !important;
+}
+
+.login-hint {
+    margin-top: 25px;
+    padding: 15px;
+    background: rgba(56, 189, 248, 0.1);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* Page Header */
+.admin-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-page-header h2 {
+    font-size: 1.8rem;
+}
+
+/* Admin Button */
+.admin-btn {
+    padding: 12px 30px;
+    font-size: 1rem;
+}
+
+/* Container */
+.admin-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Table Container */
+.admin-table-container {
+    background: var(--card-bg);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* Admin Table */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    background: rgba(56, 189, 248, 0.1);
+    padding: 15px 20px;
+    text-align: left;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.admin-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+
+.admin-table tr:hover {
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.product-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: var(--bg-color);
+}
+
+.category-badge {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+}
+
+.admin-table .price {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.no-products {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    display: none;
+}
+
+.no-products.show {
+    display: block;
+}
+
+/* Form Container */
+.admin-form-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.admin-form-container form {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 20px;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    background: var(--bg-color);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Image Upload */
+.image-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.image-upload-container input[type="file"] {
+    padding: 10px;
+    background: var(--bg-color);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.image-upload-container input[type="file"]::file-selector-button {
+    background: var(--primary);
+    color: var(--bg-color);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.image-preview {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--bg-color);
+    padding: 5px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--text);
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: var(--border);
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--primary);
+}
+
+.btn-edit {
+    background: rgba(56, 189, 248, 0.2);
+    color: var(--primary);
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    margin-right: 5px;
+}
+
+.btn-edit:hover {
+    background: var(--primary);
+    color: var(--bg-color);
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--accent);
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.btn-delete:hover {
+    background: var(--accent);
+    color: var(--text);
+}
+
+/* User Greeting */
+.user-greeting {
+    color: var(--text);
+    font-size: 0.9rem;
+    margin-right: 10px;
+}
+
+.logout-btn {
+    background: var(--accent);
+    color: var(--text);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Hamburger Button */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    background: none;
+    border: none;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 10px 0;
+    z-index: 1000;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.dropdown-menu.active {
+    display: block;
+    animation: dropdownFade 0.2s ease;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.2s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--primary);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
+.dropdown-user {
+    display: block;
+    padding: 10px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.logout-item {
+    color: var(--accent);
+}
+
+.logout-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent);
+}
+
+/* Nav Right */
+.nav-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Mobile Dropdown */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .dropdown-menu {
+        right: 10px;
+        min-width: 180px;
+    }
+
+    .admin-section {
+        padding: 5rem 1rem 3rem;
+    }
+
+    .admin-container {
+        padding: 0 15px;
+    }
+
+    .admin-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-page-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .admin-table-container {
+        overflow-x: auto;
+    }
+
+    .admin-table {
+        min-width: 600px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .admin-form-container form {
+        padding: 25px;
+    }
+
+    .admin-login-box {
+        margin: 0 15px;
+        padding: 30px 20px;
+    }
+}
