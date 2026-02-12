@@ -120,18 +120,17 @@
         }
 
         function loadFeaturedProducts() {
-            fetch(`${API_URL}/api/products`)
+            fetch('/api/featured')
                 .then(r => r.json())
                 .then(products => {
-                    const featured = products.slice(0, 8);
                     const container = document.getElementById('featured-products');
-                    container.innerHTML = featured.map(p => `
+                    container.innerHTML = products.map(p => `
                         <div class="product-card">
                             <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
                             <h3>${p.name}</h3>
                             <p>${p.desc}</p>
                             <p class="price">₦${p.price.toLocaleString()}</p>
-                            <a href="product.html?id=${p.id}" class="btn">View</a>
+                            <a href="product.html?id=${p._id}" class="btn">View</a>
                         </div>
                     `).join('');
                 });

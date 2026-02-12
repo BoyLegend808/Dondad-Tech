@@ -273,6 +273,32 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
+// Get Featured Products (changes every 24 hours)
+app.get("/api/featured", async (req, res) => {
+  try {
+    // Get current date to create daily rotation
+    const today = new Date();
+    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    
+    // Get all products
+    const allProducts = await Product.find({}).lean();
+    
+    // Simple seeded random selection based on date
+    const shuffled = allProducts.sort((a, b) => {
+      const hashA = (a._id.toString().charCodeAt(0) + seed) % 100;
+      const hashB = (b._id.toString().charCodeAt(0) + seed) % 100;
+      return hashA - hashB;
+    });
+    
+    // Take first 8 products
+    const featured = shuffled.slice(0, 8);
+    res.json(featured);
+  } catch (error) {
+    console.error("Featured error:", error);
+    res.status(500).json({ error: "Failed to fetch featured products" });
+  }
+});
+
 // Cart Route
 app.get("/api/cart/:userId", async (req, res) => {
   try {
