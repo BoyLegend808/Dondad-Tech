@@ -1,0 +1,231 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin",
+      "email": "admin@dondad.com",
+      "password": "admin123",
+      "role": "admin",
+      "phone": "08000000000"
+    },
+    {
+      "id": 2,
+      "name": "John Ugwuneke",
+      "email": "ugwunekejohn5@gmail.com",
+      "password": "I am Legend",
+      "phone": "+2349160641195",
+      "role": "user"
+    },
+    {
+      "id": 3,
+      "name": "Test",
+      "email": "test@test.com",
+      "password": "test123",
+      "phone": "08012345678",
+      "role": "user"
+    },
+    {
+      "id": 4,
+      "name": "John Ugwuneke",
+      "email": "jcoolugwuneke@gmail.com",
+      "password": "I am Legend",
+      "phone": "+2349160641195",
+      "role": "user"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "iPhone 13 Pro Max",
+      "category": "phones",
+      "price": 450000,
+      "image": "xs.png",
+      "desc": "256GB, A15 chip"
+    },
+    {
+      "id": 2,
+      "name": "iPhone 13 Pro",
+      "category": "phones",
+      "price": 400000,
+      "image": "xs.png",
+      "desc": "256GB, A15 chip"
+    },
+    {
+      "id": 3,
+      "name": "iPhone 13",
+      "category": "phones",
+      "price": 350000,
+      "image": "xs.png",
+      "desc": "128GB, A15 chip"
+    },
+    {
+      "id": 4,
+      "name": "iPhone 12 Pro Max",
+      "category": "phones",
+      "price": 320000,
+      "image": "xs.png",
+      "desc": "128GB, A14 chip"
+    },
+    {
+      "id": 5,
+      "name": "iPhone 12",
+      "category": "phones",
+      "price": 280000,
+      "image": "xs.png",
+      "desc": "128GB, A14 chip"
+    },
+    {
+      "id": 6,
+      "name": "iPhone 11",
+      "category": "phones",
+      "price": 220000,
+      "image": "xs.png",
+      "desc": "64GB, A13 chip"
+    },
+    {
+      "id": 7,
+      "name": "iPhone XS Max",
+      "category": "phones",
+      "price": 180000,
+      "image": "xs.png",
+      "desc": "64GB, A12 chip"
+    },
+    {
+      "id": 8,
+      "name": "iPhone XR",
+      "category": "phones",
+      "price": 150000,
+      "image": "xs.png",
+      "desc": "64GB, A12 chip"
+    },
+    {
+      "id": 9,
+      "name": "MacBook Pro 14",
+      "category": "laptops",
+      "price": 850000,
+      "image": "hero img.png",
+      "desc": "M1 Pro, 16GB RAM"
+    },
+    {
+      "id": 10,
+      "name": "MacBook Air M2",
+      "category": "laptops",
+      "price": 650000,
+      "image": "hero img.png",
+      "desc": "M2 chip, 8GB RAM"
+    },
+    {
+      "id": 11,
+      "name": "Dell XPS 13",
+      "category": "laptops",
+      "price": 550000,
+      "image": "hero img.png",
+      "desc": "Intel i7, 16GB RAM"
+    },
+    {
+      "id": 12,
+      "name": "HP Spectre x360",
+      "category": "laptops",
+      "price": 480000,
+      "image": "hero img.png",
+      "desc": "Intel i7, 16GB RAM"
+    },
+    {
+      "id": 13,
+      "name": "Lenovo ThinkPad",
+      "category": "laptops",
+      "price": 520000,
+      "image": "hero img.png",
+      "desc": "Intel i7, 16GB RAM"
+    },
+    {
+      "id": 14,
+      "name": "iPad Pro 12.9",
+      "category": "tablets",
+      "price": 550000,
+      "image": "xs.png",
+      "desc": "M1 chip, 128GB"
+    },
+    {
+      "id": 15,
+      "name": "iPad Air",
+      "category": "tablets",
+      "price": 350000,
+      "image": "xs.png",
+      "desc": "M1 chip, 64GB"
+    },
+    {
+      "id": 16,
+      "name": "iPad 10th Gen",
+      "category": "tablets",
+      "price": 250000,
+      "image": "xs.png",
+      "desc": "A14 chip, 64GB"
+    },
+    {
+      "id": 17,
+      "name": "Samsung Tab S8",
+      "category": "tablets",
+      "price": 380000,
+      "image": "xs.png",
+      "desc": "Snapdragon 8 Gen 1"
+    },
+    {
+      "id": 18,
+      "name": "AirPods Pro",
+      "category": "accessories",
+      "price": 120000,
+      "image": "xs.png",
+      "desc": "Active Noise Cancellation"
+    },
+    {
+      "id": 19,
+      "name": "AirPods 3",
+      "category": "accessories",
+      "price": 85000,
+      "image": "xs.png",
+      "desc": "Spatial audio"
+    },
+    {
+      "id": 20,
+      "name": "iPhone Charger",
+      "category": "accessories",
+      "price": 15000,
+      "image": "xs.png",
+      "desc": "20W Fast charging"
+    },
+    {
+      "id": 21,
+      "name": "USB-C Cable",
+      "category": "accessories",
+      "price": 5000,
+      "image": "xs.png",
+      "desc": "1m braided"
+    },
+    {
+      "id": 22,
+      "name": "Phone Case",
+      "category": "accessories",
+      "price": 8000,
+      "image": "xs.png",
+      "desc": "Silicone case"
+    },
+    {
+      "id": 23,
+      "name": "Power Bank",
+      "category": "accessories",
+      "price": 25000,
+      "image": "xs.png",
+      "desc": "20000mAh"
+    },
+    {
+      "id": 24,
+      "name": "Screen Protector",
+      "category": "accessories",
+      "price": 3000,
+      "image": "xs.png",
+      "desc": "Tempered glass"
+    }
+  ],
+  "cart": []
+}

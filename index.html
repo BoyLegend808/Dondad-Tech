@@ -3,33 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dondad Tech - Premium Devices</title>
+    <title>Dondad Tech</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="index.html" class="logo">Dondad Tech</a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
-                <li><a href="admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
+                <li><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
-                <div class="auth-links" id="auth-links">
-                    <a href="login.html" class="auth-link">Login</a>
-                    <a href="register.html" class="auth-link">Register</a>
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                    <a href="register.html" class="auth-btn register">Register</a>
                 </div>
-                <span id="user-greeting" class="user-greeting"></span>
-                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
-                    <span>Cart</span>
-                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
-                </a>
-                <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div id="user-menu" style="display:none;">
+                    <span id="user-name"></span>
+                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                    <button onclick="logout()" class="auth-btn logout">Logout</button>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </nav>
@@ -38,17 +35,17 @@
     <main>
         <section class="hero">
             <div class="hero-content">
-                <h1>Dondad<br><span>Tech</span></h1>
-                <p>Premium devices - Phones, Laptops, Tablets & Accessories</p>
+                <h1>Welcome to<br><span>Dondad Tech</span></h1>
+                <p>Your one-stop shop for phones, laptops, tablets & accessories</p>
                 <a href="shop.html" class="btn">Shop Now</a>
             </div>
             <div class="hero-image">
-                <img src="hero img.png" alt="Tech Devices">
+                <img src="logo.png" alt="Dondad Tech">
             </div>
         </section>
 
         <section class="categories">
-            <h2>Browse Categories</h2>
+            <h2>Categories</h2>
             <div class="category-grid">
                 <a href="shop.html?category=phones" class="category-card">
                     <img src="xs.png" alt="Phones">
@@ -71,7 +68,7 @@
 
         <section class="featured">
             <h2>Featured Products</h2>
-            <div class="featured-scroll" id="featured-products"></div>
+            <div class="product-scroll" id="featured-products"></div>
         </section>
     </main>
 
@@ -79,8 +76,72 @@
         <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
     </footer>
 
-    <script src="products.js"></script>
-    <script src="auth.js"></script>
-    <script src="index.js"></script>
+    <script>
+        const API_URL = '';
+
+        // Check auth
+        function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+
+            if (user) {
+                authButtons.style.display = 'none';
+                userMenu.style.display = 'flex';
+                userName.textContent = 'Hi, ' + user.name;
+            } else {
+                authButtons.style.display = 'flex';
+                userMenu.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('dondad_currentUser');
+            location.reload();
+        }
+
+        function toggleMenu() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        }
+
+        function updateCartCount() {
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!user) {
+                document.getElementById('cart-count').textContent = '0';
+                return;
+            }
+            fetch(`${API_URL}/api/cart/${user.id}`)
+                .then(r => r.json())
+                .then(cart => {
+                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    document.getElementById('cart-count').textContent = count;
+                });
+        }
+
+        function loadFeaturedProducts() {
+            fetch(`${API_URL}/api/products`)
+                .then(r => r.json())
+                .then(products => {
+                    const featured = products.slice(0, 8);
+                    const container = document.getElementById('featured-products');
+                    container.innerHTML = featured.map(p => `
+                        <div class="product-card">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                            <h3>${p.name}</h3>
+                            <p>${p.desc}</p>
+                            <p class="price">₦${p.price.toLocaleString()}</p>
+                            <a href="product.html?id=${p.id}" class="btn">View</a>
+                        </div>
+                    `).join('');
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            updateCartCount();
+            loadFeaturedProducts();
+        });
+    </script>
 </body>
 </html>

@@ -1,61 +1,34 @@
 // Index Page JavaScript
 const API_BASE = "";
-let featuredProducts = [];
 
-// Load featured products from API
+// Load featured products
 async function loadFeaturedProducts() {
-  console.log("Loading featured products...");
+  const container = document.getElementById("featured-products");
+  if (!container) return;
 
   try {
-    console.log("Fetching from API...");
     const response = await fetch(`${API_BASE}/api/products`);
-    console.log("API response status:", response.status);
-
-    if (!response.ok) {
-      throw new Error("API request failed");
-    }
-
     const products = await response.json();
-    console.log("Products from API:", products);
-
-    featuredProducts = products.slice(0, 6);
-    renderFeaturedProducts();
+    const featured = products.slice(0, 6);
+    renderFeaturedProducts(featured);
   } catch (error) {
-    console.error("Error loading products:", error);
-
-    // Try localStorage fallback
-    const stored = localStorage.getItem("dondad_products");
-    console.log("LocalStorage products:", stored);
-
-    if (stored) {
-      featuredProducts = JSON.parse(stored).slice(0, 6);
-    } else if (typeof products !== "undefined") {
-      // Check if products.js is loaded
-      featuredProducts = products.slice(0, 6);
-      console.log("Using products.js fallback:", featuredProducts);
-    } else {
-      console.log("No products found anywhere");
-      featuredProducts = [];
-    }
-    renderFeaturedProducts();
+    // Fallback to local products
+    const featured = (typeof products !== 'undefined' ? products : []).slice(0, 6);
+    renderFeaturedProducts(featured);
   }
 }
 
 // Render featured products
-function renderFeaturedProducts() {
+function renderFeaturedProducts(products) {
   const container = document.getElementById("featured-products");
-  console.log("Container found:", !!container);
-  console.log("Featured products to render:", featuredProducts);
-
   if (!container) return;
 
-  if (featuredProducts.length === 0) {
-    container.innerHTML =
-      '<p style="text-align:center; padding: 2rem; color: var(--text-muted);">No featured products available</p>';
+  if (products.length === 0) {
+    container.innerHTML = '<p style="text-align:center; padding: 2rem;">No products available</p>';
     return;
   }
 
-  container.innerHTML = featuredProducts
+  container.innerHTML = products
     .map(
       (p) => `
         <article class="featured-card">
@@ -68,11 +41,9 @@ function renderFeaturedProducts() {
     `,
     )
     .join("");
-
-  console.log("Rendered HTML:", container.innerHTML.length, "characters");
 }
 
-// Load featured products on page load
+// Load on page load
 document.addEventListener("DOMContentLoaded", function () {
   loadFeaturedProducts();
 });

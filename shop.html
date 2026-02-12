@@ -9,27 +9,24 @@
 <body>
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="index.html" class="logo">Dondad Tech</a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html" class="active">Shop</a></li>
-                <li><a href="admin.html" id="admin-link">Admin Panel</a></li>
+                <li><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
-                <div class="auth-links" id="auth-links">
-                    <a href="login.html" class="auth-link">Login</a>
-                    <a href="register.html" class="auth-link">Register</a>
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                    <a href="register.html" class="auth-btn register">Register</a>
                 </div>
-                <span id="user-greeting" class="user-greeting"></span>
-                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
-                    <span>Cart</span>
-                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
-                </a>
-                <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div id="user-menu" style="display:none;">
+                    <span id="user-name"></span>
+                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                    <button onclick="logout()" class="auth-btn logout">Logout</button>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </nav>
@@ -38,20 +35,20 @@
     <main>
         <section class="shop-header">
             <h1>Shop All Products</h1>
-            <div class="shop-filters">
-                <button class="filter-btn active" data-category="all">All</button>
-                <button class="filter-btn" data-category="phones">Phones</button>
-                <button class="filter-btn" data-category="laptops">Laptops</button>
-                <button class="filter-btn" data-category="tablets">Tablets</button>
-                <button class="filter-btn" data-category="accessories">Accessories</button>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
+                <button class="filter-btn" onclick="filterProducts('phones', this)">Phones</button>
+                <button class="filter-btn" onclick="filterProducts('laptops', this)">Laptops</button>
+                <button class="filter-btn" onclick="filterProducts('tablets', this)">Tablets</button>
+                <button class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
             </div>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search products...">
-            </div>
+            <input type="text" id="search" placeholder="Search products..." oninput="searchProducts(this.value)">
         </section>
 
         <section>
-            <div class="product-grid" id="product-grid"></div>
+            <div class="product-grid" id="product-grid">
+                <p style="text-align:center; padding: 2rem;">Loading products...</p>
+            </div>
         </section>
     </main>
 
@@ -59,7 +56,124 @@
         <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
     </footer>
 
-    <script src="auth.js"></script>
-    <script src="shop.js"></script>
+    <script>
+        const API_URL = '';
+        let allProducts = [];
+
+        function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+
+            if (user) {
+                authButtons.style.display = 'none';
+                userMenu.style.display = 'flex';
+                userName.textContent = 'Hi, ' + user.name;
+            } else {
+                authButtons.style.display = 'flex';
+                userMenu.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('dondad_currentUser');
+            location.reload();
+        }
+
+        function toggleMenu() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        }
+
+        function updateCartCount() {
+            const user = JSON.parse(localStorage.getItem('dondad_user'));
+            if (!user) {
+                document.getElementById('cart-count').textContent = '0';
+                return;
+            }
+            fetch(`${API_URL}/api/cart/${user.id}`)
+                .then(r => r.json())
+                .then(cart => {
+                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    document.getElementById('cart-count').textContent = count;
+                });
+        }
+
+        function loadProducts() {
+            fetch(`${API_URL}/api/products`)
+                .then(r => r.json())
+                .then(products => {
+                    allProducts = products;
+                    renderProducts(products);
+                })
+                .catch(() => {
+                    document.getElementById('product-grid').innerHTML = '<p style="text-align:center;">Error loading products. Make sure server is running.</p>';
+                });
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('product-grid');
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; padding: 2rem;">No products found</p>';
+                return;
+            }
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                    <h3>${p.name}</h3>
+                    <p>${p.desc}</p>
+                    <p class="price">₦${p.price.toLocaleString()}</p>
+                    <a href="product.html?id=${p.id}" class="btn">View</a>
+                    <button onclick="addToCart(${p.id})" class="btn add-cart">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts(category, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (category === 'all') {
+                renderProducts(allProducts);
+            } else {
+                const filtered = allProducts.filter(p => p.category === category);
+                renderProducts(filtered);
+            }
+        }
+
+        function searchProducts(term) {
+            const filtered = allProducts.filter(p => 
+                p.name.toLowerCase().includes(term.toLowerCase()) || 
+                p.desc.toLowerCase().includes(term.toLowerCase())
+            );
+            renderProducts(filtered);
+        }
+
+        function addToCart(productId) {
+            const user = JSON.parse(localStorage.getItem('dondad_user'));
+            if (!user) {
+                alert('Please login to add to cart');
+                location.href = 'login.html';
+                return;
+            }
+            
+            fetch(`${API_URL}/api/cart`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id, productId, qty: 1 })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    alert('Added to cart!');
+                    updateCartCount();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            updateCartCount();
+            loadProducts();
+        });
+    </script>
 </body>
 </html>

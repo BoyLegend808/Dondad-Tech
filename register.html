@@ -5,101 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Dondad Tech</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="shop.html">Shop</a></li>
-                <li><a href="login.html">Admin</a></li>
-            </ul>
+            <a href="index.html" class="logo">Dondad Tech</a>
             <div class="nav-right">
-                <div class="auth-links" id="auth-links">
-                    <a href="login.html" class="auth-link">Login</a>
-                    <a href="register.html" class="auth-link">Register</a>
-                </div>
-                <span id="user-greeting" class="user-greeting"></span>
-                <a href="cart.html" class="cart-link">
-                    <span>Cart</span>
-                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
-                </a>
-                <button id="logout-btn" class="logout-btn" style="display: none;">Logout</button>
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <a href="login.html" class="auth-btn">Login</a>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </nav>
     </header>
 
-    <main>
-        <section class="form-page">
-            <article class="form-container">
-                <h1>Create Account</h1>
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h1>Create Account</h1>
+                    <p>Join Dondad Tech today</p>
+                </div>
+                
                 <form id="register-form">
                     <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" required>
+                        <label for="name">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="text" id="name" placeholder="Enter your name" required>
+                        </div>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" required>
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" placeholder="Enter your email" required>
+                        </div>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" required>
+                        <label for="phone">
+                            <i class="fas fa-phone"></i> Phone
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="phone" placeholder="Enter your phone number">
+                        </div>
                     </div>
-                    <div class="form-group password-group">
-                        <label for="password">Password</label>
-                        <div class="password-input-wrapper">
-                            <input type="password" id="password" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
+                    
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" placeholder="Create password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye" id="eye-password"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="form-group password-group">
-                        <label for="confirm">Confirm Password</label>
-                        <div class="password-input-wrapper">
-                            <input type="password" id="confirm" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('confirm', this)">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
+                    
+                    <div class="form-group">
+                        <label for="confirm">
+                            <i class="fas fa-lock"></i> Confirm Password
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="password" id="confirm" placeholder="Confirm password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirm')" aria-label="Toggle confirm password visibility">
+                                <i class="fas fa-eye" id="eye-confirm"></i>
                             </button>
                         </div>
                     </div>
-                    <button type="submit" class="btn">Register</button>
+                    
+                    <p id="error" class="error-message"></p>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
                 </form>
-                <p class="error-message" id="register-error"></p>
-                <p>Already have an account? <a href="login.html">Login</a></p>
-            </article>
-        </section>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="login.html">Login</a></p>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <footer>
-        <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
-    </footer>
-
-    <script src="auth.js"></script>
     <script>
-        function togglePassword(inputId, button) {
-            const input = document.getElementById(inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+        function toggleMenu() {
+            document.querySelector('.nav-links')?.classList.toggle('active');
+        }
+
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const eyeIcon = document.getElementById(fieldId === 'password' ? 'eye-password' : 'eye-confirm');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
             } else {
-                input.type = 'password';
-                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
             }
         }
+
+        document.getElementById('register-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm').value;
+            const error = document.getElementById('error');
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            if (password !== confirm) {
+                error.textContent = 'Passwords do not match';
+                error.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                error.textContent = 'Password must be at least 6 characters';
+                error.style.display = 'block';
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            btn.disabled = true;
+
+            try {
+                const r = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, phone })
+                });
+                const data = await r.json();
+
+                if (data.success) {
+                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    location.href = 'index.html';
+                } else {
+                    error.textContent = data.error || 'Registration failed';
+                    error.style.display = 'block';
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                error.textContent = 'Connection error. Please try again.';
+                error.style.display = 'block';
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                btn.disabled = false;
+            }
+        };
     </script>
 </body>
 </html>
