@@ -273,11 +273,10 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
-// Cart Route with SAFETY CHECK (Fixes the "undefined" error)
-app.get("/api/cart", async (req, res) => {
+// Cart Route
+app.get("/api/cart/:userId", async (req, res) => {
   try {
-    const userId = req.query.userId;
-    // This check prevents Mongoose from trying to search for an "undefined" ID
+    const { userId } = req.params;
     if (!userId || userId === "undefined" || userId.length < 12) {
       return res.status(400).json({ error: "Valid User ID is required" });
     }
@@ -286,6 +285,62 @@ app.get("/api/cart", async (req, res) => {
   } catch (error) {
     console.error("Cart Error:", error);
     res.status(500).json({ error: "Error fetching cart" });
+  }
+});
+
+// Add to Cart
+app.post("/api/cart/:userId/:productId", async (req, res) => {
+  try {
+    const { userId, productId } = req.params;
+    const { qty } = req.body;
+    
+    if (!userId || !productId) {
+      return res.status(400).json({ error: "User ID and Product ID are required" });
+    }
+    
+    const existing = await Cart.findOne({ userId, productId });
+    if (existing) {
+      existing.qty += qty || 1;
+      await existing.save();
+    } else {
+      await Cart.create({ userId, productId, qty: qty || 1 });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Add to Cart Error:", error);
+    res.status(500).json({ error: "Failed to add to cart" });
+  }
+});
+
+// Update Cart Quantity
+app.put("/api/cart/:userId/:productId", async (req, res) => {
+  try {
+    const { userId, productId } = req.params;
+    const { qty } = req.body;
+    
+    if (qty <= 0) {
+      await Cart.findOneAndDelete({ userId, productId });
+    } else {
+      await Cart.findOneAndUpdate({ userId, productId }, { qty });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Update Cart Error:", error);
+    res.status(500).json({ error: "Failed to update cart" });
+  }
+});
+
+// Remove from Cart
+app.delete("/api/cart/:userId/:productId", async (req, res) => {
+  try {
+    const { userId, productId } = req.params;
+    await Cart.findOneAndDelete({ userId, productId });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Remove from Cart Error:", error);
+    res.status(500).json({ error: "Failed to remove from cart" });
   }
 });
 

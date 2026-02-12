@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart - Dondad Tech</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="index.html" class="logo">Dondad Tech</a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
@@ -27,196 +28,192 @@
                 </a>
                 <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
                 <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    <span></span><span></span><span></span>
                 </button>
             </div>
         </nav>
     </header>
 
-    <main>
-        <section class="cart-page">
-            <h1>Your Cart</h1>
-            <div class="cart-items" id="cart-items"></div>
-            <div class="cart-summary">
-                <h3>Order Summary</h3>
-                <div class="cart-summary-row">
-                    <span>Subtotal</span>
-                    <span id="cart-subtotal">₦0</span>
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card" style="max-width: 800px;">
+                <div class="auth-header">
+                    <div class="auth-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h1>Your Cart</h1>
+                    <p>Review your items</p>
                 </div>
-                <div class="cart-summary-row">
-                    <span>Delivery</span>
-                    <span>Calculated at checkout</span>
+                
+                <div class="cart-items" id="cart-items"></div>
+                
+                <div class="cart-summary" id="cart-summary" style="display: none;">
+                    <h3>Order Summary</h3>
+                    <div class="cart-summary-row">
+                        <span>Subtotal</span>
+                        <span id="cart-subtotal">₦0</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Delivery</span>
+                        <span>Calculated at checkout</span>
+                    </div>
+                    <div class="cart-summary-row cart-summary-total">
+                        <span>Total</span>
+                        <span id="cart-total">₦0</span>
+                    </div>
+                    <a href="checkout.html" class="btn btn-primary btn-block" style="display:block; text-align:center; margin-top:1.5rem;">
+                        <i class="fas fa-credit-card"></i> Proceed to Checkout
+                    </a>
+                    <a href="shop.html" class="btn btn-block" style="display:block; text-align:center; margin-top:1rem; background: transparent; border: 2px solid var(--primary); color: var(--primary);">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
                 </div>
-                <div class="cart-summary-row cart-summary-total">
-                    <span>Total</span>
-                    <span id="cart-total">₦0</span>
-                </div>
-                <a href="checkout.html" class="btn" style="display:block; text-align:center; margin-top:1.5rem;">Proceed to Checkout</a>
-                <a href="shop.html" class="btn" style="display:block; text-align:center; margin-top:1rem; background-color: transparent; border:1px solid var(--border);">Continue Shopping</a>
             </div>
-        </section>
+        </div>
     </main>
 
     <footer>
         <p>&copy; 2024 Dondad Tech. All rights reserved.</p>
     </footer>
 
-    <script src="products.js"></script>
-    <script src="script.js"></script>
     <script>
-        // Load products from localStorage or use default from products.js
-        function getAllProducts() {
-            const stored = localStorage.getItem('dondad_products');
-            if (stored) {
-                return JSON.parse(stored);
-            }
-            return typeof products !== 'undefined' ? products : [];
-        }
-        
-        // Check if user is logged in before showing cart
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
-            if (!currentUser) {
-                // Redirect to login if not logged in
-                alert('Please login to view your cart.');
+        let currentUser = null;
+
+        // Check auth
+        document.addEventListener('DOMContentLoaded', async function() {
+            const userStr = localStorage.getItem('dondad_currentUser');
+            if (!userStr) {
                 window.location.href = 'login.html';
                 return;
             }
             
-            // User is logged in - initialize page
-            initCartPage();
-            initHamburger();
+            currentUser = JSON.parse(userStr);
+            await loadCart();
             updateAuthUI();
-            updateCartCount();
         });
-        
-        // Toggle hamburger menu
-        function toggleHamburger() {
-            const hamburger = document.getElementById('hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                console.log('Hamburger toggled, active:', hamburger.classList.contains('active'));
-            }
-        }
-        
-        function initHamburger() {
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            console.log('Hamburger element:', hamburger);
-            console.log('NavLinks element:', navLinks);
-            if (hamburger && navLinks) {
-                // Toggle menu function
-                const toggleMenu = function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    hamburger.classList.toggle('active');
-                    navLinks.classList.toggle('active');
-                    console.log('Hamburger clicked, active class:', hamburger.classList.contains('active'));
-                };
-                
-                // Support both click and touch events for mobile
-                hamburger.addEventListener('click', toggleMenu);
-                hamburger.addEventListener('touchstart', toggleMenu, {passive: false});
-                
-                // Close menu when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (navLinks.classList.contains('active') && 
-                        !navLinks.contains(e.target) && 
-                        !hamburger.contains(e.target)) {
-                        hamburger.classList.remove('active');
-                        navLinks.classList.remove('active');
-                    }
-                });
-                
-                // Close menu when clicking on a nav link
-                navLinks.querySelectorAll('a').forEach(function(link) {
-                    link.addEventListener('click', function() {
-                        hamburger.classList.remove('active');
-                        navLinks.classList.remove('active');
-                    });
-                });
-            } else {
-                console.error('Hamburger or navLinks not found!');
-            }
-        }
-        
-        function initCartPage() {
-            // Load products from localStorage or use default
-            let productsData = getAllProducts();
-            
-            // Get cart items
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const cartItems = cart.map(item => {
-                const product = productsData.find(p => p.id === item.id);
-                return product ? { ...product, qty: item.qty } : null;
-            }).filter(item => item !== null);
-            
-            const container = document.getElementById('cart-items');
-            const totalEl = document.getElementById('cart-total');
-            const subtotalEl = document.getElementById('cart-subtotal');
 
-            if (cartItems.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 2rem; color: var(--text-muted); font-size: 1.2rem;">🛒 Your cart is empty</p>';
-                totalEl.textContent = '₦0';
-                subtotalEl.textContent = '₦0';
-                document.querySelector('.cart-summary').style.display = 'none';
-                return;
-            }
-            
-            // Show order summary
-            document.querySelector('.cart-summary').style.display = 'block';
-            
-            // Render cart items with item totals
-            container.innerHTML = cartItems.map(item => `
-                <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}">
-                    <div class="cart-item-info">
-                        <h3>${item.name}</h3>
-                        <p>₦${item.price.toLocaleString()} × ${item.qty}</p>
-                        <p style="color: var(--primary); font-weight: 600;">₦${(item.price * item.qty).toLocaleString()}</p>
-                    </div>
-                    <div class="cart-item-qty">
-                        <button onclick="updateCartQty(${item.id}, ${item.qty - 1})">-</button>
-                        <span>${item.qty}</span>
-                        <button onclick="updateCartQty(${item.id}, ${item.qty + 1})">+</button>
-                    </div>
-                    <button class="cart-item-remove" onclick="removeFromCart(${item.id})">×</button>
-                </div>
-            `).join('');
+        async function loadCart() {
+            try {
+                const response = await fetch(`/api/cart/${currentUser.id}`);
+                const cartItems = await response.json();
+                
+                const container = document.getElementById('cart-items');
+                const summary = document.getElementById('cart-summary');
+                const totalEl = document.getElementById('cart-total');
+                const subtotalEl = document.getElementById('cart-subtotal');
+                const cartCount = document.getElementById('cart-count');
 
-            // Calculate total
-            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const delivery = 0; // Free delivery for now
-            const total = subtotal + delivery;
-            
-            subtotalEl.textContent = '₦' + subtotal.toLocaleString();
-            totalEl.textContent = '₦' + total.toLocaleString();
-        }
-        
-        // Update cart quantity
-        function updateCartQty(productId, qty) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const item = cart.find(item => item.id === productId);
-            if (item) {
-                item.qty = qty;
-                if (item.qty <= 0) {
-                    cart = cart.filter(item => item.id !== productId);
+                cartCount.textContent = cartItems.reduce((sum, item) => sum + item.qty, 0);
+
+                if (cartItems.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-cart" style="text-align:center; padding: 3rem;">
+                            <i class="fas fa-shopping-basket" style="font-size: 4rem; color: var(--muted); margin-bottom: 1rem;"></i>
+                            <p style="font-size: 1.2rem; color: var(--muted);">Your cart is empty</p>
+                            <a href="shop.html" class="btn btn-primary" style="margin-top: 1rem;">
+                                <i class="fas fa-store"></i> Start Shopping
+                            </a>
+                        </div>
+                    `;
+                    summary.style.display = 'none';
+                    return;
                 }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                location.reload();
+
+                summary.style.display = 'block';
+                
+                container.innerHTML = cartItems.map(item => `
+                    <div class="cart-item">
+                        <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
+                        <div class="cart-item-info">
+                            <h3>${item.productId?.name || 'Unknown Product'}</h3>
+                            <p>₦${(item.productId?.price || 0).toLocaleString()} × ${item.qty}</p>
+                            <p style="color: var(--primary); font-weight: 600;">
+                                ₦${((item.productId?.price || 0) * item.qty).toLocaleString()}
+                            </p>
+                        </div>
+                        <div class="cart-item-qty">
+                            <button onclick="updateQty('${item.productId?._id}', ${item.qty - 1})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span>${item.qty}</span>
+                            <button onclick="updateQty('${item.productId?._id}', ${item.qty + 1})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <button class="cart-item-remove" onclick="removeItem('${item.productId?._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                // Calculate total
+                const subtotal = cartItems.reduce((sum, item) => sum + ((item.productId?.price || 0) * item.qty), 0);
+                const delivery = 0;
+                const total = subtotal + delivery;
+                
+                subtotalEl.textContent = '₦' + subtotal.toLocaleString();
+                totalEl.textContent = '₦' + total.toLocaleString();
+                
+            } catch (error) {
+                console.error('Error loading cart:', error);
             }
         }
-        
-        // Remove from cart
-        function removeFromCart(productId) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            cart = cart.filter(item => item.id !== productId);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            location.reload();
+
+        async function updateQty(productId, qty) {
+            try {
+                await fetch(`/api/cart/${currentUser.id}/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qty })
+                });
+                await loadCart();
+                updateCartCount();
+            } catch (error) {
+                console.error('Error updating quantity:', error);
+            }
+        }
+
+        async function removeItem(productId) {
+            if (!confirm('Remove this item from cart?')) return;
+            try {
+                await fetch(`/api/cart/${currentUser.id}/${productId}`, {
+                    method: 'DELETE'
+                });
+                await loadCart();
+                updateCartCount();
+            } catch (error) {
+                console.error('Error removing item:', error);
+            }
+        }
+
+        function updateAuthUI() {
+            document.getElementById('auth-links').style.display = currentUser ? 'none' : 'flex';
+            document.getElementById('cart-link').style.display = currentUser ? 'flex' : 'none';
+            document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
+            document.getElementById('user-greeting').textContent = currentUser ? 'Hi, ' + currentUser.name : '';
+            
+            if (currentUser?.role === 'admin') {
+                document.getElementById('admin-link').style.display = 'block';
+            }
+        }
+
+        function updateCartCount() {
+            fetch(`/api/cart/${currentUser?.id}`)
+                .then(r => r.json())
+                .then(cart => {
+                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    document.getElementById('cart-count').textContent = count;
+                });
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('dondad_currentUser');
+            window.location.href = 'index.html';
+        }
+
+        function toggleHamburger() {
+            document.querySelector('.nav-links')?.classList.toggle('active');
+            document.querySelector('.hamburger')?.classList.toggle('active');
         }
     </script>
 </body>

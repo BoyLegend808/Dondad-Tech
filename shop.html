@@ -86,12 +86,12 @@
         }
 
         function updateCartCount() {
-            const user = JSON.parse(localStorage.getItem('dondad_user'));
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
             if (!user) {
                 document.getElementById('cart-count').textContent = '0';
                 return;
             }
-            fetch(`${API_URL}/api/cart/${user.id}`)
+            fetch(`/api/cart/${user.id}`)
                 .then(r => r.json())
                 .then(cart => {
                     const count = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -150,17 +150,17 @@
         }
 
         function addToCart(productId) {
-            const user = JSON.parse(localStorage.getItem('dondad_user'));
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
             if (!user) {
                 alert('Please login to add to cart');
                 location.href = 'login.html';
                 return;
             }
             
-            fetch(`${API_URL}/api/cart`, {
+            fetch(`/api/cart/${user.id}/${productId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, productId, qty: 1 })
+                body: JSON.stringify({ qty: 1 })
             }).then(r => r.json()).then(data => {
                 if (data.success) {
                     alert('Added to cart!');
