@@ -361,6 +361,27 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// Seed Admin User (Run this to create admin if missing)
+app.get("/api/seed-admin", async (req, res) => {
+  try {
+    const existing = await User.findOne({ email: "admin@dondad.com" });
+    if (existing) {
+      res.json({ success: true, message: "Admin already exists", user: existing });
+    } else {
+      const admin = await User.create({
+        name: "Admin",
+        email: "admin@dondad.com",
+        password: "admin123",
+        phone: "08000000000",
+        role: "admin",
+      });
+      res.json({ success: true, message: "Admin created", user: admin });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to seed admin" });
+  }
+});
+
 // Register
 app.post("/api/register", async (req, res) => {
   try {
