@@ -123,8 +123,8 @@
                     <h3>${p.name}</h3>
                     <p>${p.desc}</p>
                     <p class="price">₦${p.price.toLocaleString()}</p>
-                    <a href="product.html?id=${p.id}" class="btn">View</a>
-                    <button onclick="addToCart(${p.id})" class="btn add-cart">Add to Cart</button>
+                    <a href="product.html?id=${p._id || p.id}" class="btn">View</a>
+                    <button onclick="addToCart('${p._id || p.id}')" class="btn add-cart">Add to Cart</button>
                 </div>
             `).join('');
         }
@@ -157,7 +157,7 @@
                 return;
             }
             
-            fetch(`/api/cart/${user.id}/${productId}`, {
+            fetch(`/api/cart/${user._id || user.id}/${productId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ qty: 1 })
