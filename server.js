@@ -273,6 +273,20 @@ app.get("/api/products", async (req, res) => {
   }
 });
 
+// Get single product by ID
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      res.json(product);
+    } else {
+      res.status(404).json({ error: "Product not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
 // Get Featured Products (changes every 24 hours)
 app.get("/api/featured", async (req, res) => {
   try {

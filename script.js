@@ -26,10 +26,10 @@ function getProductsByCategory(category) {
   return allProducts.filter((p) => p.category === category);
 }
 
-// Get product by ID
+// Get product by ID (supports both numeric id and MongoDB _id)
 function getProductById(id) {
   const allProducts = getAllProducts();
-  return allProducts.find((p) => p.id === parseInt(id));
+  return allProducts.find((p) => p.id === parseInt(id) || p._id === id);
 }
 
 // Search products
