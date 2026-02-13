@@ -91,7 +91,7 @@
                 document.getElementById('cart-count').textContent = '0';
                 return;
             }
-            fetch(`/api/cart/${user.id}`)
+            fetch(`/api/cart/${user._id || user.id}`)
                 .then(r => r.json())
                 .then(cart => {
                     const count = cart.reduce((sum, item) => sum + item.qty, 0);
