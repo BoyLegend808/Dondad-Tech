@@ -308,8 +308,8 @@
             noProducts.style.display = 'none';
             tbody.innerHTML = products.map(p => `
                 <tr>
-                    <td><img src="${p.image || 'logo.png'}" alt="${p.name}" class="product-thumb"></td>
-                    <td><strong>${p.name}</strong></td>
+                    <td><a href="product.html?id=${p._id || p.id}" target="_blank"><img src="${p.image || 'logo.png'}" alt="${p.name}" class="product-thumb"></a></td>
+                    <td><a href="product.html?id=${p._id || p.id}" target="_blank"><strong>${p.name}</strong></a></td>
                     <td><span class="category-badge">${p.category}</span></td>
                     <td class="price">₦${p.price.toLocaleString()}</td>
                     <td>
