@@ -39,6 +39,26 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   image: { type: String, required: true },
   desc: { type: String, default: "" },
+  // Variant fields
+  hasVariants: { type: Boolean, default: false },
+  variants: {
+    storage: [{
+      option: { type: String, default: "" },
+      priceModifier: { type: Number, default: 0 },
+      stock: { type: Number, default: 0 }
+    }],
+    ram: [{
+      option: { type: String, default: "" },
+      priceModifier: { type: Number, default: 0 },
+      stock: { type: Number, default: 0 }
+    }],
+    color: [{
+      option: { type: String, default: "" },
+      priceModifier: { type: Number, default: 0 },
+      stock: { type: Number, default: 0 },
+      image: { type: String, default: "" }
+    }]
+  }
 });
 
 const cartSchema = new mongoose.Schema({
@@ -49,6 +69,14 @@ const cartSchema = new mongoose.Schema({
     required: true,
   },
   qty: { type: Number, default: 1 },
+  // Variant selection
+  selectedVariant: {
+    storage: { type: String, default: "" },
+    ram: { type: String, default: "" },
+    color: { type: String, default: "" }
+  },
+  // Store price at time of addition
+  unitPrice: { type: Number, required: true }
 });
 
 const User = mongoose.model("User", userSchema);
@@ -319,6 +347,31 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
+// Migrate existing products to add variant fields
+app.get("/api/products/migrate-variants", async (req, res) => {
+  try {
+    const result = await Product.updateMany(
+      { hasVariants: { $exists: false } },
+      {
+        $set: {
+          hasVariants: false,
+          variants: {
+            storage: [],
+            ram: [],
+            color: []
+          }
+        }
+      }
+    );
+    res.json({
+      success: true,
+      message: `Migrated ${result.modifiedCount} products`
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Migration failed" });
+  }
+});
+
 // Get Featured Products (changes every 24 hours)
 app.get("/api/featured", async (req, res) => {
   try {
@@ -364,18 +417,42 @@ app.get("/api/cart/:userId", async (req, res) => {
 app.post("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
-    const { qty } = req.body;
+    const { qty, selectedVariant, unitPrice } = req.body;
     
     if (!userId || !productId) {
       return res.status(400).json({ error: "User ID and Product ID are required" });
     }
     
-    const existing = await Cart.findOne({ userId, productId });
+    // Get product to calculate price if not provided
+    let price = unitPrice;
+    if (price === undefined) {
+      const product = await Product.findById(productId);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      price = product.price;
+    }
+    
+    // Check for existing cart item with same product and variant
+    const existingQuery = { userId, productId };
+    if (selectedVariant) {
+      existingQuery["selectedVariant.storage"] = selectedVariant.storage || "";
+      existingQuery["selectedVariant.ram"] = selectedVariant.ram || "";
+      existingQuery["selectedVariant.color"] = selectedVariant.color || "";
+    }
+    
+    const existing = await Cart.findOne(existingQuery);
     if (existing) {
       existing.qty += qty || 1;
       await existing.save();
     } else {
-      await Cart.create({ userId, productId, qty: qty || 1 });
+      await Cart.create({
+        userId,
+        productId,
+        qty: qty || 1,
+        selectedVariant: selectedVariant || { storage: "", ram: "", color: "" },
+        unitPrice: price
+      });
     }
     
     res.json({ success: true });
@@ -389,12 +466,22 @@ app.post("/api/cart/:userId/:productId", async (req, res) => {
 app.put("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
-    const { qty } = req.body;
+    const { qty, selectedVariant } = req.body;
     
-    if (qty <= 0) {
-      await Cart.findOneAndDelete({ userId, productId });
-    } else {
-      await Cart.findOneAndUpdate({ userId, productId }, { qty });
+    const query = { userId, productId };
+    if (selectedVariant) {
+      query["selectedVariant.storage"] = selectedVariant.storage || "";
+      query["selectedVariant.ram"] = selectedVariant.ram || "";
+      query["selectedVariant.color"] = selectedVariant.color || "";
+    }
+    
+    if (qty !== undefined && qty <= 0) {
+      await Cart.findOneAndDelete(query);
+    } else if (qty !== undefined) {
+      await Cart.findOneAndUpdate(query, { qty });
+    } else if (selectedVariant) {
+      // Just updating variant
+      await Cart.findOneAndUpdate(query, { selectedVariant });
     }
     
     res.json({ success: true });
@@ -408,7 +495,21 @@ app.put("/api/cart/:userId/:productId", async (req, res) => {
 app.delete("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
-    await Cart.findOneAndDelete({ userId, productId });
+    const { selectedVariant } = req.query;
+    
+    const query = { userId, productId };
+    if (selectedVariant) {
+      try {
+        const variant = JSON.parse(selectedVariant);
+        query["selectedVariant.storage"] = variant.storage || "";
+        query["selectedVariant.ram"] = variant.ram || "";
+        query["selectedVariant.color"] = variant.color || "";
+      } catch (e) {
+        // Invalid JSON, remove without variant filter
+      }
+    }
+    
+    await Cart.findOneAndDelete(query);
     res.json({ success: true });
   } catch (error) {
     console.error("Remove from Cart Error:", error);

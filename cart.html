@@ -121,33 +121,52 @@
 
                 summary.style.display = 'block';
                 
-                container.innerHTML = cartItems.map(item => `
-                    <div class="cart-item">
-                        <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
-                        <div class="cart-item-info">
-                            <h3>${item.productId?.name || 'Unknown Product'}</h3>
-                            <p>₦${(item.productId?.price || 0).toLocaleString()} × ${item.qty}</p>
-                            <p style="color: var(--primary); font-weight: 600;">
-                                ₦${((item.productId?.price || 0) * item.qty).toLocaleString()}
-                            </p>
-                        </div>
-                        <div class="cart-item-qty">
-                            <button onclick="updateQty('${item.productId?._id}', ${item.qty - 1})">
-                                <i class="fas fa-minus"></i>
+                container.innerHTML = cartItems.map(item => {
+                    // Build variant string
+                    const variantParts = [];
+                    if (item.selectedVariant) {
+                        if (item.selectedVariant.storage) variantParts.push(item.selectedVariant.storage);
+                        if (item.selectedVariant.ram) variantParts.push(item.selectedVariant.ram);
+                        if (item.selectedVariant.color) variantParts.push(item.selectedVariant.color);
+                    }
+                    const variantStr = variantParts.length > 0 ? variantParts.join(' | ') : '';
+                    
+                    // Use unitPrice if available, fallback to product price
+                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    const itemTotal = unitPrice * item.qty;
+                    
+                    return `
+                        <div class="cart-item">
+                            <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
+                            <div class="cart-item-info">
+                                <h3>${item.productId?.name || 'Unknown Product'}</h3>
+                                ${variantStr ? `<p class="variant-info">${variantStr}</p>` : ''}
+                                <p>₦${unitPrice.toLocaleString()} × ${item.qty}</p>
+                                <p style="color: var(--primary); font-weight: 600;">
+                                    ₦${itemTotal.toLocaleString()}
+                                </p>
+                            </div>
+                            <div class="cart-item-qty">
+                                <button onclick="updateQty('${item.productId?._id}', ${item.qty - 1}, '${encodeURIComponent(JSON.stringify(item.selectedVariant || {}))}')">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span>${item.qty}</span>
+                                <button onclick="updateQty('${item.productId?._id}', ${item.qty + 1}, '${encodeURIComponent(JSON.stringify(item.selectedVariant || {}))}')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <button class="cart-item-remove" onclick="removeItem('${item.productId?._id}', '${encodeURIComponent(JSON.stringify(item.selectedVariant || {}))}')">
+                                <i class="fas fa-trash"></i>
                             </button>
-                            <span>${item.qty}</span>
-                            <button onclick="updateQty('${item.productId?._id}', ${item.qty + 1})">
-                                <i class="fas fa-plus"></i>
-                            </button>
                         </div>
-                        <button class="cart-item-remove" onclick="removeItem('${item.productId?._id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
-                // Calculate total
-                const subtotal = cartItems.reduce((sum, item) => sum + ((item.productId?.price || 0) * item.qty), 0);
+                // Calculate total using unitPrice
+                const subtotal = cartItems.reduce((sum, item) => {
+                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    return sum + (unitPrice * item.qty);
+                }, 0);
                 const delivery = 0;
                 const total = subtotal + delivery;
                 
@@ -159,12 +178,15 @@
             }
         }
 
-        async function updateQty(productId, qty) {
+        async function updateQty(productId, qty, variantJson) {
             try {
-                await fetch(`/api/cart/${currentUser._id || currentUser.id}/${productId}`, {
+                const variant = variantJson ? JSON.parse(decodeURIComponent(variantJson)) : null;
+                const url = `/api/cart/${currentUser._id || currentUser.id}/${productId}`;
+                
+                await fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ qty })
+                    body: JSON.stringify({ qty, selectedVariant: variant })
                 });
                 await loadCart();
                 updateCartCount();
@@ -173,10 +195,17 @@
             }
         }
 
-        async function removeItem(productId) {
+        async function removeItem(productId, variantJson) {
             if (!confirm('Remove this item from cart?')) return;
             try {
-                await fetch(`/api/cart/${currentUser._id || currentUser.id}/${productId}`, {
+                const variant = variantJson ? JSON.parse(decodeURIComponent(variantJson)) : null;
+                let url = `/api/cart/${currentUser._id || currentUser.id}/${productId}`;
+                
+                if (variant) {
+                    url += `?selectedVariant=${encodeURIComponent(JSON.stringify(variant))}`;
+                }
+                
+                await fetch(url, {
                     method: 'DELETE'
                 });
                 await loadCart();
@@ -216,5 +245,17 @@
             document.querySelector('.hamburger')?.classList.toggle('active');
         }
     </script>
+    
+    <style>
+        .variant-info {
+            font-size: 0.85rem;
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0.25rem 0;
+        }
+    </style>
 </body>
 </html>

@@ -28,12 +28,16 @@ function renderProducts(products) {
 
     grid.innerHTML = products.map(p => `
         <article class="product-card">
-            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
-            <h3>${p.name}</h3>
-            <p class="desc">${p.desc || ''}</p>
-            <p class="price">₦${p.price.toLocaleString()}</p>
-            <a href="product.html?id=${p._id || p.id}" class="btn">View Details</a>
-            <button onclick="addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
+            <a href="product.html?id=${p._id || p.id}">
+                <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+            </a>
+            <div class="product-card-content">
+                <a href="product.html?id=${p._id || p.id}">
+                    <h3>${p.name}</h3>
+                </a>
+                <p class="price">₦${p.price.toLocaleString()}</p>
+                <button onclick="addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
+            </div>
         </article>
     `).join('');
 }

@@ -139,6 +139,107 @@
                         <textarea id="product-desc" rows="4" placeholder="Product description..." required></textarea>
                     </div>
 
+                    <!-- Product Variants Section -->
+                    <div class="form-group">
+                        <div class="variant-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="has-variants" onchange="toggleVariants()">
+                                <span>Enable Product Variants</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="variants-section" style="display: none;">
+                        <!-- Storage Options -->
+                        <div class="variant-group">
+                            <h4>📦 Storage Options</h4>
+                            <div id="storage-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('storage')">+ Add Storage Option</button>
+                        </div>
+
+                        <!-- RAM Options -->
+                        <div class="variant-group">
+                            <h4>🧠 RAM Options</h4>
+                            <div id="ram-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('ram')">+ Add RAM Option</button>
+                        </div>
+
+                        <!-- Color Options -->
+                        <div class="variant-group">
+                            <h4>🎨 Color Options</h4>
+                            <div id="color-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('color')">+ Add Color Option</button>
+                        </div>
+                    </div>
+
+                    <style>
+                        .variant-toggle {
+                            padding: 1rem;
+                            background: rgba(59, 130, 246, 0.1);
+                            border-radius: 8px;
+                            border: 1px solid rgba(59, 130, 246, 0.3);
+                        }
+                        .checkbox-label {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            cursor: pointer;
+                            font-weight: 500;
+                        }
+                        .checkbox-label input[type="checkbox"] {
+                            width: 18px;
+                            height: 18px;
+                            cursor: pointer;
+                        }
+                        .variant-group {
+                            margin: 1.5rem 0;
+                            padding: 1rem;
+                            background: #1f2937;
+                            border-radius: 8px;
+                        }
+                        .variant-group h4 {
+                            margin: 0 0 1rem 0;
+                            color: #e5e7eb;
+                        }
+                        .variant-row {
+                            display: grid;
+                            grid-template-columns: 1fr 100px 80px 40px;
+                            gap: 0.5rem;
+                            margin-bottom: 0.5rem;
+                            align-items: center;
+                        }
+                        .variant-row input {
+                            padding: 0.5rem;
+                            border: 1px solid #374151;
+                            border-radius: 4px;
+                            background: #1f2937;
+                            color: #fff;
+                            font-size: 0.9rem;
+                        }
+                        .variant-row .remove-btn {
+                            background: #dc2626;
+                            color: #fff;
+                            border: none;
+                            border-radius: 4px;
+                            padding: 0.5rem;
+                            cursor: pointer;
+                            font-size: 1rem;
+                        }
+                        .variant-row .remove-btn:hover {
+                            background: #b91c1c;
+                        }
+                        .btn-sm {
+                            font-size: 0.85rem;
+                            padding: 0.5rem 1rem;
+                            margin-top: 0.5rem;
+                        }
+                        @media (max-width: 600px) {
+                            .variant-row {
+                                grid-template-columns: 1fr;
+                            }
+                        }
+                    </style>
+
                     <div class="form-actions">
                         <button type="submit" class="btn admin-btn">💾 Save Product</button>
                         <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
@@ -248,6 +349,14 @@
             document.getElementById('product-form').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('image-preview').style.display = 'none';
+            
+            // Clear variant options
+            document.getElementById('has-variants').checked = false;
+            toggleVariants();
+            document.getElementById('storage-options').innerHTML = '';
+            document.getElementById('ram-options').innerHTML = '';
+            document.getElementById('color-options').innerHTML = '';
+            
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'none';
             document.getElementById('product-form-section').style.display = 'block';
@@ -279,6 +388,16 @@
             } else {
                 preview.style.display = 'none';
             }
+            
+            // Load variant data
+            document.getElementById('has-variants').checked = product.hasVariants || false;
+            toggleVariants();
+            
+            // Load variant options
+            const variants = product.variants || { storage: [], ram: [], color: [] };
+            variants.storage.forEach(opt => addVariantOption('storage', opt.option, opt.priceModifier, opt.stock));
+            variants.ram.forEach(opt => addVariantOption('ram', opt.option, opt.priceModifier, opt.stock));
+            variants.color.forEach(opt => addVariantOption('color', opt.option, opt.priceModifier, opt.stock));
             
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'none';
@@ -366,9 +485,73 @@
             }
         });
 
+        // Toggle variants section visibility
+        function toggleVariants() {
+            const hasVariants = document.getElementById('has-variants').checked;
+            const section = document.getElementById('variants-section');
+            section.style.display = hasVariants ? 'block' : 'none';
+        }
+
+        // Add variant option row
+        function addVariantOption(type, option = '', priceModifier = 0, stock = 10) {
+            const container = document.getElementById(type + '-options');
+            const row = document.createElement('div');
+            row.className = 'variant-row';
+            row.innerHTML = `
+                <input type="text" placeholder="e.g., ${type === 'storage' ? '128GB' : type === 'ram' ? '8GB' : 'Black'}" 
+                       value="${option}" name="${type}-option">
+                <input type="number" placeholder="+₦0" value="${priceModifier}" name="${type}-price">
+                <input type="number" placeholder="Stock" value="${stock}" name="${type}-stock">
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Collect variant data from form
+        function collectVariants() {
+            const hasVariants = document.getElementById('has-variants').checked;
+            
+            if (!hasVariants) {
+                return {
+                    hasVariants: false,
+                    variants: {
+                        storage: [],
+                        ram: [],
+                        color: []
+                    }
+                };
+            }
+            
+            const collectType = (type) => {
+                const options = [];
+                const container = document.getElementById(type + '-options');
+                const rows = container.querySelectorAll('.variant-row');
+                rows.forEach(row => {
+                    const option = row.querySelector(`[name="${type}-option"]`).value.trim();
+                    const priceModifier = parseFloat(row.querySelector(`[name="${type}-price"]`).value) || 0;
+                    const stock = parseInt(row.querySelector(`[name="${type}-stock"]`).value) || 0;
+                    if (option) {
+                        options.push({ option, priceModifier, stock });
+                    }
+                });
+                return options;
+            };
+            
+            return {
+                hasVariants: true,
+                variants: {
+                    storage: collectType('storage'),
+                    ram: collectType('ram'),
+                    color: collectType('color')
+                }
+            };
+        }
+
         // Handle product form
         document.getElementById('product-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            const variantData = collectVariants();
             
             const product = {
                 name: document.getElementById('product-name').value,
@@ -376,7 +559,8 @@
                 price: parseFloat(document.getElementById('product-price').value),
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
-                image: selectedImageBase64 || 'logo.png'
+                image: selectedImageBase64 || 'logo.png',
+                ...variantData
             };
             
             try {
