@@ -207,11 +207,11 @@ function addToCart(productId, qty = 1) {
   const product = getProductById(productId);
   if (!product) return;
 
-  const existingItem = cart.find((item) => item.id === productId);
+  const existingItem = cart.find((item) => item._id === productId || item.id === productId);
   if (existingItem) {
     existingItem.qty += qty;
   } else {
-    cart.push({ id: productId, qty: qty });
+    cart.push({ _id: productId, qty: qty });
   }
   saveCart();
   alert(product.name + " added to cart!");
@@ -231,13 +231,13 @@ function updateCartCount() {
 }
 
 function removeFromCart(productId) {
-  cart = cart.filter((item) => item.id !== productId);
+  cart = cart.filter((item) => item._id !== productId && item.id !== productId);
   saveCart();
   renderCart();
 }
 
 function updateCartQty(productId, qty) {
-  const item = cart.find((item) => item.id === productId);
+  const item = cart.find((item) => item._id === productId || item.id === productId);
   if (item) {
     item.qty = qty;
     if (item.qty <= 0) {
@@ -251,14 +251,14 @@ function updateCartQty(productId, qty) {
 
 function getCartItems() {
   return cart.map((item) => {
-    const product = getProductById(item.id);
+    const product = getProductById(item._id || item.id);
     return { ...product, qty: item.qty };
   });
 }
 
 function getCartTotal() {
   return cart.reduce((sum, item) => {
-    const product = getProductById(item.id);
+    const product = getProductById(item._id || item.id);
     return sum + (product ? product.price * item.qty : 0);
   }, 0);
 }

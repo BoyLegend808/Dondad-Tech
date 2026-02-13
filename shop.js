@@ -32,8 +32,8 @@ function renderProducts(products) {
             <h3>${p.name}</h3>
             <p class="desc">${p.desc || ''}</p>
             <p class="price">₦${p.price.toLocaleString()}</p>
-            <a href="product.html?id=${p.id}" class="btn">View Details</a>
-            <button onclick="addToCart(${p.id})" class="btn">Add to Cart</button>
+            <a href="product.html?id=${p._id || p.id}" class="btn">View Details</a>
+            <button onclick="addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
         </article>
     `).join('');
 }
@@ -83,11 +83,11 @@ function addToCart(productId, qty = 1) {
     }
     
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const existingItem = cart.find(item => item.id === productId);
+    const existingItem = cart.find(item => item.id === productId || item._id === productId);
     if (existingItem) {
         existingItem.qty += qty;
     } else {
-        cart.push({ id: productId, qty: qty });
+        cart.push({ _id: productId, qty: qty });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();

@@ -254,13 +254,16 @@
         }
 
         function showEditProduct(id) {
-            const product = products.find(p => p.id === id);
-            if (!product) return;
+            const product = products.find(p => p._id === id || p.id === id);
+            if (!product) {
+                console.error('Product not found for id:', id);
+                return;
+            }
             
             isEditing = true;
             selectedImageBase64 = '';
             document.getElementById('form-title').textContent = '✏️ Edit Product';
-            document.getElementById('product-id').value = product.id;
+            document.getElementById('product-id').value = product._id || product.id;
             document.getElementById('product-name').value = product.name;
             document.getElementById('product-category').value = product.category;
             document.getElementById('product-price').value = product.price;
@@ -310,8 +313,8 @@
                     <td><span class="category-badge">${p.category}</span></td>
                     <td class="price">₦${p.price.toLocaleString()}</td>
                     <td>
-                        <button onclick="showEditProduct(${p.id})" class="btn btn-edit">✏️ Edit</button>
-                        <button onclick="deleteProduct(${p.id})" class="btn btn-delete">🗑️</button>
+                        <button onclick="showEditProduct('${p._id || p.id}')" class="btn btn-edit">✏️ Edit</button>
+                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn btn-delete">🗑️</button>
                     </td>
                 </tr>
             `).join('');
@@ -379,7 +382,7 @@
             try {
                 let response;
                 if (isEditing) {
-                    const id = parseInt(document.getElementById('product-id').value);
+                    const id = document.getElementById('product-id').value;
                     response = await fetch(API_URL + '/api/products/' + id, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
