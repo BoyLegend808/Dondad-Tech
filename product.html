@@ -11,10 +11,10 @@
 <body>
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="index.html" class="logo">Dondad Tech</a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
-                <li><a href="shop.html">Shop</a></li>
+                <li><a href="shop.html" class="active">Shop</a></li>
                 <li><a href="login.html">Admin</a></li>
             </ul>
             <div class="nav-right">
@@ -38,24 +38,34 @@
     </header>
 
     <main>
-        <section class="product-detail" id="product-detail">
-            <div class="product-detail-image">
-                <img id="product-image" src="" alt="Product">
+        <section class="product-page">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <a href="shop.html">Shop</a>
+                <span>/</span>
+                <span id="breadcrumb-category">Category</span>
+                <span>/</span>
+                <span id="breadcrumb-name" class="current">Product</span>
             </div>
-            <div class="product-detail-info">
-                <h1 id="product-name"></h1>
-                <p id="product-category" class="category-tag"></p>
-                <p class="price" id="product-price"></p>
-                <p class="desc" id="product-desc"></p>
-                <div class="add-to-cart">
-                    <div class="quantity-selector">
-                        <button onclick="changeQty(-1)">-</button>
-                        <input type="number" id="quantity" value="1" min="1">
-                        <button onclick="changeQty(1)">+</button>
-                    </div>
-                    <button class="btn" id="add-to-cart-btn">Add to Cart</button>
+
+            <!-- Product Detail Section -->
+            <div class="product-container" id="product-container">
+                <!-- Loading State -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading product...</p>
                 </div>
             </div>
+
+            <!-- Related Products -->
+            <section class="related-products">
+                <h2>Related Products</h2>
+                <div class="related-grid" id="related-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </section>
         </section>
     </main>
 
@@ -82,43 +92,555 @@
         // Product detail page logic - Fetch from API
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+        let currentProduct = null;
         
         async function loadProduct() {
+            const container = document.getElementById('product-container');
+            
             try {
                 const response = await fetch('/api/products/' + productId);
                 if (response.ok) {
                     const product = await response.json();
-                    document.getElementById('product-image').src = product.image;
-                    document.getElementById('product-name').textContent = product.name;
-                    document.getElementById('product-category').textContent = product.category;
-                    document.getElementById('product-price').textContent = '₦' + product.price.toLocaleString();
-                    document.getElementById('product-desc').textContent = product.desc;
-                    document.title = product.name + ' - Dondad Tech';
-                    
-                    document.getElementById('add-to-cart-btn').addEventListener('click', () => {
-                        const qty = parseInt(document.getElementById('quantity').value);
-                        // For MongoDB, use _id instead of id
-                        addToCart(product._id, qty);
-                    });
+                    currentProduct = product;
+                    renderProduct(product);
+                    loadRelatedProducts(product);
                 } else {
-                    document.querySelector('main').innerHTML =
-                        '<p style="text-align:center; padding: 6rem 2rem;">Product not found</p>';
+                    container.innerHTML = `
+                        <div class="error-state">
+                            <div class="error-icon">🔍</div>
+                            <h2>Product Not Found</h2>
+                            <p>Sorry, the product you're looking for doesn't exist or has been removed.</p>
+                            <a href="shop.html" class="btn">Back to Shop</a>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Error loading product:', error);
-                document.querySelector('main').innerHTML =
-                    '<p style="text-align:center; padding: 6rem 2rem;">Error loading product</p>';
+                container.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">⚠️</div>
+                        <h2>Error Loading Product</h2>
+                        <p>Unable to connect to server. Please make sure the server is running.</p>
+                        <button onclick="loadProduct()" class="btn">Try Again</button>
+                    </div>
+                `;
             }
         }
         
-        loadProduct();
+        function renderProduct(product) {
+            const container = document.getElementById('product-container');
+            const categoryDisplay = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+            
+            // Update breadcrumb
+            document.getElementById('breadcrumb-category').textContent = categoryDisplay;
+            document.getElementById('breadcrumb-name').textContent = product.name;
+            
+            container.innerHTML = `
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img id="product-image" src="${product.image}" alt="${product.name}" onerror="this.src='logo.png'">
+                        <div class="image-badge">${categoryDisplay}</div>
+                    </div>
+                </div>
+                
+                <div class="product-info">
+                    <div class="product-header">
+                        <span class="category-label">${categoryDisplay}</span>
+                        <h1 id="product-name">${product.name}</h1>
+                    </div>
+                    
+                    <div class="product-price-section">
+                        <span class="price-label">Price</span>
+                        <p class="price" id="product-price">₦${product.price.toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="product-description">
+                        <h3>Description</h3>
+                        <p id="product-desc">${product.desc}</p>
+                    </div>
+                    
+                    <div class="product-features">
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Original Brand Product</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Quality Guaranteed</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Secure Payment</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Fast Delivery</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <div class="qty-controls">
+                                <button onclick="changeQty(-1)">−</button>
+                                <input type="number" id="quantity" value="1" min="1" max="99">
+                                <button onclick="changeQty(1)">+</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="add-to-cart-btn">
+                            <span class="btn-icon">🛒</span>
+                            Add to Cart
+                        </button>
+                    </div>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <span class="meta-value">${categoryDisplay}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Product ID:</span>
+                            <span class="meta-value">${product._id ? product._id.substring(0, 8) + '...' : 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Update page title
+            document.title = product.name + ' - Dondad Tech';
+            
+            // Add to cart event listener
+            document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+                const qty = parseInt(document.getElementById('quantity').value);
+                addToCart(product._id || product.id, qty);
+            });
+        }
+        
+        async function loadRelatedProducts(product) {
+            try {
+                const response = await fetch('/api/products?category=' + product.category);
+                const products = await response.json();
+                
+                // Filter out current product and take first 4
+                const related = products.filter(p => (p._id || p.id) !== (product._id || product.id)).slice(0, 4);
+                
+                const grid = document.getElementById('related-grid');
+                if (related.length > 0) {
+                    grid.innerHTML = related.map(p => `
+                        <a href="product.html?id=${p._id || p.id}" class="related-card">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                            <h4>${p.name}</h4>
+                            <p class="price">₦${p.price.toLocaleString()}</p>
+                        </a>
+                    `).join('');
+                } else {
+                    document.querySelector('.related-products').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading related products:', error);
+                document.querySelector('.related-products').style.display = 'none';
+            }
+        }
 
         function changeQty(delta) {
             const input = document.getElementById('quantity');
             const newVal = parseInt(input.value) + delta;
-            if (newVal >= 1) input.value = newVal;
+            if (newVal >= 1 && newVal <= 99) input.value = newVal;
         }
+        
+        loadProduct();
     </script>
+    
+    <style>
+        /* Product Page Styles */
+        .product-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .breadcrumb a:hover {
+            color: var(--primary-dark);
+        }
+        
+        .breadcrumb .current {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        .product-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+        
+        @media (max-width: 900px) {
+            .product-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+        
+        /* Gallery Styles */
+        .product-gallery {
+            position: relative;
+        }
+        
+        .main-image {
+            position: relative;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .main-image img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            padding: 2rem;
+        }
+        
+        .image-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--primary);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        /* Product Info Styles */
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .product-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        
+        .category-label {
+            display: inline-block;
+            background: var(--bg-secondary);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+        }
+        
+        .product-price-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .price-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .product-price-section .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+        
+        .product-description {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .product-description h3 {
+            font-size: 1.1rem;
+            margin: 0 0 0.75rem 0;
+            color: var(--text-color);
+        }
+        
+        .product-description p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin: 0;
+        }
+        
+        .product-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        
+        .feature-icon {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .quantity-selector label {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+        
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .qty-controls button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--bg-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+        
+        .qty-controls button:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        
+        .qty-controls input {
+            width: 50px;
+            height: 40px;
+            border: none;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .qty-controls input::-webkit-inner-spin-button,
+        .qty-controls input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem 2rem;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+        
+        .product-meta {
+            display: flex;
+            gap: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .meta-item {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .meta-label {
+            color: var(--text-muted);
+        }
+        
+        .meta-value {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        
+        /* Related Products */
+        .related-products {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .related-products h2 {
+            font-size: 1.5rem;
+            margin: 0 0 1.5rem 0;
+            color: var(--text-color);
+        }
+        
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 900px) {
+            .related-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 500px) {
+            .related-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .related-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        
+        .related-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .related-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .related-card h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+        
+        .related-card .price {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            gap: 1rem;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-state p {
+            color: var(--text-muted);
+        }
+        
+        /* Error State */
+        .error-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .error-state h2 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-color);
+        }
+        
+        .error-state p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </body>
 
 </html>
