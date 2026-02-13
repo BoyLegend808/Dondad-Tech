@@ -287,6 +287,38 @@ app.get("/api/products/:id", async (req, res) => {
   }
 });
 
+// Update product
+app.put("/api/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (product) {
+      res.json(product);
+    } else {
+      res.status(404).json({ error: "Product not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+// Delete product
+app.delete("/api/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (product) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Product not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
 // Get Featured Products (changes every 24 hours)
 app.get("/api/featured", async (req, res) => {
   try {
