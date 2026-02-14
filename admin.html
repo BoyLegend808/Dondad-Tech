@@ -135,8 +135,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Description *</label>
-                        <textarea id="product-desc" rows="4" placeholder="Product description..." required></textarea>
+                        <label>Short Description (shown on product cards) *</label>
+                        <textarea id="product-desc" rows="2" placeholder="Brief description shown in shop grid..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Full Description (shown on product page)</label>
+                        <textarea id="product-full-desc" rows="6" placeholder="Detailed description shown when opening the product..."></textarea>
                     </div>
 
                     <!-- Product Variants Section -->
@@ -377,7 +382,8 @@
             document.getElementById('product-category').value = product.category;
             document.getElementById('product-price').value = product.price;
             document.getElementById('product-stock').value = product.stock || 10;
-            document.getElementById('product-desc').value = product.desc;
+            document.getElementById('product-desc').value = product.desc || '';
+            document.getElementById('product-full-desc').value = product.fullDesc || '';
             
             // Show current image or hide preview
             const preview = document.getElementById('image-preview');
@@ -559,6 +565,7 @@
                 price: parseFloat(document.getElementById('product-price').value),
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
+                fullDesc: document.getElementById('product-full-desc').value,
                 image: selectedImageBase64 || 'logo.png',
                 ...variantData
             };

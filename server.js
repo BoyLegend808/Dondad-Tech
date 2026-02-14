@@ -38,7 +38,8 @@ const productSchema = new mongoose.Schema({
   category: { type: String, required: true },
   price: { type: Number, required: true },
   image: { type: String, required: true },
-  desc: { type: String, default: "" },
+  desc: { type: String, default: "" }, // Short description for product cards
+  fullDesc: { type: String, default: "" }, // Full description for product detail page
   // Variant fields
   hasVariants: { type: Boolean, default: false },
   variants: {

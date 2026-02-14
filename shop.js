@@ -35,6 +35,7 @@ function renderProducts(products) {
                 <a href="product.html?id=${p._id || p.id}">
                     <h3>${p.name}</h3>
                 </a>
+                <p class="product-card-desc">${p.desc || ''}</p>
                 <p class="price">₦${p.price.toLocaleString()}</p>
                 <button onclick="addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
             </div>
