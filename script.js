@@ -64,7 +64,7 @@ function initializeDefaultAccounts() {
       email: "ugwunekejohn5@gmail.com",
       phone: "08012345678",
       password: "customer123",
-      role: "customer"
+      role: "customer",
     });
     setUsers(users);
     console.log(
@@ -73,9 +73,7 @@ function initializeDefaultAccounts() {
   }
 
   // Check if admin account already exists
-  const adminExists = users.find(
-    (u) => u.email === "admin@dondadtech.com",
-  );
+  const adminExists = users.find((u) => u.email === "admin@dondadtech.com");
 
   if (!adminExists) {
     // Add admin account
@@ -84,12 +82,10 @@ function initializeDefaultAccounts() {
       email: "admin@dondadtech.com",
       phone: "08000000000",
       password: "admin123",
-      role: "admin"
+      role: "admin",
     });
     setUsers(users);
-    console.log(
-      "Admin account created: admin@dondadtech.com / admin123",
-    );
+    console.log("Admin account created: admin@dondadtech.com / admin123");
   }
 }
 
@@ -97,24 +93,26 @@ function initializeDefaultAccounts() {
 initializeDefaultAccounts();
 
 // Debug: Clear all user data (call resetUsers() in console to reset)
-window.resetUsers = function() {
+window.resetUsers = function () {
   localStorage.removeItem(USERS_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
   initializeDefaultAccounts();
   console.log("Users reset! Default accounts recreated.");
-  alert("User data reset! Refresh the page to login.\n\nCustomer: ugwunekejohn5@gmail.com / customer123\nAdmin: admin@dondadtech.com / admin123");
+  alert(
+    "User data reset! Refresh the page to login.\n\nCustomer: ugwunekejohn5@gmail.com / customer123\nAdmin: admin@dondadtech.com / admin123",
+  );
   location.reload();
 };
 
 // Force logout and refresh (call forceLogout() in console)
-window.forceLogout = function() {
+window.forceLogout = function () {
   localStorage.removeItem(CURRENT_USER_KEY);
   console.log("Forced logout! Refreshing...");
   location.reload();
 };
 
 // Clear user session on page load (for testing)
-window.clearUserSession = function() {
+window.clearUserSession = function () {
   localStorage.removeItem(CURRENT_USER_KEY);
   console.log("User session cleared!");
   updateAuthUI();
@@ -154,7 +152,12 @@ function loginUser(email, password) {
   const users = getUsers();
   const user = users.find((u) => u.email === email && u.password === password);
   if (user) {
-    setCurrentUser({ name: user.name, email: user.email, phone: user.phone, role: user.role });
+    setCurrentUser({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+    });
     return true;
   }
   return false;
@@ -188,15 +191,19 @@ function updateAuthUI() {
   if (authLinks) {
     if (user) {
       authLinks.style.display = "none";
-      
+
       // Handle enhanced user menu
       if (userMenu && userName && userAvatar) {
-        userMenu.style.display = 'flex';
-        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+        userMenu.style.display = "flex";
+        const initials = user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .substring(0, 2);
         userAvatar.textContent = initials || user.name.charAt(0);
         userName.textContent = user.name;
       }
-      
+
       // Legacy support
       if (userGreeting) {
         userGreeting.style.display = "inline";
@@ -207,7 +214,7 @@ function updateAuthUI() {
       }
     } else {
       authLinks.style.display = "flex";
-      if (userMenu) userMenu.style.display = 'none';
+      if (userMenu) userMenu.style.display = "none";
       if (userGreeting) {
         userGreeting.style.display = "none";
       }
@@ -229,7 +236,9 @@ function addToCart(productId, qty = 1) {
   const product = getProductById(productId);
   if (!product) return;
 
-  const existingItem = cart.find((item) => item._id === productId || item.id === productId);
+  const existingItem = cart.find(
+    (item) => item._id === productId || item.id === productId,
+  );
   if (existingItem) {
     existingItem.qty += qty;
   } else {
@@ -259,7 +268,9 @@ function removeFromCart(productId) {
 }
 
 function updateCartQty(productId, qty) {
-  const item = cart.find((item) => item._id === productId || item.id === productId);
+  const item = cart.find(
+    (item) => item._id === productId || item.id === productId,
+  );
   if (item) {
     item.qty = qty;
     if (item.qty <= 0) {
@@ -377,7 +388,7 @@ function setupHamburger() {
 
   if (hamburger && navLinks) {
     // Toggle menu function
-    const toggleMenu = function(e) {
+    const toggleMenu = function (e) {
       e.preventDefault();
       e.stopPropagation();
       console.log("Hamburger clicked!");
@@ -386,16 +397,18 @@ function setupHamburger() {
       console.log("Hamburger classes:", hamburger.classList);
       console.log("NavLinks classes:", navLinks.classList);
     };
-    
+
     // Support both click and touch events for mobile
     hamburger.addEventListener("click", toggleMenu);
-    hamburger.addEventListener("touchstart", toggleMenu, {passive: false});
+    hamburger.addEventListener("touchstart", toggleMenu, { passive: false });
 
     // Close menu when clicking outside
     document.addEventListener("click", (e) => {
-      if (navLinks.classList.contains("active") && 
-          !navLinks.contains(e.target) && 
-          !hamburger.contains(e.target)) {
+      if (
+        navLinks.classList.contains("active") &&
+        !navLinks.contains(e.target) &&
+        !hamburger.contains(e.target)
+      ) {
         hamburger.classList.remove("active");
         navLinks.classList.remove("active");
       }
@@ -456,11 +469,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       console.log("Login attempt for:", email);
-      
+
       if (loginUser(email, password)) {
         const user = getCurrentUser();
         console.log("Login successful for:", user.email);
-        if (user.role === 'admin') {
+        if (user.role === "admin") {
           alert("Admin login successful! Redirecting to admin panel...");
           window.location.href = "admin.html";
         } else {
@@ -472,7 +485,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // Debug: Show current users in console
         const users = getUsers();
         console.log("Current users in database:", users);
-        alert("Invalid email or password! If you're using the default account, try registering a new account or type 'resetUsers()' in the browser console to reset.");
+        alert(
+          "Invalid email or password! If you're using the default account, try registering a new account or type 'resetUsers()' in the browser console to reset.",
+        );
       }
       return false;
     });
@@ -504,12 +519,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-// View local database (call viewDatabase() in console)  
-window.viewDatabase = function() {  
-  console.log("=== LOCAL DATABASE ===");  
-  console.log("Users:", JSON.parse(localStorage.getItem('dondad_users') || '[]'));  
-  console.log("Current User:", JSON.parse(localStorage.getItem('dondad_currentUser') || 'null'));  
-  console.log("Products:", JSON.parse(localStorage.getItem('dondad_products') || '[]'));  
-  console.log("Cart:", JSON.parse(localStorage.getItem('cart') || '[]'));  
-  alert("Local database logged to console! Press F12 to view.");  
-} 
+// View local database (call viewDatabase() in console)
+window.viewDatabase = function () {
+  console.log("=== LOCAL DATABASE ===");
+  console.log(
+    "Users:",
+    JSON.parse(localStorage.getItem("dondad_users") || "[]"),
+  );
+  console.log(
+    "Current User:",
+    JSON.parse(localStorage.getItem("dondad_currentUser") || "null"),
+  );
+  console.log(
+    "Products:",
+    JSON.parse(localStorage.getItem("dondad_products") || "[]"),
+  );
+  console.log("Cart:", JSON.parse(localStorage.getItem("cart") || "[]"));
+  alert("Local database logged to console! Press F12 to view.");
+};

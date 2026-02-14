@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart - Dondad Tech</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -30,7 +35,8 @@
                         </div>
                         <div class="user-dropdown">
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                                Logout</a>
                         </div>
                     </div>
                 </div>
@@ -55,9 +61,9 @@
                     <h1>Your Cart</h1>
                     <p>Review your items</p>
                 </div>
-                
+
                 <div class="cart-items" id="cart-items"></div>
-                
+
                 <div class="cart-summary" id="cart-summary" style="display: none;">
                     <h3>Order Summary</h3>
                     <div class="cart-summary-row">
@@ -72,10 +78,12 @@
                         <span>Total</span>
                         <span id="cart-total">₦0</span>
                     </div>
-                    <a href="checkout.html" class="btn btn-primary btn-block" style="display:block; text-align:center; margin-top:1.5rem;">
+                    <a href="checkout.html" class="btn btn-primary btn-block"
+                        style="display:block; text-align:center; margin-top:1.5rem;">
                         <i class="fas fa-credit-card"></i> Proceed to Checkout
                     </a>
-                    <a href="shop.html" class="btn btn-block" style="display:block; text-align:center; margin-top:1rem; background: transparent; border: 2px solid var(--primary); color: var(--primary);">
+                    <a href="shop.html" class="btn btn-block"
+                        style="display:block; text-align:center; margin-top:1rem; background: transparent; border: 2px solid var(--primary); color: var(--primary);">
                         <i class="fas fa-arrow-left"></i> Continue Shopping
                     </a>
                 </div>
@@ -91,13 +99,13 @@
         let currentUser = null;
 
         // Check auth
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             const userStr = localStorage.getItem('dondad_currentUser');
             if (!userStr) {
                 window.location.href = 'login.html';
                 return;
             }
-            
+
             currentUser = JSON.parse(userStr);
             await loadCart();
             updateAuthUI();
@@ -107,7 +115,7 @@
             try {
                 const response = await fetch(`/api/cart/${currentUser._id || currentUser.id}`);
                 const cartItems = await response.json();
-                
+
                 const container = document.getElementById('cart-items');
                 const summary = document.getElementById('cart-summary');
                 const totalEl = document.getElementById('cart-total');
@@ -131,7 +139,7 @@
                 }
 
                 summary.style.display = 'block';
-                
+
                 container.innerHTML = cartItems.map(item => {
                     // Build variant string
                     const variantParts = [];
@@ -141,11 +149,11 @@
                         if (item.selectedVariant.color) variantParts.push(item.selectedVariant.color);
                     }
                     const variantStr = variantParts.length > 0 ? variantParts.join(' | ') : '';
-                    
+
                     // Use unitPrice if available, fallback to product price
-                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    const unitPrice = item.unitPrice || item.productId ? .price || 0;
                     const itemTotal = unitPrice * item.qty;
-                    
+
                     return `
                         <div class="cart-item">
                             <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
@@ -175,15 +183,15 @@
 
                 // Calculate total using unitPrice
                 const subtotal = cartItems.reduce((sum, item) => {
-                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    const unitPrice = item.unitPrice || item.productId ? .price || 0;
                     return sum + (unitPrice * item.qty);
                 }, 0);
                 const delivery = 0;
                 const total = subtotal + delivery;
-                
+
                 subtotalEl.textContent = '₦' + subtotal.toLocaleString();
                 totalEl.textContent = '₦' + total.toLocaleString();
-                
+
             } catch (error) {
                 console.error('Error loading cart:', error);
             }
@@ -193,11 +201,16 @@
             try {
                 const variant = variantJson ? JSON.parse(decodeURIComponent(variantJson)) : null;
                 const url = `/api/cart/${currentUser._id || currentUser.id}/${productId}`;
-                
+
                 await fetch(url, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ qty, selectedVariant: variant })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        qty,
+                        selectedVariant: variant
+                    })
                 });
                 await loadCart();
                 updateCartCount();
@@ -211,11 +224,11 @@
             try {
                 const variant = variantJson ? JSON.parse(decodeURIComponent(variantJson)) : null;
                 let url = `/api/cart/${currentUser._id || currentUser.id}/${productId}`;
-                
+
                 if (variant) {
                     url += `?selectedVariant=${encodeURIComponent(JSON.stringify(variant))}`;
                 }
-                
+
                 await fetch(url, {
                     method: 'DELETE'
                 });
@@ -230,19 +243,19 @@
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
             const userAvatar = document.getElementById('user-avatar');
-            
+
             document.getElementById('auth-links').style.display = currentUser ? 'none' : 'flex';
             document.getElementById('cart-link').style.display = currentUser ? 'flex' : 'none';
             userMenu.style.display = currentUser ? 'flex' : 'none';
-            
+
             if (currentUser) {
                 // Get initials for avatar
                 const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
                 userAvatar.textContent = initials || currentUser.name.charAt(0);
                 userName.textContent = currentUser.name;
             }
-            
-            if (currentUser?.role === 'admin') {
+
+            if (currentUser ? .role === 'admin') {
                 document.getElementById('admin-link').style.display = 'block';
             }
         }
@@ -262,11 +275,11 @@
         }
 
         function toggleHamburger() {
-            document.querySelector('.nav-links')?.classList.toggle('active');
-            document.querySelector('.hamburger')?.classList.toggle('active');
+            document.querySelector('.nav-links') ? .classList.toggle('active');
+            document.querySelector('.hamburger') ? .classList.toggle('active');
         }
     </script>
-    
+
     <style>
         .variant-info {
             font-size: 0.85rem;
@@ -279,4 +292,5 @@
         }
     </style>
 </body>
+
 </html>

@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dondad Tech</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -29,7 +34,8 @@
                         </div>
                         <div class="user-dropdown">
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="#" onclick="logout()" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                                Logout</a>
                         </div>
                     </div>
                     <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
@@ -100,12 +106,12 @@
             if (user) {
                 authButtons.style.display = 'none';
                 userMenu.style.display = 'flex';
-                
+
                 // Get initials for avatar
                 const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
                 userAvatar.textContent = initials || user.name.charAt(0);
                 userName.textContent = user.name;
-                
+
                 // Show admin link only for admin users
                 if (user.role === 'admin') {
                     adminLink.style.display = 'block';
@@ -164,4 +170,5 @@
         });
     </script>
 </body>
+
 </html>

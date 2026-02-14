@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Dondad Tech</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -29,7 +34,8 @@
                         </div>
                         <div class="user-dropdown">
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                                Logout</a>
                         </div>
                     </div>
                 </div>
@@ -104,7 +110,8 @@
                         <span>Total</span>
                         <span id="checkout-total">₦0</span>
                     </div>
-                    <button type="submit" form="checkout-form" class="btn" style="width:100%; margin-top:1.5rem;">Place Order</button>
+                    <button type="submit" form="checkout-form" class="btn" style="width:100%; margin-top:1.5rem;">Place
+                        Order</button>
                 </div>
             </div>
         </section>
@@ -118,27 +125,27 @@
     <script src="script.js"></script>
     <script>
         // Check if user is logged in before showing checkout
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
             if (!currentUser) {
                 alert('Please login to proceed to checkout.');
                 window.location.href = 'login.html';
                 return;
             }
-            
+
             // Show admin link only for admin users
             const adminLink = document.getElementById('admin-nav-link');
             if (currentUser.role === 'admin' && adminLink) {
                 adminLink.style.display = 'block';
             }
-            
+
             // User is logged in - initialize page
             initCheckoutPage();
             initHamburger();
             updateAuthUI();
             updateCartCount();
         });
-        
+
         // Toggle hamburger menu
         function toggleHamburger() {
             const hamburger = document.getElementById('hamburger');
@@ -149,7 +156,7 @@
                 console.log('Hamburger toggled, active:', hamburger.classList.contains('active'));
             }
         }
-        
+
         function initHamburger() {
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
@@ -157,31 +164,33 @@
             console.log('NavLinks element:', navLinks);
             if (hamburger && navLinks) {
                 // Toggle menu function
-                const toggleMenu = function(e) {
+                const toggleMenu = function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     hamburger.classList.toggle('active');
                     navLinks.classList.toggle('active');
                     console.log('Hamburger clicked, active class:', hamburger.classList.contains('active'));
                 };
-                
+
                 // Support both click and touch events for mobile
                 hamburger.addEventListener('click', toggleMenu);
-                hamburger.addEventListener('touchstart', toggleMenu, {passive: false});
-                
+                hamburger.addEventListener('touchstart', toggleMenu, {
+                    passive: false
+                });
+
                 // Close menu when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (navLinks.classList.contains('active') && 
-                        !navLinks.contains(e.target) && 
+                document.addEventListener('click', function (e) {
+                    if (navLinks.classList.contains('active') &&
+                        !navLinks.contains(e.target) &&
                         !hamburger.contains(e.target)) {
                         hamburger.classList.remove('active');
                         navLinks.classList.remove('active');
                     }
                 });
-                
+
                 // Close menu when clicking on a nav link
-                navLinks.querySelectorAll('a').forEach(function(link) {
-                    link.addEventListener('click', function() {
+                navLinks.querySelectorAll('a').forEach(function (link) {
+                    link.addEventListener('click', function () {
                         hamburger.classList.remove('active');
                         navLinks.classList.remove('active');
                     });
@@ -190,7 +199,7 @@
                 console.error('Hamburger or navLinks not found!');
             }
         }
-        
+
         function initCheckoutPage() {
             const cartItems = getCartItems();
             const itemsContainer = document.getElementById('checkout-items');
@@ -223,4 +232,5 @@
         }
     </script>
 </body>
+
 </html>
