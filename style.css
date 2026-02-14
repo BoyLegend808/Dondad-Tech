@@ -34,6 +34,31 @@ header { background: var(--card); padding: 0 2rem; position: fixed; width: 100%;
 .cart-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; background: rgba(56, 189, 248, 0.1); color: var(--primary); border-radius: 25px; font-weight: 600; font-size: 0.9rem; }
 .cart-btn:hover { background: var(--primary); color: var(--bg); }
 
+/* Enhanced User Menu */
+.user-menu { position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 30px; transition: all 0.3s; }
+.user-menu:hover { background: rgba(168, 85, 247, 0.15); }
+.user-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: white; text-transform: uppercase; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4); }
+.user-info { display: flex; flex-direction: column; }
+.user-greeting { font-size: 0.75rem; color: var(--muted); line-height: 1.2; }
+.user-name { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+.user-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem; min-width: 180px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s; z-index: 200; }
+.user-menu:hover .user-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.user-dropdown a { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; color: var(--text); border-radius: 8px; transition: all 0.2s; }
+.user-dropdown a:hover { background: rgba(168, 85, 247, 0.15); color: var(--primary); }
+.user-dropdown a.logout-btn { color: var(--accent); }
+.user-dropdown a.logout-btn:hover { background: rgba(236, 72, 153, 0.15); }
+.user-dropdown .dropdown-icon { width: 18px; text-align: center; }
+
+/* Admin Badge */
+.admin-badge { display: inline-block; padding: 0.2rem 0.6rem; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 0.65rem; font-weight: 700; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 0.5rem; }
+
+/* Product Page Navigation */
+.auth-links { display: flex; gap: 0.5rem; }
+.auth-link { padding: 0.5rem 1rem; color: var(--text); font-weight: 500; }
+.auth-link:hover { color: var(--primary); }
+.cart-link { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; background: rgba(56, 189, 248, 0.1); color: var(--primary); border-radius: 20px; font-weight: 600; }
+.cart-link:hover { background: var(--primary); color: var(--bg); }
+
 /* Hamburger - Hidden on desktop, visible on mobile */
 .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 5px; }
 .hamburger span { width: 25px; height: 3px; background: var(--text); transition: 0.3s; border-radius: 2px; }

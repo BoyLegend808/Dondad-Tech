@@ -21,12 +21,23 @@
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
-                <span id="user-greeting" class="user-greeting"></span>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
                 <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger()">
                     <span></span><span></span><span></span>
                 </button>
@@ -216,10 +227,20 @@
         }
 
         function updateAuthUI() {
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
+            
             document.getElementById('auth-links').style.display = currentUser ? 'none' : 'flex';
             document.getElementById('cart-link').style.display = currentUser ? 'flex' : 'none';
-            document.getElementById('logout-btn').style.display = currentUser ? 'block' : 'none';
-            document.getElementById('user-greeting').textContent = currentUser ? 'Hi, ' + currentUser.name : '';
+            userMenu.style.display = currentUser ? 'flex' : 'none';
+            
+            if (currentUser) {
+                // Get initials for avatar
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || currentUser.name.charAt(0);
+                userName.textContent = currentUser.name;
+            }
             
             if (currentUser?.role === 'admin') {
                 document.getElementById('admin-link').style.display = 'block';

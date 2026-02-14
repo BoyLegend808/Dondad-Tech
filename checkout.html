@@ -20,12 +20,23 @@
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
-                <span id="user-greeting" class="user-greeting"></span>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="cart.html" class="cart-link">
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
                 <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger()">
                     <span></span>
                     <span></span>

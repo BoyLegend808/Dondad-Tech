@@ -180,18 +180,40 @@ function updateAuthUI() {
   const authLinks = document.getElementById("auth-links");
   const userGreeting = document.getElementById("user-greeting");
   const logoutBtn = document.getElementById("logout-btn");
+  const userMenu = document.getElementById("user-menu");
+  const userName = document.getElementById("user-name");
+  const userAvatar = document.getElementById("user-avatar");
   const user = getCurrentUser();
 
-  if (authLinks && userGreeting && logoutBtn) {
+  if (authLinks) {
     if (user) {
       authLinks.style.display = "none";
-      userGreeting.style.display = "inline";
-      userGreeting.textContent = `Hi, ${user.name}`;
-      logoutBtn.style.display = "inline-block";
+      
+      // Handle enhanced user menu
+      if (userMenu && userName && userAvatar) {
+        userMenu.style.display = 'flex';
+        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+        userAvatar.textContent = initials || user.name.charAt(0);
+        userName.textContent = user.name;
+      }
+      
+      // Legacy support
+      if (userGreeting) {
+        userGreeting.style.display = "inline";
+        userGreeting.textContent = `Hi, ${user.name}`;
+      }
+      if (logoutBtn) {
+        logoutBtn.style.display = "inline-block";
+      }
     } else {
       authLinks.style.display = "flex";
-      userGreeting.style.display = "none";
-      logoutBtn.style.display = "none";
+      if (userMenu) userMenu.style.display = 'none';
+      if (userGreeting) {
+        userGreeting.style.display = "none";
+      }
+      if (logoutBtn) {
+        logoutBtn.style.display = "none";
+      }
     }
   }
 }

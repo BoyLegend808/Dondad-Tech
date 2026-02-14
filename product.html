@@ -22,12 +22,23 @@
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
-                <span id="user-greeting" class="user-greeting"></span>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button id="logout-btn" class="logout-btn" onclick="logoutUser()" style="display: none;">Logout</button>
                 <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
@@ -80,12 +91,20 @@
         document.addEventListener('DOMContentLoaded', function () {
             const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
             const adminLink = document.getElementById('admin-nav-link');
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
             
             if (currentUser) {
-                document.getElementById('auth-links').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'inline-block';
-                document.getElementById('user-greeting').style.display = 'inline';
-                document.getElementById('user-greeting').textContent = 'Hi, ' + currentUser.name;
+                authLinks.style.display = 'none';
+                userMenu.style.display = 'flex';
+                
+                // Get initials for avatar
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || currentUser.name.charAt(0);
+                userName.textContent = currentUser.name;
+                
                 document.getElementById('cart-link').style.display = 'flex';
                 
                 // Show admin link only for admin users

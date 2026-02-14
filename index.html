@@ -21,9 +21,18 @@
                     <a href="register.html" class="auth-btn register">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <span id="user-name"></span>
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logout()" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
+                    </div>
                     <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
-                    <button onclick="logout()" class="auth-btn logout">Logout</button>
                 </div>
                 <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
                     <span></span><span></span><span></span>
@@ -85,12 +94,17 @@
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
             const adminLink = document.getElementById('admin-nav-link');
 
             if (user) {
                 authButtons.style.display = 'none';
                 userMenu.style.display = 'flex';
-                userName.textContent = 'Hi, ' + user.name;
+                
+                // Get initials for avatar
+                const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || user.name.charAt(0);
+                userName.textContent = user.name;
                 
                 // Show admin link only for admin users
                 if (user.role === 'admin') {
