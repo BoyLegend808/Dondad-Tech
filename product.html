@@ -343,22 +343,23 @@
                     if (selected && product.variants[type]) {
                         const variant = product.variants[type].find(v => v.option === selected);
                         if (variant && variant.priceModifier) {
-                            totalModifier += variant.priceModifier;
-                            if (variant.priceModifier > 0) {
-                                breakdown.push(`${type}: +₦${variant.priceModifier.toLocaleString()}`);
+                            // Replace base price with variant price instead of adding
+                            if (totalModifier === 0) {
+                                totalModifier = variant.priceModifier;
+                                breakdown.push(`${type}: ₦${variant.priceModifier.toLocaleString()}`);
                             }
                         }
                     }
                 });
             }
             
-            const finalPrice = product.price + totalModifier;
+            const finalPrice = totalModifier > 0 ? totalModifier : product.price;
             document.getElementById('product-price').textContent = '₦' + finalPrice.toLocaleString();
             
             // Show breakdown if there are modifiers
             const breakdownEl = document.getElementById('price-breakdown');
             if (breakdown.length > 0) {
-                breakdownEl.textContent = 'Base price ' + (breakdown.length > 0 ? '+ ' + breakdown.join(' + ') : '');
+                breakdownEl.textContent = breakdown.join(' + ');
                 breakdownEl.style.display = 'block';
             } else {
                 breakdownEl.style.display = 'none';
@@ -396,15 +397,16 @@
                 }
             }
             
-            // Calculate final price
+            // Calculate final price - use variant price if selected, otherwise base price
             let finalPrice = product.price;
             if (product.hasVariants && product.variants) {
                 ['storage', 'ram', 'color'].forEach(type => {
                     const selected = selectedVariants[type];
                     if (selected && product.variants[type]) {
                         const variant = product.variants[type].find(v => v.option === selected);
-                        if (variant) {
-                            finalPrice += variant.priceModifier || 0;
+                        if (variant && variant.priceModifier) {
+                            // Replace base price with variant price instead of adding
+                            finalPrice = variant.priceModifier;
                         }
                     }
                 });

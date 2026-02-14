@@ -500,7 +500,7 @@
             row.innerHTML = `
                 <input type="text" placeholder="e.g., ${type === 'storage' ? '128GB' : type === 'ram' ? '8GB' : 'Black'}" 
                        value="${option}" name="${type}-option">
-                <input type="number" placeholder="+₦0" value="${priceModifier}" name="${type}-price">
+                <input type="number" placeholder="₦0" value="${priceModifier}" name="${type}-price">
                 <input type="number" placeholder="Stock" value="${stock}" name="${type}-stock">
                 <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
             `;
