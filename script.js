@@ -130,15 +130,15 @@ function setUsers(users) {
 }
 
 function getCurrentUser() {
-  return JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
+  return JSON.parse(sessionStorage.getItem(CURRENT_USER_KEY));
 }
 
 function setCurrentUser(user) {
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+  sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 }
 
 function logoutUser() {
-  localStorage.removeItem(CURRENT_USER_KEY);
+  sessionStorage.removeItem(CURRENT_USER_KEY);
   updateAuthUI();
   alert("You have been logged out successfully!");
   window.location.href = "index.html";

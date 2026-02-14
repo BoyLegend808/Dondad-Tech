@@ -36,7 +36,7 @@ function setupHamburger() {
 
 // Update navigation based on auth state
 function updateAuthNav() {
-    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
     const authLinks = document.getElementById('auth-links');
     const logoutBtn = document.getElementById('logout-btn');
     const userGreeting = document.getElementById('user-greeting');
@@ -68,7 +68,7 @@ function updateAuthNav() {
 
 // Single logout function
 function logoutUser() {
-    localStorage.removeItem('dondad_currentUser');
+    sessionStorage.removeItem('dondad_currentUser');
     alert('You have been logged out successfully!');
     window.location.href = 'index.html';
 }
@@ -115,7 +115,7 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+            sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
             if (data.user.role === 'admin') {
                 window.location.href = 'admin.html';
             } else {

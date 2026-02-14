@@ -92,7 +92,7 @@
     <script>
         // Check if user is logged in and update UI
         document.addEventListener('DOMContentLoaded', function () {
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             const adminLink = document.getElementById('admin-nav-link');
             const authLinks = document.getElementById('auth-links');
             const userMenu = document.getElementById('user-menu');
@@ -393,7 +393,7 @@
             if (!product) return;
             
             // Check if user is logged in
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!currentUser) {
                 alert('Please login to add items to cart');
                 window.location.href = 'login.html';

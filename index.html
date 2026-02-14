@@ -96,7 +96,7 @@
 
         // Check auth
         function checkAuth() {
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
@@ -124,7 +124,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('dondad_currentUser');
+            sessionStorage.removeItem('dondad_currentUser');
             location.reload();
         }
 
@@ -133,7 +133,7 @@
         }
 
         function updateCartCount() {
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!user) {
                 document.getElementById('cart-count').textContent = '0';
                 return;

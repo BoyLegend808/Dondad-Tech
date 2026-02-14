@@ -100,7 +100,7 @@
 
         // Check auth
         document.addEventListener('DOMContentLoaded', async function () {
-            const userStr = localStorage.getItem('dondad_currentUser');
+            const userStr = sessionStorage.getItem('dondad_currentUser');
             if (!userStr) {
                 window.location.href = 'login.html';
                 return;
@@ -270,7 +270,7 @@
         }
 
         function logoutUser() {
-            localStorage.removeItem('dondad_currentUser');
+            sessionStorage.removeItem('dondad_currentUser');
             window.location.href = 'index.html';
         }
 

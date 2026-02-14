@@ -293,7 +293,7 @@
         });
 
         function checkAuth() {
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
             if (user && user.role === 'admin') {
                 updateAdminNav(user);
                 showDashboard();
@@ -472,7 +472,7 @@
                 
                 const data = await response.json();
                 if (response.ok && data.user.role === 'admin') {
-                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
                     message.textContent = '';
                     checkAuth();
                 } else {
@@ -611,7 +611,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('dondad_currentUser');
+            sessionStorage.removeItem('dondad_currentUser');
             window.location.href = 'index.html';
         }
     </script>

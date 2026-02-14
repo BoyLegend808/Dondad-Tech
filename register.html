@@ -151,7 +151,7 @@
                 const data = await r.json();
 
                 if (data.success) {
-                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
                     location.href = 'index.html';
                 } else {
                     error.textContent = data.error || 'Registration failed';

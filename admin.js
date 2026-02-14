@@ -17,7 +17,7 @@ async function checkAdminAuth() {
     }
 
     // Check localStorage first
-    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
     console.log('Current user from localStorage:', currentUser);
     
     if (currentUser && currentUser.role === 'admin') {
@@ -93,7 +93,7 @@ function renderAdminProducts() {
 }
 
 function logoutAdmin() {
-    localStorage.removeItem('dondad_currentUser');
+    sessionStorage.removeItem('dondad_currentUser');
     window.location.href = 'index.html';
 }
 

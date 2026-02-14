@@ -79,7 +79,7 @@ async function searchProducts(term) {
 
 // Add to cart
 function addToCart(productId, qty = 1) {
-    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
     if (!currentUser) {
         alert('Please login to add items to cart');
         window.location.href = 'login.html';

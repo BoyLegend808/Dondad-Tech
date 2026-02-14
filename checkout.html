@@ -126,7 +126,7 @@
     <script>
         // Check if user is logged in before showing checkout
         document.addEventListener('DOMContentLoaded', function () {
-            const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!currentUser) {
                 alert('Please login to proceed to checkout.');
                 window.location.href = 'login.html';
