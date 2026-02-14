@@ -15,7 +15,7 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html" class="active">Shop</a></li>
-                <li><a href="login.html">Admin</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div class="auth-links" id="auth-links">
@@ -79,12 +79,21 @@
         // Check if user is logged in and update UI
         document.addEventListener('DOMContentLoaded', function () {
             const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const adminLink = document.getElementById('admin-nav-link');
+            
             if (currentUser) {
                 document.getElementById('auth-links').style.display = 'none';
                 document.getElementById('logout-btn').style.display = 'inline-block';
                 document.getElementById('user-greeting').style.display = 'inline';
                 document.getElementById('user-greeting').textContent = 'Hi, ' + currentUser.name;
                 document.getElementById('cart-link').style.display = 'flex';
+                
+                // Show admin link only for admin users
+                if (currentUser.role === 'admin' && adminLink) {
+                    adminLink.style.display = 'block';
+                }
+            } else {
+                if (adminLink) adminLink.style.display = 'none';
             }
             updateCartCount();
         });

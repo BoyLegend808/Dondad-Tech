@@ -13,7 +13,7 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html" class="active">Shop</a></li>
-                <li><a href="admin.html">Admin</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div id="auth-buttons">
@@ -65,14 +65,21 @@
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
+            const adminLink = document.getElementById('admin-nav-link');
 
             if (user) {
                 authButtons.style.display = 'none';
                 userMenu.style.display = 'flex';
                 userName.textContent = 'Hi, ' + user.name;
+                
+                // Show admin link only for admin users
+                if (user.role === 'admin') {
+                    adminLink.style.display = 'block';
+                }
             } else {
                 authButtons.style.display = 'flex';
                 userMenu.style.display = 'none';
+                adminLink.style.display = 'none';
             }
         }
 

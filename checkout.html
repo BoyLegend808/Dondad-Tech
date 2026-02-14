@@ -13,7 +13,7 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
-                <li><a href="login.html">Admin</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div class="auth-links" id="auth-links">
@@ -113,6 +113,12 @@
                 alert('Please login to proceed to checkout.');
                 window.location.href = 'login.html';
                 return;
+            }
+            
+            // Show admin link only for admin users
+            const adminLink = document.getElementById('admin-nav-link');
+            if (currentUser.role === 'admin' && adminLink) {
+                adminLink.style.display = 'block';
             }
             
             // User is logged in - initialize page
