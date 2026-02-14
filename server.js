@@ -383,11 +383,14 @@ app.get("/api/featured", async (req, res) => {
     // Get all products
     const allProducts = await Product.find({}).lean();
     
-    // Simple seeded random selection based on date
-    const shuffled = allProducts.sort((a, b) => {
-      const hashA = (a._id.toString().charCodeAt(0) + seed) % 100;
-      const hashB = (b._id.toString().charCodeAt(0) + seed) % 100;
-      return hashA - hashB;
+    // Seeded random shuffle based on date
+    const shuffled = [...allProducts].sort((a, b) => {
+      const hashA = a._id.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed;
+      const hashB = b._id.toString().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + seed;
+      // Simple pseudo-random based on hash
+      const randA = (hashA * 9301 + 49297) % 233280;
+      const randB = (hashB * 9301 + 49297) % 233280;
+      return randA - randB;
     });
     
     // Take first 8 products

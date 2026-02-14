@@ -7,7 +7,7 @@ async function loadFeaturedProducts() {
   if (!container) return;
 
   try {
-    const response = await fetch(`${API_BASE}/api/products`);
+    const response = await fetch(`${API_BASE}/api/featured`);
     const products = await response.json();
     const featured = products.slice(0, 6);
     renderFeaturedProducts(featured);
