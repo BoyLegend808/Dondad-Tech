@@ -80,9 +80,39 @@ const cartSchema = new mongoose.Schema({
   unitPrice: { type: Number, required: true }
 });
 
+// Order Schema
+const orderSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userName: { type: String, required: true },
+  userEmail: { type: String, required: true },
+  userPhone: { type: String, required: true },
+  items: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    productName: { type: String },
+    productImage: { type: String },
+    qty: { type: Number },
+    unitPrice: { type: Number },
+    selectedVariant: {
+      storage: { type: String, default: "" },
+      ram: { type: String, default: "" },
+      color: { type: String, default: "" }
+    }
+  }],
+  deliveryInfo: {
+    address: { type: String },
+    method: { type: String },
+    notes: { type: String }
+  },
+  paymentMethod: { type: String },
+  subtotal: { type: Number },
+  status: { type: String, default: "pending" }, // pending, confirmed, shipped, delivered, cancelled
+  createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
 const Cart = mongoose.model("Cart", cartSchema);
+const Order = mongoose.model("Order", orderSchema);
 
 // Seed initial data
 async function seedDatabase() {
@@ -518,6 +548,73 @@ app.delete("/api/cart/:userId/:productId", async (req, res) => {
   } catch (error) {
     console.error("Remove from Cart Error:", error);
     res.status(500).json({ error: "Failed to remove from cart" });
+  }
+});
+
+// ============= ORDER ENDPOINTS =============
+
+// Create Order
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { userId, userName, userEmail, userPhone, items, deliveryInfo, paymentMethod, subtotal } = req.body;
+    
+    const order = await Order.create({
+      userId,
+      userName,
+      userEmail,
+      userPhone,
+      items,
+      deliveryInfo,
+      paymentMethod,
+      subtotal,
+      status: "pending"
+    });
+    
+    // Clear user's cart after order
+    await Cart.deleteMany({ userId });
+    
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error("Create Order Error:", error);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// Get user's orders
+app.get("/api/orders/user/:userId", async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error("Get Orders Error:", error);
+    res.status(500).json({ error: "Failed to get orders" });
+  }
+});
+
+// Get all orders (for admin)
+app.get("/api/orders", async (req, res) => {
+  try {
+    const orders = await Order.find({}).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error("Get All Orders Error:", error);
+    res.status(500).json({ error: "Failed to get orders" });
+  }
+});
+
+// Update order status (for admin)
+app.put("/api/orders/:orderId", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.orderId,
+      { status },
+      { new: true }
+    );
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error("Update Order Error:", error);
+    res.status(500).json({ error: "Failed to update order" });
   }
 });
 

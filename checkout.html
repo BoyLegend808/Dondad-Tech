@@ -222,12 +222,66 @@
             totalEl.textContent = '₦' + total.toLocaleString();
             subtotalEl.textContent = '₦' + total.toLocaleString();
 
-            document.getElementById('checkout-form').addEventListener('submit', (e) => {
+            document.getElementById('checkout-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                alert('Thank you for your order! We will contact you shortly to confirm.');
-                cart = [];
-                saveCart();
-                window.location.href = 'index.html';
+                
+                const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+                if (!currentUser) {
+                    alert('Please login to place an order');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Get cart items
+                const cartResponse = await fetch(`/api/cart/${currentUser._id || currentUser.id}`);
+                const cartItems = await cartResponse.json();
+                
+                if (cartItems.length === 0) {
+                    alert('Your cart is empty');
+                    return;
+                }
+                
+                // Prepare order data
+                const orderData = {
+                    userId: currentUser._id || currentUser.id,
+                    userName: document.getElementById('name').value,
+                    userEmail: document.getElementById('email').value,
+                    userPhone: document.getElementById('phone').value,
+                    items: cartItems.map(item => ({
+                        productId: item.productId,
+                        productName: item.productName || item.productId?.name || 'Product',
+                        productImage: item.productId?.image || '',
+                        qty: item.qty,
+                        unitPrice: item.unitPrice,
+                        selectedVariant: item.selectedVariant
+                    })),
+                    deliveryInfo: {
+                        address: document.getElementById('address').value,
+                        method: document.getElementById('delivery').value,
+                        notes: document.getElementById('notes').value
+                    },
+                    paymentMethod: document.getElementById('payment').value,
+                    subtotal: getCartTotal()
+                };
+                
+                try {
+                    const response = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Thank you for your order! Order ID: ' + result.order._id + '\nWe will contact you shortly to confirm.');
+                        window.location.href = 'index.html';
+                    } else {
+                        alert('Failed to place order. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Order error:', error);
+                    alert('Error placing order. Please try again.');
+                }
             });
         }
     </script>
