@@ -379,6 +379,7 @@ section h2 { text-align: center; font-size: 2rem; margin-bottom: 2rem; }
     margin-bottom: 1rem;
     border: 1px solid var(--border);
     transition: all 0.3s;
+    position: relative;
 }
 
 .cart-item:hover {
@@ -458,6 +459,33 @@ section h2 { text-align: center; font-size: 2rem; margin-bottom: 2rem; }
 .cart-item-remove:hover {
     background: var(--accent);
     color: white;
+}
+
+.cart-item-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.1);
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 1;
+}
+
+.cart-item-close:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.cart-item {
+    position: relative;
 }
 
 .cart-summary {
