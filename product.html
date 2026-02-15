@@ -128,8 +128,13 @@
         function toggleUserMenu(e) {
             // Prevent the click from propagating to parent elements
             e.stopPropagation();
+            
+            // Find the user-menu element
             const userMenu = document.querySelector('.user-menu');
             const userDropdown = document.querySelector('.user-dropdown');
+            
+            console.log('toggleUserMenu clicked, userMenu:', userMenu);
+            console.log('Has active class:', userMenu?.classList?.contains('active'));
             
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
@@ -138,6 +143,7 @@
             
             if (userMenu) {
                 userMenu.classList.toggle('active');
+                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
             }
         }
 
