@@ -138,7 +138,7 @@
             const userDropdown = document.querySelector('.user-dropdown');
 
             console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu ? .classList ? .contains('active'));
+            console.log('Has active class:', userMenu?.classList?.contains('active'));
 
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
@@ -166,7 +166,7 @@
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
             console.log('Checking hamburger close - hamburger:', hamburger, 'navLinks:', navLinks);
-            console.log('Hamburger active:', hamburger ? .classList ? .contains('active'));
+            console.log('Hamburger active:', hamburger?.classList?.contains('active'));
             if (hamburger && navLinks) {
                 if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                     hamburger.classList.remove('active');
