@@ -122,16 +122,13 @@
         // Check auth
         document.addEventListener('DOMContentLoaded', async function() {
             const userStr = sessionStorage.getItem('dondad_currentUser');
-            alert('Profile page check: ' + (userStr ? 'User found - ' + userStr.substring(0,50) : 'No user found!'));
-            console.log('Profile page - userStr:', userStr);
             if (!userStr) {
-                console.log('Redirecting to login - no user found');
                 window.location.href = 'login.html';
                 return;
             }
             
             currentUser = JSON.parse(userStr);
-            console.log('User found:', currentUser.name);
+            currentUser = JSON.parse(userStr);
             
             // Show user menu directly
             const authLinks = document.getElementById('auth-links');
@@ -184,7 +181,6 @@
         });
 
         function updateAuthUI() {
-            alert('updateAuthUI called, currentUser: ' + (currentUser ? currentUser.name : 'NULL'));
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
             const userAvatar = document.getElementById('user-avatar');
@@ -209,9 +205,8 @@
                     document.getElementById('admin-nav-link').style.display = 'block';
                 }
             } else {
-                // TEMPORARILY DISABLED FOR DEBUGGING
-                // window.location.href = 'login.html';
-                alert('In else branch - this should not happen if user is found');
+                // Redirect to login if not logged in
+                window.location.href = 'login.html';
             }
         }
 
