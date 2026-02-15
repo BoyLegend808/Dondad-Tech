@@ -184,6 +184,7 @@
         });
 
         function updateAuthUI() {
+            alert('updateAuthUI called, currentUser: ' + (currentUser ? currentUser.name : 'NULL'));
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
             const userAvatar = document.getElementById('user-avatar');
