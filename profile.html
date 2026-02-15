@@ -122,6 +122,7 @@
         // Check auth
         document.addEventListener('DOMContentLoaded', async function() {
             const userStr = sessionStorage.getItem('dondad_currentUser');
+            alert('Profile page check: ' + (userStr ? 'User found - ' + userStr.substring(0,50) : 'No user found!'));
             console.log('Profile page - userStr:', userStr);
             if (!userStr) {
                 console.log('Redirecting to login - no user found');
