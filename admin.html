@@ -58,28 +58,49 @@
     <!-- Admin Dashboard -->
     <section id="admin-dashboard" class="admin-section">
         <div class="admin-container">
-            <div class="admin-page-header">
-                <h2>📦 Product Management</h2>
-                <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
+            <!-- Admin Tabs Navigation -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchAdminTab('products')">📦 Products</button>
+                <button class="admin-tab" onclick="switchAdminTab('orders')">📋 Orders</button>
             </div>
 
-            <!-- Products Table -->
-            <div class="admin-table-container">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">Image</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th style="width: 150px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="products-table">
-                        <!-- Products loaded here -->
-                    </tbody>
+            <!-- Products Tab -->
+            <div id="products-tab" class="admin-tab-content">
+                <div class="admin-page-header">
+                    <h2>📦 Product Management</h2>
+                    <div class="header-actions">
+                        <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
+                        <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th style="width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table">
+                            <!-- Products loaded here -->
+                        </tbody>
                 </table>
                 <p id="no-products" class="no-products">No products found. Click "Add Product" to create your first product!</p>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="orders-tab" class="admin-tab-content" style="display: none;">
+                <div class="admin-page-header">
+                    <h2>📋 Order Management</h2>
+                </div>
+                <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
+                <div id="orders-list" style="display: none;"></div>
+                <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
             </div>
         </div>
     </section>
@@ -344,7 +365,112 @@
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('admin-dashboard').style.display = 'block';
             document.getElementById('product-form-section').style.display = 'none';
-            loadProducts();
+            switchAdminTab('products');
+        }
+
+        // Admin Tabs
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+            
+            if (tab === 'products') {
+                document.querySelector('.admin-tab:nth-child(1)').classList.add('active');
+                document.getElementById('products-tab').style.display = 'block';
+                loadProducts();
+            } else if (tab === 'orders') {
+                document.querySelector('.admin-tab:nth-child(2)').classList.add('active');
+                document.getElementById('orders-tab').style.display = 'block';
+                loadOrders();
+            }
+        }
+
+        // Load Orders
+        async function loadOrders() {
+            try {
+                const response = await fetch(API_URL + '/api/orders');
+                const orders = await response.json();
+                
+                document.getElementById('orders-loading').style.display = 'none';
+                
+                if (orders.length === 0) {
+                    document.getElementById('no-orders').style.display = 'block';
+                    return;
+                }
+                
+                document.getElementById('orders-list').style.display = 'block';
+                renderOrders(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('orders-loading').textContent = 'Error loading orders';
+            }
+        }
+
+        // Render Orders
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-list');
+            container.innerHTML = orders.map(order => `
+                <div class="admin-order-card">
+                    <div class="order-card-header">
+                        <div>
+                            <span class="order-id">#${order._id.substring(0, 8)}</span>
+                            <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <select class="order-status-select" onchange="updateOrderStatus('${order._id}', this.value)" data-current="${order.status}">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="order-customer">
+                        <strong>👤 ${order.userName}</strong>
+                        <span>📧 ${order.userEmail}</span>
+                        <span>📞 ${order.userPhone}</span>
+                    </div>
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="order-item-row">
+                                <span>${item.qty}× ${item.productName || 'Product'}</span>
+                                <span>₦${(item.unitPrice * item.qty).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="order-footer">
+                        <span>💰 Total: ₦${order.subtotal.toLocaleString()}</span>
+                        <span>🚚 ${order.deliveryInfo?.method || 'N/A'}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update Order Status
+        async function updateOrderStatus(orderId, status) {
+            try {
+                const response = await fetch(API_URL + '/api/orders/' + orderId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('✅ Order status updated to ' + status);
+                }
+            } catch (error) {
+                console.error('Error updating order:', error);
+                alert('Error updating order status');
+            }
+        }
+
+        // Search Products
+        function searchProducts(query) {
+            const searchTerm = query.toLowerCase();
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) ||
+                p.category.toLowerCase().includes(searchTerm) ||
+                p.desc?.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filtered);
         }
 
         function showAddProduct() {
