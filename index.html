@@ -165,10 +165,13 @@
             // Close hamburger menu
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
+            console.log('Checking hamburger close - hamburger:', hamburger, 'navLinks:', navLinks);
+            console.log('Hamburger active:', hamburger?.classList?.contains('active'));
             if (hamburger && navLinks) {
                 if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                     hamburger.classList.remove('active');
                     navLinks.classList.remove('active');
+                    console.log('Closed hamburger');
                 }
             }
         });
