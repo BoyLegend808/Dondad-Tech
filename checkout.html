@@ -26,7 +26,7 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -144,6 +144,38 @@
             initHamburger();
             updateAuthUI();
             updateCartCount();
+        });
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            window.location.href = 'login.html';
+        }
+
+        function toggleUserMenu(e) {
+            // Prevent the click from propagating to parent elements
+            e.stopPropagation();
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            
+            // Don't toggle if clicking inside the dropdown
+            if (userDropdown && userDropdown.contains(e.target)) {
+                return;
+            }
+            
+            if (userMenu) {
+                userMenu.classList.toggle('active');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown) {
+                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userMenu.classList.remove('active');
+                }
+            }
         });
 
         // Toggle hamburger menu

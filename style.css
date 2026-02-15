@@ -36,13 +36,13 @@ header { background: var(--card); padding: 0 2rem; position: fixed; width: 100%;
 
 /* Enhanced User Menu */
 .user-menu { position: relative; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 30px; transition: all 0.3s; }
-.user-menu:hover { background: rgba(168, 85, 247, 0.15); }
+.user-menu:hover, .user-menu.active { background: rgba(168, 85, 247, 0.15); }
 .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: white; text-transform: uppercase; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4); }
 .user-info { display: flex; flex-direction: column; }
 .user-greeting { font-size: 0.75rem; color: var(--muted); line-height: 1.2; }
 .user-name { font-size: 0.9rem; font-weight: 600; color: var(--text); line-height: 1.2; }
 .user-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.5rem; min-width: 180px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s; z-index: 200; }
-.user-menu:hover .user-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.user-menu:hover .user-dropdown, .user-menu.active .user-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
 .user-dropdown a { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 1rem; color: var(--text); border-radius: 8px; transition: all 0.2s; }
 .user-dropdown a:hover { background: rgba(168, 85, 247, 0.15); color: var(--primary); }
 .user-dropdown a.logout-btn { color: var(--accent); }

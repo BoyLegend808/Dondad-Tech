@@ -10,9 +10,44 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="script.js?v=5"></script>
 </head>
 
 <body>
+    <script>
+        // Immediate check - show user menu if logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const userStr = sessionStorage.getItem('dondad_currentUser');
+            console.log('Cart page - User check:', userStr ? 'Found user' : 'No user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const authLinks = document.getElementById('auth-links');
+                    const userMenu = document.getElementById('user-menu');
+                    const userName = document.getElementById('user-name');
+                    const userAvatar = document.getElementById('user-avatar');
+                    const cartLink = document.getElementById('cart-link');
+                    
+                    console.log('Elements found - authLinks:', !!authLinks, 'userMenu:', !!userMenu);
+                    
+                    if (authLinks) {
+                        authLinks.style.display = 'none';
+                        console.log('Set auth-links to none');
+                    }
+                    if (userMenu) {
+                        userMenu.style.display = 'flex';
+                        console.log('Set user-menu to flex');
+                    }
+                    if (userName) userName.textContent = user.name;
+                    if (userAvatar) {
+                        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                        userAvatar.textContent = initials || user.name.charAt(0);
+                    }
+                    if (cartLink) cartLink.style.display = 'flex';
+                } catch(e) { console.error('Error:', e); }
+            }
+        });
+    </script>
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Dondad Tech</a>
@@ -22,18 +57,20 @@
                 <li><a href="admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
             </ul>
             <div class="nav-right">
-                <div class="auth-links" id="auth-links">
+                <!-- Show user menu by default (will hide if not logged in via JS) -->
+                <div class="auth-links" id="auth-links" style="display:none;">
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
-                <div id="user-menu" style="display:none;">
-                    <div class="user-menu">
+                <div id="user-menu">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
+                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
                             <a href="#" onclick="logoutUser()" class="logout-btn"><span class="dropdown-icon">🚪</span>
                                 Logout</a>
@@ -101,14 +138,76 @@
         // Check auth
         document.addEventListener('DOMContentLoaded', async function () {
             const userStr = sessionStorage.getItem('dondad_currentUser');
+            console.log('Cart page loaded, userStr:', userStr);
             if (!userStr) {
+                console.log('No user found in session, redirecting to login');
                 window.location.href = 'login.html';
                 return;
             }
 
             currentUser = JSON.parse(userStr);
+            console.log('User logged in:', currentUser.name);
+            
+            // Show user menu directly
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
+            const cartLink = document.getElementById('cart-link');
+            
+            console.log('authLinks:', authLinks);
+            console.log('userMenu:', userMenu);
+            
+            if (authLinks) {
+                authLinks.style.display = 'none';
+                console.log('Hid auth-links');
+            }
+            if (userMenu) {
+                userMenu.style.display = 'flex';
+                userMenu.style.visibility = 'visible';
+                console.log('Showed user-menu');
+            }
+            if (userName) userName.textContent = currentUser.name;
+            if (userAvatar) {
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || currentUser.name.charAt(0);
+            }
+            if (cartLink) cartLink.style.display = 'flex';
+            
             await loadCart();
-            updateAuthUI();
+            console.log('Auth UI updated');
+        });
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            window.location.href = 'login.html';
+        }
+
+        function toggleUserMenu(e) {
+            // Prevent the click from propagating to parent elements
+            e.stopPropagation();
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            
+            // Don't toggle if clicking inside the dropdown
+            if (userDropdown && userDropdown.contains(e.target)) {
+                return;
+            }
+            
+            if (userMenu) {
+                userMenu.classList.toggle('active');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown) {
+                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userMenu.classList.remove('active');
+                }
+            }
         });
 
         async function loadCart() {
@@ -151,7 +250,7 @@
                     const variantStr = variantParts.length > 0 ? variantParts.join(' | ') : '';
 
                     // Use unitPrice if available, fallback to product price
-                    const unitPrice = item.unitPrice || item.productId ? .price || 0;
+                    const unitPrice = item.unitPrice || item.productId?.price || 0;
                     const itemTotal = unitPrice * item.qty;
 
                     return `
@@ -183,7 +282,7 @@
 
                 // Calculate total using unitPrice
                 const subtotal = cartItems.reduce((sum, item) => {
-                    const unitPrice = item.unitPrice || item.productId ? .price || 0;
+                    const unitPrice = item.unitPrice || item.productId?.price || 0;
                     return sum + (unitPrice * item.qty);
                 }, 0);
                 const delivery = 0;
@@ -255,7 +354,7 @@
                 userName.textContent = currentUser.name;
             }
 
-            if (currentUser ? .role === 'admin') {
+            if (currentUser?.role === 'admin') {
                 document.getElementById('admin-link').style.display = 'block';
             }
         }
@@ -275,8 +374,8 @@
         }
 
         function toggleHamburger() {
-            document.querySelector('.nav-links') ? .classList.toggle('active');
-            document.querySelector('.hamburger') ? .classList.toggle('active');
+            document.querySelector('.nav-links')?.classList.toggle('active');
+            document.querySelector('.hamburger')?.classList.toggle('active');
         }
     </script>
 
