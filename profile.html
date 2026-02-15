@@ -11,6 +11,29 @@
     <meta http-equiv="Expires" content="0">
 </head>
 <body>
+    <script>
+        // Immediate check - show user menu if logged in
+        (function() {
+            const userStr = sessionStorage.getItem('dondad_currentUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const authLinks = document.getElementById('auth-links');
+                    const userMenu = document.getElementById('user-menu');
+                    const userName = document.getElementById('user-name');
+                    const userAvatar = document.getElementById('user-avatar');
+                    
+                    if (authLinks) authLinks.style.display = 'none';
+                    if (userMenu) userMenu.style.display = 'flex';
+                    if (userName) userName.textContent = user.name;
+                    if (userAvatar) {
+                        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                        userAvatar.textContent = initials || user.name.charAt(0);
+                    }
+                } catch(e) { console.error('Error:', e); }
+            }
+        })();
+    </script>
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Dondad Tech</a>
@@ -99,12 +122,15 @@
         // Check auth
         document.addEventListener('DOMContentLoaded', async function() {
             const userStr = sessionStorage.getItem('dondad_currentUser');
+            console.log('Profile page - userStr:', userStr);
             if (!userStr) {
+                console.log('Redirecting to login - no user found');
                 window.location.href = 'login.html';
                 return;
             }
             
             currentUser = JSON.parse(userStr);
+            console.log('User found:', currentUser.name);
             
             // Show user menu directly
             const authLinks = document.getElementById('auth-links');
