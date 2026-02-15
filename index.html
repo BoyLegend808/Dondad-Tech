@@ -132,19 +132,19 @@
         function toggleUserMenu(e) {
             // Prevent the click from propagating to parent elements
             e.stopPropagation();
-            
+
             // Find the user-menu element (can be either class or id)
             const userMenu = document.querySelector('.user-menu');
             const userDropdown = document.querySelector('.user-dropdown');
-            
+
             console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu?.classList?.contains('active'));
-            
+            console.log('Has active class:', userMenu ? .classList ? .contains('active'));
+
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
                 return;
             }
-            
+
             if (userMenu) {
                 userMenu.classList.toggle('active');
                 console.log('Toggled active, now has:', userMenu.classList.contains('active'));
@@ -152,7 +152,7 @@
         }
 
         // Close dropdown and hamburger when clicking on the page
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             // Close user dropdown
             const userMenu = document.querySelector('.user-menu');
             const userDropdown = document.querySelector('.user-dropdown');
@@ -161,12 +161,12 @@
                     userMenu.classList.remove('active');
                 }
             }
-            
+
             // Close hamburger menu
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
             console.log('Checking hamburger close - hamburger:', hamburger, 'navLinks:', navLinks);
-            console.log('Hamburger active:', hamburger?.classList?.contains('active'));
+            console.log('Hamburger active:', hamburger ? .classList ? .contains('active'));
             if (hamburger && navLinks) {
                 if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                     hamburger.classList.remove('active');
@@ -181,16 +181,40 @@
         }
 
         function updateCartCount() {
+            const cartCountEl = document.getElementById('cart-count');
+            if (!cartCountEl) return;
+            
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!user) {
-                document.getElementById('cart-count').textContent = '0';
+                cartCountEl.textContent = '0';
                 return;
             }
-            fetch(`${API_URL}/api/cart/${user.id}`)
+            
+            const userId = user._id || user.id;
+            if (!userId) {
+                cartCountEl.textContent = '0';
+                return;
+            }
+            
+            // First try API, then fallback to localStorage
+            fetch(`/api/cart/${userId}`)
                 .then(r => r.json())
                 .then(cart => {
-                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-                    document.getElementById('cart-count').textContent = count;
+                    let count = 0;
+                    if (Array.isArray(cart) && cart.length > 0) {
+                        count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    } else {
+                        // Fallback to localStorage if API returns empty
+                        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                        count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    }
+                    cartCountEl.textContent = count;
+                })
+                .catch(() => {
+                    // On error, try localStorage
+                    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    cartCountEl.textContent = count;
                 });
         }
 

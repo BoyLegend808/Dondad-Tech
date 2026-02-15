@@ -256,8 +256,33 @@ function saveCart() {
 function updateCartCount() {
   const cartCount = document.getElementById("cart-count");
   if (cartCount) {
-    const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-    cartCount.textContent = totalItems;
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    if (!currentUser) {
+      cartCount.textContent = '0';
+      return;
+    }
+    const userId = currentUser._id || currentUser.id;
+    if (!userId) {
+      cartCount.textContent = '0';
+      return;
+    }
+    fetch(`/api/cart/${userId}`)
+      .then(r => r.json())
+      .then(cart => {
+        let totalItems = 0;
+        if (Array.isArray(cart) && cart.length > 0) {
+          totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+        } else {
+          const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+          totalItems = localCart.reduce((sum, item) => sum + item.qty, 0);
+        }
+        cartCount.textContent = totalItems;
+      })
+      .catch(() => {
+        const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+        const totalItems = localCart.reduce((sum, item) => sum + item.qty, 0);
+        cartCount.textContent = totalItems;
+      });
   }
 }
 

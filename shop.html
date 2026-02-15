@@ -157,16 +157,38 @@
         }
 
         function updateCartCount() {
+            const cartCountEl = document.getElementById('cart-count');
+            if (!cartCountEl) return;
+            
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!user) {
-                document.getElementById('cart-count').textContent = '0';
+                cartCountEl.textContent = '0';
                 return;
             }
-            fetch(`/api/cart/${user._id || user.id}`)
+            
+            const userId = user._id || user.id;
+            if (!userId) {
+                cartCountEl.textContent = '0';
+                return;
+            }
+            
+            // First try API, then fallback to localStorage
+            fetch(`/api/cart/${userId}`)
                 .then(r => r.json())
                 .then(cart => {
-                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-                    document.getElementById('cart-count').textContent = count;
+                    let count = 0;
+                    if (Array.isArray(cart) && cart.length > 0) {
+                        count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    } else {
+                        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                        count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    }
+                    cartCountEl.textContent = count;
+                })
+                .catch(() => {
+                    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    cartCountEl.textContent = count;
                 });
         }
 

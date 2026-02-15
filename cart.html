@@ -272,6 +272,9 @@
 
                     return `
                         <div class="cart-item">
+                            <button class="cart-item-close" onclick="removeItem('${item.productId?._id}', '${encodeURIComponent(JSON.stringify(item.selectedVariant || {}))}')" title="Remove item">
+                                <i class="fas fa-times"></i>
+                            </button>
                             <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
                             <div class="cart-item-info">
                                 <h3>${item.productId?.name || 'Unknown Product'}</h3>
