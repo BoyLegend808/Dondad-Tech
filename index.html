@@ -97,7 +97,13 @@
 
         // Check auth
         function checkAuth() {
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            let user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            if (!user) {
+                user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+                if (user) {
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
+                }
+            }
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
@@ -184,10 +190,27 @@
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
             
-            // Use localStorage first (fast)
+            // Use localStorage first (fast), then try API
             const localCart = JSON.parse(localStorage.getItem('cart')) || [];
             const localCount = localCart.reduce((sum, item) => sum + item.qty, 0);
             cartCountEl.textContent = localCount;
+            
+            // Also try API in background to sync
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser')) || JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (user) {
+                const userId = user._id || user.id;
+                if (userId) {
+                    fetch(`/api/cart/${userId}`)
+                        .then(r => r.json())
+                        .then(cart => {
+                            if (Array.isArray(cart) && cart.length > 0) {
+                                const count = cart.reduce((sum, item) => sum + item.qty, 0);
+                                cartCountEl.textContent = count;
+                            }
+                        })
+                        .catch(() => {});
+                }
+            }
         }
 
         function loadFeaturedProducts() {
