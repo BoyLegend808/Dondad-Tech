@@ -300,9 +300,9 @@ header {
     color: var(--bg);
 }
 
-/* Hamburger - Hidden on desktop, visible on mobile */
+/* Hamburger - Visible on all devices */
 .hamburger {
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 5px;
     background: none;
@@ -1061,10 +1061,6 @@ footer {
     .nav-links.active {
         display: flex;
     }
-
-    .hamburger {
-        display: flex;
-    }
 }
 
 /* Tablets (768px) */
@@ -1073,10 +1069,6 @@ footer {
     /* Header */
     header {
         padding: 0 1rem;
-    }
-
-    .hamburger {
-        display: flex;
     }
 
     .nav-links {
