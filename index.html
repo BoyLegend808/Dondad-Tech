@@ -190,12 +190,7 @@
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
             
-            // Use localStorage first (fast), then try API
-            const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-            const localCount = localCart.reduce((sum, item) => sum + item.qty, 0);
-            cartCountEl.textContent = localCount;
-            
-            // Also try API in background to sync
+            // First try API (since that's where product page saves)
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser')) || JSON.parse(localStorage.getItem('dondad_currentUser'));
             if (user) {
                 const userId = user._id || user.id;
@@ -206,11 +201,23 @@
                             if (Array.isArray(cart) && cart.length > 0) {
                                 const count = cart.reduce((sum, item) => sum + item.qty, 0);
                                 cartCountEl.textContent = count;
+                            } else {
+                                // Fallback to localStorage
+                                const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                                cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
                             }
                         })
-                        .catch(() => {});
+                        .catch(() => {
+                            const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                            cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
+                        });
+                    return;
                 }
             }
+            
+            // No user - use localStorage
+            const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+            cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
         }
 
         function loadFeaturedProducts() {
