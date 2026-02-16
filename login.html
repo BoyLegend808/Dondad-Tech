@@ -115,6 +115,7 @@
 
                 if (data.success) {
                     sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
                     if (data.user.role === 'admin') {
                         location.href = 'admin.html';
                     } else {

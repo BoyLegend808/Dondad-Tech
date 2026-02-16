@@ -446,9 +446,11 @@
             const product = window.currentProductData;
             if (!product) return;
             
-            // Check if user is logged in
-            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
-            console.log('Current user from sessionStorage:', currentUser);
+            // Check if user is logged in - check both sessionStorage and localStorage
+            let currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            }
             if (!currentUser) {
                 alert('Please login to add items to cart');
                 window.location.href = 'login.html';
