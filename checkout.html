@@ -250,26 +250,41 @@
         }
 
         function initCheckoutPage() {
-            const cartItems = getCartItems();
-            const itemsContainer = document.getElementById('checkout-items');
-            const totalEl = document.getElementById('checkout-total');
-            const subtotalEl = document.getElementById('checkout-subtotal');
-
-            if (cartItems.length === 0) {
-                window.location.href = 'shop.html';
+            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser')) || JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (!currentUser) {
+                window.location.href = 'login.html';
                 return;
             }
+            
+            const userId = currentUser._id || currentUser.id;
+            
+            // Fetch cart from API
+            fetch(`/api/cart/${userId}`)
+                .then(r => r.json())
+                .then(cartItems => {
+                    const itemsContainer = document.getElementById('checkout-items');
+                    const totalEl = document.getElementById('checkout-total');
+                    const subtotalEl = document.getElementById('checkout-subtotal');
 
-            itemsContainer.innerHTML = cartItems.map(item => `
-                <div class="cart-summary-row">
-                    <span>${item.name} x${item.qty}</span>
-                    <span>₦${(item.price * item.qty).toLocaleString()}</span>
-                </div>
-            `).join('');
+                    if (cartItems.length === 0) {
+                        window.location.href = 'shop.html';
+                        return;
+                    }
 
-            const total = getCartTotal();
-            totalEl.textContent = '₦' + total.toLocaleString();
-            subtotalEl.textContent = '₦' + total.toLocaleString();
+                    itemsContainer.innerHTML = cartItems.map(item => `
+                        <div class="cart-summary-row">
+                            <span>${item.productId?.name || 'Product'} x${item.qty}</span>
+                            <span>₦${((item.unitPrice || item.productId?.price || 0) * item.qty).toLocaleString()}</span>
+                        </div>
+                    `).join('');
+
+                    const total = cartItems.reduce((sum, item) => sum + ((item.unitPrice || item.productId?.price || 0) * item.qty), 0);
+                    totalEl.textContent = '₦' + total.toLocaleString();
+                    subtotalEl.textContent = '₦' + total.toLocaleString();
+                })
+                .catch(() => {
+                    window.location.href = 'shop.html';
+                });
 
             document.getElementById('checkout-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
