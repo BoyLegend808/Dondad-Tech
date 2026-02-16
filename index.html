@@ -184,38 +184,10 @@
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
             
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
-            if (!user) {
-                cartCountEl.textContent = '0';
-                return;
-            }
-            
-            const userId = user._id || user.id;
-            if (!userId) {
-                cartCountEl.textContent = '0';
-                return;
-            }
-            
-            // First try API, then fallback to localStorage
-            fetch(`/api/cart/${userId}`)
-                .then(r => r.json())
-                .then(cart => {
-                    let count = 0;
-                    if (Array.isArray(cart) && cart.length > 0) {
-                        count = cart.reduce((sum, item) => sum + item.qty, 0);
-                    } else {
-                        // Fallback to localStorage if API returns empty
-                        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-                        count = localCart.reduce((sum, item) => sum + item.qty, 0);
-                    }
-                    cartCountEl.textContent = count;
-                })
-                .catch(() => {
-                    // On error, try localStorage
-                    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-                    const count = localCart.reduce((sum, item) => sum + item.qty, 0);
-                    cartCountEl.textContent = count;
-                });
+            // Use localStorage first (fast)
+            const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+            const localCount = localCart.reduce((sum, item) => sum + item.qty, 0);
+            cartCountEl.textContent = localCount;
         }
 
         function loadFeaturedProducts() {
