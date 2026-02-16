@@ -42,7 +42,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -123,6 +123,11 @@
         function logout() {
             sessionStorage.removeItem('dondad_currentUser');
             location.reload();
+        }
+
+        function toggleMenu() {
+            document.querySelector('.nav-links').classList.toggle('active');
+            document.querySelector('.hamburger').classList.toggle('active');
         }
 
         function toggleUserMenu(e) {
