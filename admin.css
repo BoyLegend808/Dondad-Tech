@@ -698,6 +698,12 @@
     }
 }
 
+/* Keep native select options readable in browser dropdown popups */
+.form-group select option {
+    color: #111827;
+    background: #ffffff;
+}
+
 @media (max-width: 600px) {
     .admin-section {
         padding: 4.75rem 0.75rem 2rem;
