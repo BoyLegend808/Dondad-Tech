@@ -429,6 +429,61 @@ section h2 {
     margin-bottom: 2rem;
 }
 
+/* About */
+.about-section {
+    padding-top: 1rem;
+    scroll-margin-top: 90px;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
+.about-content,
+.about-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+}
+
+.about-label {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.about-content h2 {
+    text-align: left;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.about-content p {
+    color: var(--muted);
+    margin-bottom: 0.8rem;
+}
+
+.about-card h3 {
+    margin-bottom: 0.75rem;
+}
+
+.about-card ul {
+    padding-left: 1rem;
+    color: var(--muted);
+}
+
+.about-card li {
+    margin-bottom: 0.5rem;
+}
+
 /* Categories */
 .category-grid {
     display: grid;
@@ -1175,6 +1230,14 @@ footer {
 
     section h2 {
         font-size: 1.75rem;
+    }
+
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .about-content h2 {
+        font-size: 1.5rem;
     }
 
     /* Categories */
