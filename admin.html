@@ -58,6 +58,26 @@
             <div class="admin-tabs">
                 <button class="admin-tab active" onclick="switchAdminTab('products')">📦 Products</button>
                 <button class="admin-tab" onclick="switchAdminTab('orders')">📋 Orders</button>
+                <button class="admin-tab" onclick="switchAdminTab('customers')">Customers</button>
+            </div>
+
+            <div id="admin-stats-grid" class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <h4>Total Sales</h4>
+                    <p id="stat-total-sales">₦0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Pending Orders</h4>
+                    <p id="stat-pending-orders">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Low Stock Items</h4>
+                    <p id="stat-low-stock">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Total Customers</h4>
+                    <p id="stat-total-customers">0</p>
+                </div>
             </div>
 
             <!-- Products Tab -->
@@ -97,6 +117,28 @@
                 <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
                 <div id="orders-list" style="display: none;"></div>
                 <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
+            </div>
+
+            <div id="customers-tab" class="admin-tab-content" style="display: none;">
+                <div class="admin-page-header">
+                    <h2>Customer Management</h2>
+                </div>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-table"></tbody>
+                    </table>
+                    <p id="no-customers" class="no-products" style="display: none;">No customers found.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -282,7 +324,6 @@
 
         // Check login status on load
         document.addEventListener('DOMContentLoaded', function() {
-            ensureAdminEnhancements();
             checkAuth();
             
             // Dropdown toggle for hamburger
@@ -326,77 +367,6 @@
                 loadDashboardStats();
             } else {
                 showLogin();
-            }
-        }
-
-        function ensureAdminEnhancements() {
-            const tabsContainer = document.querySelector('.admin-tabs');
-            if (!tabsContainer) return;
-
-            const hasCustomersTabBtn = Array.from(tabsContainer.querySelectorAll('.admin-tab'))
-                .some(btn => btn.getAttribute('onclick') === "switchAdminTab('customers')");
-            if (!hasCustomersTabBtn) {
-                const btn = document.createElement('button');
-                btn.className = 'admin-tab';
-                btn.setAttribute('onclick', "switchAdminTab('customers')");
-                btn.textContent = 'Customers';
-                tabsContainer.appendChild(btn);
-            }
-
-            if (!document.getElementById('admin-stats-grid')) {
-                const stats = document.createElement('div');
-                stats.id = 'admin-stats-grid';
-                stats.className = 'admin-stats-grid';
-                stats.innerHTML = `
-                    <div class="admin-stat-card">
-                        <h4>Total Sales</h4>
-                        <p id="stat-total-sales">₦0</p>
-                    </div>
-                    <div class="admin-stat-card">
-                        <h4>Pending Orders</h4>
-                        <p id="stat-pending-orders">0</p>
-                    </div>
-                    <div class="admin-stat-card">
-                        <h4>Low Stock Items</h4>
-                        <p id="stat-low-stock">0</p>
-                    </div>
-                    <div class="admin-stat-card">
-                        <h4>Total Customers</h4>
-                        <p id="stat-total-customers">0</p>
-                    </div>
-                `;
-                tabsContainer.insertAdjacentElement('afterend', stats);
-            }
-
-            if (!document.getElementById('customers-tab')) {
-                const ordersTab = document.getElementById('orders-tab');
-                if (!ordersTab) return;
-                const customersTab = document.createElement('div');
-                customersTab.id = 'customers-tab';
-                customersTab.className = 'admin-tab-content';
-                customersTab.style.display = 'none';
-                customersTab.innerHTML = `
-                    <div class="admin-page-header">
-                        <h2>Customer Management</h2>
-                    </div>
-                    <div class="admin-table-container">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Orders</th>
-                                    <th>Total Spent</th>
-                                </tr>
-                            </thead>
-                            <tbody id="customers-table"></tbody>
-                        </table>
-                        <p id="no-customers" class="no-products" style="display: none;">No customers found.</p>
-                    </div>
-                `;
-                ordersTab.insertAdjacentElement('afterend', customersTab);
             }
         }
 
