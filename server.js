@@ -8,9 +8,14 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+const loginAttempts = new Map();
 
 // MongoDB Connection
 const MONGODB_URI =
@@ -22,6 +27,7 @@ mongoose
     console.log("Connected to MongoDB");
     await seedDatabase(); // Run seed after connection
     await ensureDefaultUsers();
+    await migrateLegacyPasswords();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -143,13 +149,90 @@ function normalizeEmail(email = "") {
   return email.trim().toLowerCase();
 }
 
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const iterations = 100000;
+  const hash = crypto
+    .pbkdf2Sync(password, salt, iterations, 64, "sha512")
+    .toString("hex");
+  return `pbkdf2$${iterations}$${salt}$${hash}`;
+}
+
+function isPasswordHashed(password = "") {
+  return typeof password === "string" && password.startsWith("pbkdf2$");
+}
+
+function verifyPassword(inputPassword, storedPassword) {
+  if (!isPasswordHashed(storedPassword)) {
+    return inputPassword === storedPassword;
+  }
+
+  const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
+  if (scheme !== "pbkdf2" || !iterationStr || !salt || !storedHash) {
+    return false;
+  }
+
+  const iterations = parseInt(iterationStr, 10);
+  if (!Number.isFinite(iterations) || iterations <= 0) {
+    return false;
+  }
+
+  const computedHash = crypto
+    .pbkdf2Sync(inputPassword, salt, iterations, 64, "sha512")
+    .toString("hex");
+
+  const a = Buffer.from(computedHash, "hex");
+  const b = Buffer.from(storedHash, "hex");
+  if (a.length !== b.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(a, b);
+}
+
+function loginRateLimit(req, res, next) {
+  const key = req.ip || req.connection.remoteAddress || "unknown";
+  const now = Date.now();
+  const record = loginAttempts.get(key);
+
+  if (!record || now > record.expiresAt) {
+    loginAttempts.set(key, { count: 1, expiresAt: now + LOGIN_WINDOW_MS });
+    return next();
+  }
+
+  if (record.count >= LOGIN_MAX_ATTEMPTS) {
+    return res.status(429).json({
+      success: false,
+      error: "Too many login attempts. Please try again in 15 minutes.",
+    });
+  }
+
+  record.count += 1;
+  loginAttempts.set(key, record);
+  next();
+}
+
 async function ensureDefaultUsers() {
   for (const defaultUser of DEFAULT_USERS) {
     const email = normalizeEmail(defaultUser.email);
     const existing = await User.findOne({ email });
     if (!existing) {
-      await User.create({ ...defaultUser, email });
+      await User.create({
+        ...defaultUser,
+        email,
+        password: hashPassword(defaultUser.password),
+      });
       console.log(`Created default user: ${email}`);
+    }
+  }
+}
+
+async function migrateLegacyPasswords() {
+  const users = await User.find({});
+  for (const user of users) {
+    if (!isPasswordHashed(user.password)) {
+      user.password = hashPassword(user.password);
+      await user.save();
+      console.log(`Migrated password hash for: ${user.email}`);
     }
   }
 }
@@ -162,7 +245,7 @@ async function seedDatabase() {
       await User.create({
         name: "Admin",
         email: "admin@dondad.com",
-        password: "admin123",
+        password: hashPassword("admin123"),
         phone: "08000000000",
         role: "admin",
       });
@@ -659,18 +742,28 @@ app.put("/api/orders/:orderId", async (req, res) => {
 });
 
 // Login
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", loginRateLimit, async (req, res) => {
   try {
     const email = normalizeEmail(req.body?.email || "");
     const password = (req.body?.password || "").trim();
-    const user = await User.findOne({ email, password }).select(
-      "_id name email role",
+    const user = await User.findOne({ email }).select(
+      "_id name email role password",
     );
-    if (user) {
-      res.json({ success: true, user });
-    } else {
+    if (!user || !verifyPassword(password, user.password)) {
       res.status(401).json({ success: false, error: "Invalid credentials" });
+      return;
     }
+    const key = req.ip || req.connection.remoteAddress || "unknown";
+    loginAttempts.delete(key);
+    res.json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
   }
@@ -686,7 +779,7 @@ app.get("/api/seed-admin", async (req, res) => {
       const admin = await User.create({
         name: "Admin",
         email: "admin@dondad.com",
-        password: "admin123",
+        password: hashPassword("admin123"),
         phone: "08000000000",
         role: "admin",
       });
@@ -706,7 +799,12 @@ app.post("/api/register", async (req, res) => {
     if (existing)
       return res.status(400).json({ success: false, error: "Email exists" });
 
-    const user = await User.create({ name, email, password, phone });
+    const user = await User.create({
+      name,
+      email,
+      password: hashPassword(password),
+      phone,
+    });
     res.json({
       success: true,
       user: { id: user._id, name, email, role: "user" },
