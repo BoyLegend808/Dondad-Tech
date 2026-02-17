@@ -216,6 +216,7 @@ function initCommon() {
     updateAuthNav();
     updateCartCount();
 
+    // Handle logout buttons (both ID and class based)
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function(e) {
@@ -223,6 +224,15 @@ function initCommon() {
             logoutUser();
         });
     }
+    
+    // Also handle logout links with onclick
+    const logoutLinks = document.querySelectorAll('.logout-btn');
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutUser();
+        });
+    });
 
     // Listen for online/offline status
     window.addEventListener('offline', handleOffline);
