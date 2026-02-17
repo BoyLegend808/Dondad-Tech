@@ -1,6 +1,57 @@
 // Authentication JavaScript
 const API_BASE = '';
 
+// Session configuration
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+let sessionTimer = null;
+let isOffline = false;
+let offlineTimer = null;
+
+// Reset session timer on user activity
+function resetSessionTimer() {
+    if (sessionTimer) {
+        clearTimeout(sessionTimer);
+    }
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    if (currentUser) {
+        sessionTimer = setTimeout(() => {
+            logoutUser('Session expired due to inactivity. Please login again.');
+        }, SESSION_TIMEOUT);
+    }
+}
+
+// Handle offline detection
+function handleOffline() {
+    isOffline = true;
+    // Start a timer when going offline
+    offlineTimer = setTimeout(() => {
+        const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+        if (currentUser) {
+            logoutUser('You have been logged out due to being offline for too long.');
+        }
+    }, 60000); // 60 seconds offline = logout
+}
+
+// Handle online detection
+function handleOnline() {
+    isOffline = false;
+    if (offlineTimer) {
+        clearTimeout(offlineTimer);
+        offlineTimer = null;
+    }
+    // Reset session timer when back online
+    resetSessionTimer();
+}
+
+// Handle tab close - logout immediately
+function handleTabClose() {
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    if (currentUser) {
+        // Clear session on tab close
+        sessionStorage.removeItem('dondad_currentUser');
+    }
+}
+
 // Hamburger menu setup
 function setupHamburger() {
     const hamburger = document.querySelector('.hamburger');
@@ -50,6 +101,12 @@ function updateAuthNav() {
         userGreeting.textContent = 'Hi, ' + currentUser.name;
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'block';
+        
+        // Start session timer for logged in user
+        resetSessionTimer();
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetSessionTimer, { passive: true });
+        });
     } else if (currentUser) {
         authLinks.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
@@ -57,19 +114,33 @@ function updateAuthNav() {
         userGreeting.textContent = 'Hi, ' + currentUser.name;
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'none';
+        
+        // Start session timer for logged in user
+        resetSessionTimer();
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetSessionTimer, { passive: true });
+        });
     } else {
         authLinks.style.display = 'flex';
         logoutBtn.style.display = 'none';
         userGreeting.style.display = 'none';
         if (cartLink) cartLink.style.display = 'none';
         if (adminLink) adminLink.style.display = 'none';
+        
+        // Clear session timer for logged out user
+        if (sessionTimer) {
+            clearTimeout(sessionTimer);
+            sessionTimer = null;
+        }
     }
 }
 
 // Single logout function
-function logoutUser() {
+function logoutUser(message = 'You have been logged out successfully!') {
     sessionStorage.removeItem('dondad_currentUser');
-    alert('You have been logged out successfully!');
+    if (message) {
+        alert(message);
+    }
     window.location.href = 'index.html';
 }
 
@@ -93,6 +164,13 @@ function initCommon() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', logoutUser);
     }
+
+    // Listen for online/offline status
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+
+    // Handle tab close - immediately clear session
+    window.addEventListener('beforeunload', handleTabClose);
 }
 
 // Login function
