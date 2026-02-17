@@ -7,6 +7,81 @@ let cart = JSON.parse(localStorage.getItem("cart")) || [];
 const USERS_KEY = "dondad_users";
 const CURRENT_USER_KEY = "dondad_currentUser";
 
+// Session configuration for auto-logout
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+let sessionTimer = null;
+let isOffline = false;
+let offlineTimer = null;
+
+// Reset session timer on user activity
+function resetSessionTimer() {
+    if (sessionTimer) {
+        clearTimeout(sessionTimer);
+    }
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        sessionTimer = setTimeout(() => {
+            logoutUser('Session expired due to inactivity. Please login again.');
+        }, SESSION_TIMEOUT);
+    }
+}
+
+// Handle offline detection
+function handleOffline() {
+    isOffline = true;
+    offlineTimer = setTimeout(() => {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            logoutUser('You have been logged out due to being offline for too long.');
+        }
+    }, 60000); // 60 seconds offline = logout
+}
+
+// Handle online detection
+function handleOnline() {
+    isOffline = false;
+    if (offlineTimer) {
+        clearTimeout(offlineTimer);
+        offlineTimer = null;
+    }
+    resetSessionTimer();
+}
+
+// Handle tab close - logout immediately
+function handleTabClose() {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        sessionStorage.removeItem(CURRENT_USER_KEY);
+    }
+}
+
+// Setup auto-logout listeners
+function setupAutoLogout() {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        resetSessionTimer();
+        
+        // Listen for user activity to reset timer
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetSessionTimer, { passive: true });
+        });
+    }
+    
+    // Listen for online/offline status
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    
+    // Handle tab close
+    window.addEventListener('beforeunload', handleTabClose);
+    
+    // Handle visibility change (mobile)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            handleTabClose();
+        }
+    });
+}
+
 // Product persistence key
 const PRODUCTS_KEY = "dondad_products";
 
@@ -137,10 +212,14 @@ function setCurrentUser(user) {
   sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 }
 
-function logoutUser() {
+function logoutUser(message = null) {
   sessionStorage.removeItem(CURRENT_USER_KEY);
   updateAuthUI();
-  alert("You have been logged out successfully!");
+  if (message) {
+    alert(message);
+  } else {
+    alert("You have been logged out successfully!");
+  }
   window.location.href = "index.html";
 }
 
@@ -455,6 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
   setupHamburger();
   updateAuthUI();
+  setupAutoLogout();
 
   // Homepage featured products
   const allProducts = getAllProducts();
