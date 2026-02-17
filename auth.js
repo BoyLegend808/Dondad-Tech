@@ -3,9 +3,67 @@ const API_BASE = '';
 
 // Session configuration
 const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+const TAB_CLOSE_TIMEOUT = 0; // 0 = immediate logout on tab close
 let sessionTimer = null;
 let isOffline = false;
 let offlineTimer = null;
+
+// Session key for tracking
+const SESSION_KEY = 'pajay_session_valid';
+const SESSION_TIMESTAMP_KEY = 'pajay_session_timestamp';
+
+// Check and validate session on page load
+function validateSession() {
+    const sessionValid = sessionStorage.getItem(SESSION_KEY);
+    const sessionTimestamp = sessionStorage.getItem(SESSION_TIMESTAMP_KEY);
+    
+    if (sessionValid && sessionTimestamp) {
+        const now = Date.now();
+        const elapsed = now - parseInt(sessionTimestamp);
+        
+        // If session has expired (more than 15 minutes since last activity), logout
+        if (elapsed > SESSION_TIMEOUT) {
+            clearSession();
+            return false;
+        }
+        
+        // Check if this is a new session (tab was closed and reopened)
+        // Use sessionStorage - it should clear on tab close, but we add extra check
+        const lastActivity = sessionStorage.getItem('pajay_last_activity');
+        if (lastActivity) {
+            const timeSinceLastActivity = now - parseInt(lastActivity);
+            // If more than a few seconds have passed since last activity, consider it a new session
+            if (timeSinceLastActivity > 5000) {
+                // This is likely a new tab/session - clear and require re-login
+                clearSession();
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    return false;
+}
+
+// Clear session completely
+function clearSession() {
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_TIMESTAMP_KEY);
+    sessionStorage.removeItem('pajay_last_activity');
+    sessionStorage.removeItem('dondad_currentUser');
+}
+
+// Mark session as valid and track timestamp
+function markSessionValid() {
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+    updateLastActivity();
+}
+
+// Update last activity timestamp
+function updateLastActivity() {
+    sessionStorage.setItem('pajay_last_activity', Date.now().toString());
+}
 
 // Reset session timer on user activity
 function resetSessionTimer() {
@@ -17,6 +75,8 @@ function resetSessionTimer() {
         sessionTimer = setTimeout(() => {
             logoutUser('Session expired due to inactivity. Please login again.');
         }, SESSION_TIMEOUT);
+        // Update timestamp
+        sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
     }
 }
 
@@ -45,11 +105,8 @@ function handleOnline() {
 
 // Handle tab close - logout immediately
 function handleTabClose() {
-    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
-    if (currentUser) {
-        // Clear session on tab close
-        sessionStorage.removeItem('dondad_currentUser');
-    }
+    // Clear the session completely when tab closes
+    clearSession();
 }
 
 // Hamburger menu setup
@@ -102,10 +159,11 @@ function updateAuthNav() {
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'block';
         
-        // Start session timer for logged in user
+        // Mark session as valid and start timer
+        markSessionValid();
         resetSessionTimer();
         ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetSessionTimer, { passive: true });
+            document.addEventListener(event, updateLastActivity, { passive: true });
         });
     } else if (currentUser) {
         authLinks.style.display = 'none';
@@ -115,10 +173,11 @@ function updateAuthNav() {
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'none';
         
-        // Start session timer for logged in user
+        // Mark session as valid and start timer
+        markSessionValid();
         resetSessionTimer();
         ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetSessionTimer, { passive: true });
+            document.addEventListener(event, updateLastActivity, { passive: true });
         });
     } else {
         authLinks.style.display = 'flex';
@@ -137,7 +196,7 @@ function updateAuthNav() {
 
 // Single logout function
 function logoutUser(message = 'You have been logged out successfully!') {
-    sessionStorage.removeItem('dondad_currentUser');
+    clearSession();
     if (message) {
         alert(message);
     }
@@ -156,6 +215,19 @@ function updateCartCount() {
 
 // Initialize common functionality
 function initCommon() {
+    // Validate session on page load - check if session is still valid
+    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    if (currentUser) {
+        // Validate session - if tab was closed and reopened, this will detect it
+        const isValid = validateSession();
+        if (!isValid) {
+            // Session invalid - clear and redirect to login
+            clearSession();
+            window.location.href = 'index.html';
+            return;
+        }
+    }
+
     setupHamburger();
     updateAuthNav();
     updateCartCount();
@@ -171,6 +243,13 @@ function initCommon() {
 
     // Handle tab close - immediately clear session
     window.addEventListener('beforeunload', handleTabClose);
+    
+    // Also handle visibility change (more reliable for mobile)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            handleTabClose();
+        }
+    });
 }
 
 // Login function
