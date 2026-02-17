@@ -1,4 +1,4 @@
-# Dondad Tech - E-commerce Website
+# Pajay Gadgets - E-commerce Website
 
 A full-stack e-commerce website for premium devices (Phones, Laptops, Tablets & Accessories).
 

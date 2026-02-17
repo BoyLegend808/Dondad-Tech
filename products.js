@@ -1,4 +1,4 @@
-// Product data for Dondad Tech
+// Product data for Pajay Gadgets
 const products = [
     // Phones
     { id: 1, name: "iPhone 13 Pro Max", category: "phones", price: 450000, image: "Iphone 11/iphone_113-removebg-preview.png", desc: "256GB, A15 chip, triple camera" },

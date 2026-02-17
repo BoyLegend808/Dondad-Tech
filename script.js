@@ -1,4 +1,4 @@
-// Dondad Tech - Main JavaScript
+// Pajay Gadgets - Main JavaScript
 
 // Cart functionality
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
