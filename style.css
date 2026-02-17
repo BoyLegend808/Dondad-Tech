@@ -358,36 +358,73 @@ header {
     justify-content: space-between;
     gap: 3rem;
     min-height: 80vh;
+    position: relative;
+}
+
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 70% 35%, rgba(168, 85, 247, 0.26), transparent 45%),
+        radial-gradient(circle at 20% 70%, rgba(236, 72, 153, 0.2), transparent 42%);
+    pointer-events: none;
 }
 
 .hero-content {
     flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #d8b4fe;
+    margin-bottom: 0.8rem;
 }
 
 .hero-content h1 {
-    font-size: 3.5rem;
+    font-size: 3.2rem;
     line-height: 1.2;
     margin-bottom: 1rem;
 }
 
 .hero-content h1 span {
-    color: var(--primary);
+    color: #e879f9;
 }
 
 .hero-content p {
     color: var(--muted);
-    font-size: 1.2rem;
+    font-size: 1.08rem;
+    max-width: 560px;
     margin-bottom: 2rem;
 }
 
 .hero-image {
     flex: 1;
     text-align: center;
+    position: relative;
+    z-index: 1;
 }
 
-.hero-image img {
-    max-width: 400px;
-    animation: float 3s ease-in-out infinite;
+.hero-visual-frame {
+    border-radius: 26px;
+    padding: 0.85rem;
+    background: linear-gradient(130deg, rgba(236, 72, 153, 0.7), rgba(168, 85, 247, 0.7), rgba(96, 165, 250, 0.65));
+    box-shadow: 0 22px 70px rgba(168, 85, 247, 0.35), 0 0 30px rgba(236, 72, 153, 0.3);
+}
+
+.hero-visual-frame img {
+    width: 100%;
+    max-width: 460px;
+    display: block;
+    border-radius: 20px;
+    object-fit: cover;
+    aspect-ratio: 4 / 5;
+    filter: saturate(1.08) contrast(1.05);
+    animation: float 4s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -1212,8 +1249,8 @@ footer {
         font-size: 2.5rem;
     }
 
-    .hero-image img {
-        max-width: 300px;
+    .hero-visual-frame img {
+        max-width: 360px;
     }
 
     section {
@@ -1303,8 +1340,12 @@ footer {
         font-size: 1rem;
     }
 
-    .hero-image img {
-        max-width: 280px;
+    .hero-visual-frame {
+        margin-top: 0.5rem;
+    }
+
+    .hero-visual-frame img {
+        max-width: 330px;
     }
 
     /* Sections */
@@ -1463,8 +1504,16 @@ footer {
         font-size: 0.9rem;
     }
 
-    .hero-image img {
-        max-width: 220px;
+    .hero-kicker {
+        font-size: 0.72rem;
+    }
+
+    .hero-visual-frame {
+        padding: 0.65rem;
+    }
+
+    .hero-visual-frame img {
+        max-width: 265px;
     }
 
     .btn {
@@ -1649,8 +1698,8 @@ footer {
         margin-bottom: 1.5rem;
     }
 
-    .hero-image img {
-        max-width: 180px;
+    .hero-visual-frame img {
+        max-width: 220px;
     }
 
     .btn {
