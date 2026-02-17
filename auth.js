@@ -195,11 +195,8 @@ function updateAuthNav() {
 }
 
 // Single logout function
-function logoutUser(message = 'You have been logged out successfully!') {
+function logoutUser(message = null) {
     clearSession();
-    if (message) {
-        alert(message);
-    }
     window.location.href = 'index.html';
 }
 
@@ -215,26 +212,16 @@ function updateCartCount() {
 
 // Initialize common functionality
 function initCommon() {
-    // Validate session on page load - check if session is still valid
-    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
-    if (currentUser) {
-        // Validate session - if tab was closed and reopened, this will detect it
-        const isValid = validateSession();
-        if (!isValid) {
-            // Session invalid - clear and redirect to login
-            clearSession();
-            window.location.href = 'index.html';
-            return;
-        }
-    }
-
     setupHamburger();
     updateAuthNav();
     updateCartCount();
 
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', logoutUser);
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutUser();
+        });
     }
 
     // Listen for online/offline status
