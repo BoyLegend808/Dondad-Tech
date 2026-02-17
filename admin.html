@@ -321,6 +321,38 @@
         let orders = [];
         let users = [];
         let isEditing = false;
+        const CATEGORY_OPTIONS = [
+            { value: 'phones', label: 'Phones' },
+            { value: 'laptops', label: 'Laptops' },
+            { value: 'tablets', label: 'Tablets' },
+            { value: 'accessories', label: 'Accessories' }
+        ];
+
+        function normalizeCategory(category) {
+            const value = String(category || '').toLowerCase().trim();
+            const map = {
+                phone: 'phones',
+                phones: 'phones',
+                laptop: 'laptops',
+                laptops: 'laptops',
+                tablet: 'tablets',
+                tablets: 'tablets',
+                accessory: 'accessories',
+                accessories: 'accessories'
+            };
+            return map[value] || 'phones';
+        }
+
+        function ensureCategorySelectOptions(selectedCategory) {
+            const select = document.getElementById('product-category');
+            if (!select) return;
+
+            const normalized = normalizeCategory(selectedCategory);
+            select.innerHTML = CATEGORY_OPTIONS.map(opt =>
+                `<option value="${opt.value}" ${opt.value === normalized ? 'selected' : ''}>${opt.label}</option>`
+            ).join('');
+            select.value = normalized;
+        }
 
         // Check login status on load
         document.addEventListener('DOMContentLoaded', function() {
@@ -606,6 +638,7 @@
         function showAddProduct() {
             isEditing = false;
             selectedImageBase64 = '';
+            ensureCategorySelectOptions('phones');
             document.getElementById('form-title').textContent = '➕ Add New Product';
             document.getElementById('product-form').reset();
             document.getElementById('product-id').value = '';
@@ -632,10 +665,10 @@
             
             isEditing = true;
             selectedImageBase64 = '';
+            ensureCategorySelectOptions(product.category);
             document.getElementById('form-title').textContent = '✏️ Edit Product';
             document.getElementById('product-id').value = product._id || product.id;
             document.getElementById('product-name').value = product.name;
-            document.getElementById('product-category').value = product.category;
             document.getElementById('product-price').value = product.price;
             document.getElementById('product-stock').value = product.stock || 10;
             document.getElementById('product-desc').value = product.desc || '';
@@ -818,7 +851,7 @@
             
             const product = {
                 name: document.getElementById('product-name').value,
-                category: document.getElementById('product-category').value,
+                category: normalizeCategory(document.getElementById('product-category').value),
                 price: parseFloat(document.getElementById('product-price').value),
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
