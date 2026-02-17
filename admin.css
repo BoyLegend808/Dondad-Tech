@@ -72,6 +72,7 @@
     color: var(--text);
     font-size: 0.9rem;
     width: 250px;
+    max-width: 100%;
 }
 
 /* Admin Tabs */
@@ -81,6 +82,8 @@
     margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
     padding-bottom: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-tab {
@@ -92,6 +95,7 @@
     cursor: pointer;
     border-radius: 8px 8px 0 0;
     transition: all 0.3s;
+    white-space: nowrap;
 }
 
 .admin-tab:hover {
@@ -151,6 +155,8 @@
     background: var(--card-bg);
     border-radius: 15px;
     overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Admin Table */
@@ -226,6 +232,13 @@
     background: var(--card-bg);
     padding: 40px;
     border-radius: 20px;
+}
+
+.header-actions .btn,
+.admin-form-container .btn,
+.btn-edit,
+.btn-delete {
+    white-space: nowrap;
 }
 
 /* Form Styles */
@@ -532,6 +545,16 @@
         align-items: flex-start;
     }
 
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-search {
+        width: 100%;
+    }
+
     .admin-page-header h2 {
         font-size: 1.4rem;
     }
@@ -545,7 +568,7 @@
     }
 
     .admin-table {
-        min-width: 600px;
+        min-width: 680px;
     }
 
     .form-row {
@@ -556,6 +579,11 @@
         flex-direction: column;
     }
 
+    .form-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
     .admin-form-container form {
         padding: 25px;
     }
@@ -563,5 +591,69 @@
     .admin-login-box {
         margin: 0 15px;
         padding: 30px 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-section {
+        padding: 4.75rem 0.75rem 2rem;
+    }
+
+    .admin-container {
+        padding: 0 8px;
+    }
+
+    .admin-tabs {
+        gap: 0.35rem;
+    }
+
+    .admin-tab {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-stat-card p {
+        font-size: 1.25rem;
+    }
+
+    .admin-form-container form {
+        padding: 18px;
+    }
+
+    .image-upload-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 12px 10px;
+        font-size: 0.9rem;
+    }
+
+    .btn-edit,
+    .btn-delete {
+        padding: 7px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .admin-login-box {
+        margin: 0 8px;
+        padding: 20px 14px;
+    }
+
+    .admin-page-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .dropdown-menu {
+        right: 0;
+        min-width: 160px;
     }
 }
