@@ -217,10 +217,13 @@ function logoutUser(message = null) {
   updateAuthUI();
   if (message) {
     alert(message);
-  } else {
-    alert("You have been logged out successfully!");
   }
   window.location.href = "index.html";
+}
+
+// Alias for logout
+function logout() {
+  logoutUser();
 }
 
 function isLoggedIn() {
