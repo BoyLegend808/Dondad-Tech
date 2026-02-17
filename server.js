@@ -725,6 +725,19 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
+// Get all users (for admin)
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select("_id name email phone role")
+      .sort({ _id: -1 });
+    res.json(users);
+  } catch (error) {
+    console.error("Get Users Error:", error);
+    res.status(500).json({ error: "Failed to get users" });
+  }
+});
+
 // Update order status (for admin)
 app.put("/api/orders/:orderId", async (req, res) => {
   try {

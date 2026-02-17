@@ -105,6 +105,35 @@
     font-weight: 600;
 }
 
+/* Admin Stats */
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.admin-stat-card h4 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.admin-stat-card p {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin: 0;
+}
+
 /* Admin Button */
 .admin-btn {
     padding: 12px 30px;
@@ -505,6 +534,10 @@
 
     .admin-page-header h2 {
         font-size: 1.4rem;
+    }
+
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .admin-table-container {

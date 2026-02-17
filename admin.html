@@ -280,10 +280,13 @@
         // Admin Panel Logic
         const API_URL = '';
         let products = [];
+        let orders = [];
+        let users = [];
         let isEditing = false;
 
         // Check login status on load
         document.addEventListener('DOMContentLoaded', function() {
+            ensureAdminEnhancements();
             checkAuth();
             
             // Dropdown toggle for hamburger
@@ -324,8 +327,80 @@
                 updateAdminNav(user);
                 showDashboard();
                 loadProducts();
+                loadDashboardStats();
             } else {
                 showLogin();
+            }
+        }
+
+        function ensureAdminEnhancements() {
+            const tabsContainer = document.querySelector('.admin-tabs');
+            if (!tabsContainer) return;
+
+            const hasCustomersTabBtn = Array.from(tabsContainer.querySelectorAll('.admin-tab'))
+                .some(btn => btn.getAttribute('onclick') === "switchAdminTab('customers')");
+            if (!hasCustomersTabBtn) {
+                const btn = document.createElement('button');
+                btn.className = 'admin-tab';
+                btn.setAttribute('onclick', "switchAdminTab('customers')");
+                btn.textContent = 'Customers';
+                tabsContainer.appendChild(btn);
+            }
+
+            if (!document.getElementById('admin-stats-grid')) {
+                const stats = document.createElement('div');
+                stats.id = 'admin-stats-grid';
+                stats.className = 'admin-stats-grid';
+                stats.innerHTML = `
+                    <div class="admin-stat-card">
+                        <h4>Total Sales</h4>
+                        <p id="stat-total-sales">₦0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h4>Pending Orders</h4>
+                        <p id="stat-pending-orders">0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h4>Low Stock Items</h4>
+                        <p id="stat-low-stock">0</p>
+                    </div>
+                    <div class="admin-stat-card">
+                        <h4>Total Customers</h4>
+                        <p id="stat-total-customers">0</p>
+                    </div>
+                `;
+                tabsContainer.insertAdjacentElement('afterend', stats);
+            }
+
+            if (!document.getElementById('customers-tab')) {
+                const ordersTab = document.getElementById('orders-tab');
+                if (!ordersTab) return;
+                const customersTab = document.createElement('div');
+                customersTab.id = 'customers-tab';
+                customersTab.className = 'admin-tab-content';
+                customersTab.style.display = 'none';
+                customersTab.innerHTML = `
+                    <div class="admin-page-header">
+                        <h2>Customer Management</h2>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table"></tbody>
+                        </table>
+                        <p id="no-customers" class="no-products" style="display: none;">No customers found.</p>
+                    </div>
+                `;
+                ordersTab.insertAdjacentElement('afterend', customersTab);
             }
         }
 
@@ -372,15 +447,21 @@
         function switchAdminTab(tab) {
             document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
-            
+
+            const activeBtn = Array.from(document.querySelectorAll('.admin-tab'))
+                .find(btn => btn.getAttribute('onclick') === `switchAdminTab('${tab}')`);
+            if (activeBtn) activeBtn.classList.add('active');
+
             if (tab === 'products') {
-                document.querySelector('.admin-tab:nth-child(1)').classList.add('active');
                 document.getElementById('products-tab').style.display = 'block';
                 loadProducts();
             } else if (tab === 'orders') {
-                document.querySelector('.admin-tab:nth-child(2)').classList.add('active');
                 document.getElementById('orders-tab').style.display = 'block';
                 loadOrders();
+            } else if (tab === 'customers') {
+                const customersTab = document.getElementById('customers-tab');
+                if (customersTab) customersTab.style.display = 'block';
+                loadCustomers();
             }
         }
 
@@ -388,7 +469,7 @@
         async function loadOrders() {
             try {
                 const response = await fetch(API_URL + '/api/orders');
-                const orders = await response.json();
+                orders = await response.json();
                 
                 document.getElementById('orders-loading').style.display = 'none';
                 
@@ -399,6 +480,7 @@
                 
                 document.getElementById('orders-list').style.display = 'block';
                 renderOrders(orders);
+                loadDashboardStats();
             } catch (error) {
                 console.error('Error loading orders:', error);
                 document.getElementById('orders-loading').textContent = 'Error loading orders';
@@ -455,10 +537,92 @@
                 const result = await response.json();
                 if (result.success) {
                     alert('✅ Order status updated to ' + status);
+                    loadDashboardStats();
                 }
             } catch (error) {
                 console.error('Error updating order:', error);
                 alert('Error updating order status');
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const [productsRes, ordersRes, usersRes] = await Promise.all([
+                    fetch(API_URL + '/api/products'),
+                    fetch(API_URL + '/api/orders'),
+                    fetch(API_URL + '/api/users')
+                ]);
+
+                products = await productsRes.json();
+                orders = await ordersRes.json();
+                users = await usersRes.json();
+
+                const totalSales = orders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+                const pendingOrders = orders.filter(order => order.status === 'pending').length;
+                const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
+                const customersCount = users.filter(u => u.role !== 'admin').length;
+
+                const totalSalesEl = document.getElementById('stat-total-sales');
+                const pendingOrdersEl = document.getElementById('stat-pending-orders');
+                const lowStockEl = document.getElementById('stat-low-stock');
+                const totalCustomersEl = document.getElementById('stat-total-customers');
+
+                if (totalSalesEl) totalSalesEl.textContent = `₦${totalSales.toLocaleString()}`;
+                if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
+                if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
+                if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
+
+        function getJoinedDateFromObjectId(objectId) {
+            if (!objectId || typeof objectId !== 'string' || objectId.length < 8) return 'N/A';
+            const timestampHex = objectId.substring(0, 8);
+            const timestamp = parseInt(timestampHex, 16) * 1000;
+            if (!Number.isFinite(timestamp)) return 'N/A';
+            return new Date(timestamp).toLocaleDateString();
+        }
+
+        async function loadCustomers() {
+            const table = document.getElementById('customers-table');
+            const empty = document.getElementById('no-customers');
+            if (!table || !empty) return;
+
+            try {
+                if (!users.length || !orders.length) {
+                    await loadDashboardStats();
+                }
+
+                const customers = users.filter(user => user.role !== 'admin');
+                if (!customers.length) {
+                    table.innerHTML = '';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                empty.style.display = 'none';
+                table.innerHTML = customers.map(user => {
+                    const userOrders = orders.filter(order =>
+                        String(order.userId) === String(user._id) || order.userEmail === user.email
+                    );
+                    const totalSpent = userOrders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+                    return `
+                        <tr>
+                            <td>${user.name || 'N/A'}</td>
+                            <td>${user.email || 'N/A'}</td>
+                            <td><span class="category-badge">${user.role || 'user'}</span></td>
+                            <td>${getJoinedDateFromObjectId(user._id)}</td>
+                            <td>${userOrders.length}</td>
+                            <td class="price">₦${totalSpent.toLocaleString()}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                table.innerHTML = '';
+                empty.style.display = 'block';
+                empty.textContent = 'Error loading customers.';
             }
         }
 
@@ -541,6 +705,7 @@
                 const response = await fetch(API_URL + '/api/products');
                 products = await response.json();
                 renderProducts();
+                loadDashboardStats();
             } catch (error) {
                 console.error('Error loading products:', error);
             }
