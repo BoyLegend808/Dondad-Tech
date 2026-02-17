@@ -35,7 +35,7 @@
                         <div class="user-dropdown">
                             <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout()" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
                                 Logout</a>
                         </div>
                     </div>
@@ -97,13 +97,7 @@
 
         // Check auth
         function checkAuth() {
-            let user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
-            if (!user) {
-                user = JSON.parse(localStorage.getItem('dondad_currentUser'));
-                if (user) {
-                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
-                }
-            }
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
@@ -132,6 +126,7 @@
 
         function logout() {
             sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
             location.reload();
         }
 
@@ -195,7 +190,7 @@
             cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
             
             // Then try API to get accurate count
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser')) || JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (user) {
                 const userId = user._id || user.id;
                 if (userId) {
@@ -238,3 +233,4 @@
 </body>
 
 </html>
+

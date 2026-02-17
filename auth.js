@@ -51,6 +51,7 @@ function clearSession() {
     sessionStorage.removeItem(SESSION_TIMESTAMP_KEY);
     sessionStorage.removeItem('pajay_last_activity');
     sessionStorage.removeItem('dondad_currentUser');
+    localStorage.removeItem('dondad_currentUser');
 }
 
 // Mark session as valid and track timestamp

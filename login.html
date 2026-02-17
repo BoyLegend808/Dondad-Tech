@@ -114,8 +114,13 @@
                 const data = await r.json();
 
                 if (data.success) {
+                    const remember = document.getElementById('remember')?.checked;
                     sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
-                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    if (remember) {
+                        localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    } else {
+                        localStorage.removeItem('dondad_currentUser');
+                    }
                     if (data.user.role === 'admin') {
                         location.href = 'admin.html';
                     } else {

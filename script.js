@@ -214,6 +214,7 @@ function setCurrentUser(user) {
 
 function logoutUser(message = null) {
   sessionStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem(CURRENT_USER_KEY);
   updateAuthUI();
   if (message) {
     alert(message);

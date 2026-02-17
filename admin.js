@@ -94,6 +94,7 @@ function renderAdminProducts() {
 
 function logoutAdmin() {
     sessionStorage.removeItem('dondad_currentUser');
+    localStorage.removeItem('dondad_currentUser');
     window.location.href = 'index.html';
 }
 

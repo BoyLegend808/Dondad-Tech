@@ -34,7 +34,7 @@
                         </div>
                         <div class="user-dropdown">
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout()" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
                                 Logout</a>
                         </div>
                     </div>
@@ -105,6 +105,7 @@
 
         function logout() {
             sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
             location.reload();
         }
 
@@ -248,7 +249,7 @@
         }
 
         function addToCart(productId) {
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!user) {
                 alert('Please login to add to cart');
                 location.href = 'login.html';
@@ -280,3 +281,4 @@
 </body>
 
 </html>
+
