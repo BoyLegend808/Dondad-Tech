@@ -18,9 +18,10 @@ const MONGODB_URI =
 
 mongoose
   .connect(MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
-    seedDatabase(); // Run seed after connection
+    await seedDatabase(); // Run seed after connection
+    await ensureDefaultUsers();
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -113,6 +114,45 @@ const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
 const Cart = mongoose.model("Cart", cartSchema);
 const Order = mongoose.model("Order", orderSchema);
+
+const DEFAULT_USERS = [
+  {
+    name: "Admin",
+    email: "admin@dondad.com",
+    password: "admin123",
+    phone: "08000000000",
+    role: "admin",
+  },
+  {
+    name: "Admin",
+    email: "admin@dondadtech.com",
+    password: "admin123",
+    phone: "08000000000",
+    role: "admin",
+  },
+  {
+    name: "John",
+    email: "ugwunekejohn5@gmail.com",
+    password: "customer123",
+    phone: "08012345678",
+    role: "customer",
+  },
+];
+
+function normalizeEmail(email = "") {
+  return email.trim().toLowerCase();
+}
+
+async function ensureDefaultUsers() {
+  for (const defaultUser of DEFAULT_USERS) {
+    const email = normalizeEmail(defaultUser.email);
+    const existing = await User.findOne({ email });
+    if (!existing) {
+      await User.create({ ...defaultUser, email });
+      console.log(`Created default user: ${email}`);
+    }
+  }
+}
 
 // Seed initial data
 async function seedDatabase() {
@@ -621,7 +661,8 @@ app.put("/api/orders/:orderId", async (req, res) => {
 // Login
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body?.email || "");
+    const password = (req.body?.password || "").trim();
     const user = await User.findOne({ email, password }).select(
       "_id name email role",
     );
@@ -659,7 +700,8 @@ app.get("/api/seed-admin", async (req, res) => {
 // Register
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, password, phone } = req.body;
+    const email = normalizeEmail(req.body?.email || "");
     const existing = await User.findOne({ email });
     if (existing)
       return res.status(400).json({ success: false, error: "Email exists" });
