@@ -678,9 +678,29 @@ section h2 {
 }
 
 .homepage .featured .product-scroll {
-    max-height: none;
-    overflow: visible;
+    max-height: 560px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.4rem;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+.homepage .featured .product-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.homepage .featured .product-scroll::-webkit-scrollbar-track {
+    background: #150826;
+    border-radius: 10px;
+}
+
+.homepage .featured .product-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7, #7b2cf4);
+    border-radius: 10px;
+}
+
+.homepage .featured .product-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #c084fc, #9333ea);
 }
 
 .homepage .category-card {
