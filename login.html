@@ -182,63 +182,70 @@
             localStorage.setItem('dondad_currentUser', JSON.stringify(user));
         }
 
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = normalizeEmail(document.getElementById('email').value);
-            const password = document.getElementById('password').value;
-            const error = document.getElementById('error');
-            const btn = e.target.querySelector('button[type="submit"]');
-            const remember = document.getElementById('remember')?.checked;
-            
-            error.style.display = 'none';
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            btn.disabled = true;
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('login-form');
+            if (form) {
+                form.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const email = normalizeEmail(document.getElementById('email').value);
+                    const password = document.getElementById('password').value;
+                    const error = document.getElementById('error');
+                    const btn = e.target.querySelector('button[type="submit"]');
+                    const remember = document.getElementById('remember')?.checked;
+                    
+                    error.style.display = 'none';
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+                    btn.disabled = true;
 
-            try {
-                const r = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const contentType = (r.headers.get('content-type') || '').toLowerCase();
-                const data = contentType.includes('application/json') ? await r.json() : null;
+                    try {
+                        const r = await fetch('/api/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email, password })
+                        });
+                        const contentType = (r.headers.get('content-type') || '').toLowerCase();
+                        const data = contentType.includes('application/json') ? await r.json() : null;
 
-                if (r.ok && data && data.success && data.user) {
-                    persistLoginUser(data.user, remember);
-                    if (data.user.role === 'admin') {
-                        location.href = 'admin.html';
-                    } else {
-                        location.href = 'index.html';
+                        if (r.ok && data && data.success && data.user) {
+                            persistLoginUser(data.user, remember);
+                            if (data.user.role === 'admin') {
+                                location.href = 'admin.html';
+                            } else {
+                                location.href = 'index.html';
+                            }
+                            return;
+                        } else {
+                            ensureLocalFallbackUsers();
+                            const localUser = loginWithLocalUsers(email, password);
+                            if (localUser) {
+                                persistLoginUser(localUser, remember);
+                                location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
+                                return;
+                            }
+
+                            error.textContent = (data && data.error) ? data.error : 'Invalid credentials';
+                            error.style.display = 'block';
+                            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                            btn.disabled = false;
+                        }
+                    } catch (err) {
+                        ensureLocalFallbackUsers();
+                        const localUser = loginWithLocalUsers(email, password);
+                        if (localUser) {
+                            persistLoginUser(localUser, remember);
+                            location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
+                            return;
+                        }
+
+                        error.textContent = 'Login failed. Check your credentials or start the server.';
+                        error.style.display = 'block';
+                        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                        btn.disabled = false;
                     }
-                } else {
-                    ensureLocalFallbackUsers();
-                    const localUser = loginWithLocalUsers(email, password);
-                    if (localUser) {
-                        persistLoginUser(localUser, remember);
-                        location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
-                        return;
-                    }
-
-                    error.textContent = (data && data.error) ? data.error : 'Invalid credentials';
-                    error.style.display = 'block';
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                ensureLocalFallbackUsers();
-                const localUser = loginWithLocalUsers(email, password);
-                if (localUser) {
-                    persistLoginUser(localUser, remember);
-                    location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
-                    return;
-                }
-
-                error.textContent = 'Login failed. Start server with "npm start" or use a valid local fallback account.';
-                error.style.display = 'block';
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-                btn.disabled = false;
+                };
             }
-        };
+        });
     </script>
 </body>
 </html>
