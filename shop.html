@@ -228,7 +228,7 @@
                 return;
             }
             grid.innerHTML = products.map(p => `
-                <div class="product-card">
+                <div class="product-card" onclick="openProductDetails('${p._id || p.id}')">
                     <a href="product.html?id=${p._id || p.id}">
                         <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
                     </a>
@@ -237,10 +237,14 @@
                             <h3>${p.name}</h3>
                         </a>
                         <p class="price">₦${p.price.toLocaleString()}</p>
-                        <button onclick="addToCart('${p._id || p.id}')" class="btn add-cart">Add to Cart</button>
+                        <button onclick="event.stopPropagation(); addToCart('${p._id || p.id}')" class="btn add-cart">Add to Cart</button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function openProductDetails(productId) {
+            window.location.href = `product.html?id=${productId}`;
         }
 
         function filterProducts(category, btn) {

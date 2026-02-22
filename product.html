@@ -61,6 +61,9 @@
 
     <main>
         <section class="product-page">
+            <div class="product-nav-actions">
+                <a href="shop.html" class="btn back-to-shop-btn" onclick="return handleBackToShop(event)">← Back to Shop</a>
+            </div>
             <!-- Breadcrumb -->
             <div class="breadcrumb">
                 <a href="index.html">Home</a>
@@ -566,6 +569,15 @@
             const newVal = parseInt(input.value) + delta;
             if (newVal >= 1 && newVal <= 99) input.value = newVal;
         }
+
+        function handleBackToShop(event) {
+            if (document.referrer && document.referrer.includes('shop.html')) {
+                event.preventDefault();
+                history.back();
+                return false;
+            }
+            return true;
+        }
         
         loadProduct();
     </script>
@@ -576,6 +588,16 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 1rem;
+        }
+
+        .product-nav-actions {
+            margin-bottom: 1rem;
+        }
+
+        .back-to-shop-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
         }
         
         .breadcrumb {

@@ -43,7 +43,7 @@ function renderProducts(products) {
     if (!grid) return;
 
     grid.innerHTML = products.map(p => `
-        <article class="product-card">
+        <article class="product-card" onclick="openProductDetails('${p._id || p.id}')">
             <a href="product.html?id=${p._id || p.id}">
                 <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
             </a>
@@ -53,10 +53,14 @@ function renderProducts(products) {
                 </a>
                 <p class="product-card-desc">${p.desc || ''}</p>
                 <p class="price">₦${p.price.toLocaleString()}</p>
-                <button onclick="addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
+                <button onclick="event.stopPropagation(); addToCart('${p._id || p.id}')" class="btn">Add to Cart</button>
             </div>
         </article>
     `).join('');
+}
+
+function openProductDetails(productId) {
+    window.location.href = `product.html?id=${productId}`;
 }
 
 // Filter products
