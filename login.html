@@ -116,45 +116,6 @@
             }
         }
 
-        function ensureLocalFallbackUsers() {
-            const key = 'dondad_users';
-            const existing = JSON.parse(localStorage.getItem(key) || '[]');
-            const users = Array.isArray(existing) ? existing : [];
-            const defaults = [
-                { name: 'Admin', email: 'admin@dondad.com', password: 'admin123', role: 'admin' },
-                { name: 'Admin', email: 'admin@dondadtech.com', password: 'admin123', role: 'admin' },
-                { name: 'John', email: 'ugwunekejohn5@gmail.com', password: 'customer123', role: 'customer' }
-            ];
-
-            let changed = false;
-            defaults.forEach(d => {
-                const found = users.some(u => normalizeEmail(u.email) === normalizeEmail(d.email));
-                if (!found) {
-                    users.push(d);
-                    changed = true;
-                }
-            });
-
-            if (changed) {
-                localStorage.setItem(key, JSON.stringify(users));
-            }
-        }
-
-        function loginWithLocalUsers(email, password) {
-            const users = JSON.parse(localStorage.getItem('dondad_users') || '[]');
-            if (!Array.isArray(users)) return null;
-
-            const match = users.find(u => normalizeEmail(u.email) === normalizeEmail(email) && String(u.password || '') === String(password));
-            if (!match) return null;
-
-            return {
-                _id: match._id || match.id || `local-${normalizeEmail(match.email)}`,
-                name: match.name || 'User',
-                email: match.email,
-                role: match.role || 'customer'
-            };
-        }
-
         function toggleMenu() {
             const navLinks = document.getElementById('navLinks');
             const hamburger = document.querySelector('.hamburger');
@@ -229,19 +190,11 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
                 try {
-                    let user;
-                    try {
-                        user = await tryApiLogin(email, password);
-                    } catch (apiErr) {
-                        ensureLocalFallbackUsers();
-                        user = loginWithLocalUsers(email, password);
-                        if (!user) throw apiErr;
-                    }
-
+                    const user = await tryApiLogin(email, password);
                     persistLoginUser(user, remember);
                     window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
                 } catch (err) {
-                    error.textContent = err.message || 'Login failed';
+                    error.textContent = err.message || 'Login failed. Please try again.';
                     error.style.display = 'block';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
