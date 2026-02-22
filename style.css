@@ -550,6 +550,229 @@ section h2 {
     font-weight: 600;
 }
 
+/* Homepage Redesign (Scoped) */
+.homepage .home-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1rem 2rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.homepage .panel-card {
+    background: linear-gradient(145deg, #18082a, #130523);
+    border: 1px solid #2a1243;
+    border-radius: 16px;
+    padding: 1rem;
+}
+
+.homepage .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.homepage .section-head a {
+    color: #d4b2ff;
+    font-size: 0.9rem;
+}
+
+.homepage .home-toolbar {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.homepage .toolbar-search {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+}
+
+.homepage .toolbar-search input {
+    border: 1px solid #3b1f5b;
+    border-radius: 12px;
+    background: #10051d;
+    color: #fff;
+    padding: 0.8rem 1rem;
+}
+
+.homepage .toolbar-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.homepage .toolbar-tags a {
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    background: #241040;
+    color: #d4b2ff;
+    font-size: 0.85rem;
+}
+
+.homepage .home-spotlight {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.8rem;
+}
+
+.homepage .spotlight-main {
+    border-radius: 14px;
+    background: radial-gradient(circle at top right, #7b2cf4 0%, #3e136a 45%, #1a0730 100%);
+    padding: 1.25rem;
+}
+
+.homepage .spotlight-kicker {
+    color: #ffd98b;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}
+
+.homepage .spotlight-main h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.homepage .spotlight-main h1 span {
+    color: #f2d1ff;
+}
+
+.homepage .spotlight-main p {
+    color: #ecd8ff;
+    margin-bottom: 1rem;
+}
+
+.homepage .spotlight-side {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.homepage .side-tile {
+    border-radius: 14px;
+    padding: 1rem;
+    background: #1f0b36;
+    border: 1px solid #311453;
+}
+
+.homepage .side-tile h3 {
+    margin-bottom: 0.35rem;
+    font-size: 1rem;
+}
+
+.homepage .side-tile p {
+    color: #bca2df;
+    font-size: 0.86rem;
+}
+
+.homepage .trust-section,
+.homepage .featured,
+.homepage .categories,
+.homepage .about-section,
+.homepage .contact-section {
+    max-width: 100%;
+    margin: 0;
+    padding: 1rem;
+}
+
+.homepage .featured .product-scroll {
+    max-height: none;
+    overflow: visible;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+.homepage .category-card {
+    background: #1d0d34;
+}
+
+.homepage .about-content,
+.homepage .about-card,
+.homepage .contact-card,
+.homepage .trust-item {
+    background: #19092d;
+}
+
+/* Global Non-Homepage Surface Refresh */
+body:not(.homepage) main:not(.auth-page) {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 1rem 2rem;
+    display: grid;
+    gap: 1rem;
+}
+
+body:not(.homepage) main:not(.auth-page)>section {
+    background: linear-gradient(145deg, #18082a, #12051f);
+    border: 1px solid #2a1243;
+    border-radius: 16px;
+    padding: 1rem;
+}
+
+body:not(.homepage) .shop-header {
+    text-align: left;
+    padding-top: 1rem;
+}
+
+body:not(.homepage) .shop-header h1 {
+    margin-bottom: 0.8rem;
+    font-size: 2rem;
+}
+
+body:not(.homepage) #search {
+    max-width: 100%;
+    margin-top: 0.5rem;
+    border-color: #3a1d5b;
+}
+
+body:not(.homepage) .filters {
+    justify-content: flex-start;
+    margin: 0.75rem 0;
+}
+
+body:not(.homepage) .checkout-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1rem;
+}
+
+body:not(.homepage) .checkout-form,
+body:not(.homepage) .tracking-form,
+body:not(.homepage) #tracking-result,
+body:not(.homepage) .wishlist-empty,
+body:not(.homepage) .cart-summary {
+    background: #17092b;
+    border: 1px solid #2f1450;
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+body:not(.homepage) .tracking-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+body:not(.homepage) .tracking-form input {
+    flex: 1;
+}
+
+body:not(.homepage) .tracking-page h1,
+body:not(.homepage) .checkout-page h1 {
+    margin-bottom: 1rem;
+}
+
+body:not(.homepage) .product-grid .product-card,
+body:not(.homepage) .related-card {
+    background: #17092b;
+    border-color: #34165a;
+}
+
+body:not(.homepage) footer {
+    border-top: 1px solid #2a1243;
+}
+
 /* Categories */
 .category-grid {
     display: grid;
@@ -752,7 +975,7 @@ section h2 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--bg) 0%, #1a0f2e 50%, #2d1f4e 100%);
+    background: radial-gradient(circle at top, #271043 0%, #150826 45%, #0f0518 100%);
 }
 
 .auth-container {
@@ -762,11 +985,11 @@ section h2 {
 }
 
 .auth-card {
-    background: var(--card);
+    background: linear-gradient(145deg, #1b0d30, #130621);
     border-radius: 20px;
     padding: 2.5rem 2rem;
-    border: 1px solid var(--border);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 1px solid #34165a;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 .auth-header {
@@ -1319,6 +1542,31 @@ footer {
         grid-template-columns: 1fr;
     }
 
+    .homepage .home-spotlight {
+        grid-template-columns: 1fr;
+    }
+
+    .homepage .spotlight-main h1 {
+        font-size: 1.6rem;
+    }
+
+    body:not(.homepage) main:not(.auth-page) {
+        padding: 5.4rem 0.75rem 1.25rem;
+    }
+
+    body:not(.homepage) main:not(.auth-page)>section {
+        padding: 0.85rem;
+    }
+
+    body:not(.homepage) .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body:not(.homepage) .tracking-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .about-content h2 {
         font-size: 1.5rem;
     }
@@ -1469,6 +1717,20 @@ footer {
     .btn {
         padding: 10px 24px;
         font-size: 0.95rem;
+    }
+
+    .homepage .home-shell {
+        padding: 5rem 0.75rem 1.5rem;
+        gap: 0.75rem;
+    }
+
+    .homepage .panel-card {
+        padding: 0.8rem;
+        border-radius: 14px;
+    }
+
+    .homepage .toolbar-search {
+        grid-template-columns: 1fr;
     }
 
     /* Sections */

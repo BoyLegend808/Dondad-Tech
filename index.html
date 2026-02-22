@@ -19,7 +19,7 @@
     <meta http-equiv="Expires" content="0">
 </head>
 
-<body>
+<body class="homepage">
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets</a>
@@ -59,19 +59,41 @@
         </nav>
     </header>
 
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Welcome to<br><span>Pajay Gadgets</span></h1>
-                <p>Your one-stop shop for phones, laptops, tablets & accessories</p>
-                <a href="shop.html" class="btn">Shop Now</a>
+    <main class="home-shell">
+        <section class="home-toolbar panel-card">
+            <div class="toolbar-search">
+                <input type="text" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
+                <a href="shop.html" class="btn">Browse</a>
             </div>
-            <div class="hero-image">
-                <img src="logo.png" alt="Pajay Gadgets">
+            <div class="toolbar-tags">
+                <a href="shop.html?category=phones">Phones</a>
+                <a href="shop.html?category=laptops">Laptops</a>
+                <a href="shop.html?category=tablets">Tablets</a>
+                <a href="shop.html?category=accessories">Accessories</a>
             </div>
         </section>
 
-        <section class="trust-section">
+        <section class="home-spotlight panel-card">
+            <div class="spotlight-main">
+                <p class="spotlight-kicker">Deal Zone</p>
+                <h1>Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
+                <p>Daily deals on top devices with clean pricing and fast delivery support.</p>
+                <a href="shop.html" class="btn">Shop Now</a>
+            </div>
+            <div class="spotlight-side">
+                <article class="side-tile">
+                    <h3>Noise Cancelling Headsets</h3>
+                    <p>Comfort-first audio picks this week.</p>
+                </article>
+                <article class="side-tile">
+                    <h3>Smart Watches</h3>
+                    <p>Fitness + notifications in one place.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="trust-section panel-card">
+            <h2>Why Shop Here</h2>
             <div class="trust-grid">
                 <div class="trust-item">
                     <h3>Original Products</h3>
@@ -88,8 +110,19 @@
             </div>
         </section>
 
-        <section class="categories">
-            <h2>Categories</h2>
+        <section class="featured panel-card">
+            <div class="section-head">
+                <h2>Featured Products</h2>
+                <a href="shop.html">View all</a>
+            </div>
+            <div class="product-scroll" id="featured-products"></div>
+        </section>
+
+        <section class="categories panel-card">
+            <div class="section-head">
+                <h2>Top Categories</h2>
+                <a href="shop.html">Open shop</a>
+            </div>
             <div class="category-grid">
                 <a href="shop.html?category=phones" class="category-card">
                     <img src="xs.png" alt="Phones">
@@ -110,12 +143,7 @@
             </div>
         </section>
 
-        <section class="featured">
-            <h2>Featured Products</h2>
-            <div class="product-scroll" id="featured-products"></div>
-        </section>
-
-        <section class="about-section" id="about">
+        <section class="about-section panel-card" id="about">
             <div class="about-grid">
                 <div class="about-content">
                     <p class="about-label">About Us</p>
@@ -137,7 +165,7 @@
             </div>
         </section>
 
-        <section class="contact-section" id="contact">
+        <section class="contact-section panel-card" id="contact">
             <h2>Contact Us</h2>
             <div class="contact-grid">
                 <div class="contact-card">
@@ -167,7 +195,7 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-        <script>
+    <script>
         function getCurrentUser() {
             try {
                 const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
@@ -266,7 +294,7 @@
                 .catch(() => {});
         }
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const userMenu = document.querySelector('.user-menu');
             const userDropdown = document.querySelector('.user-dropdown');
             if (userMenu && userDropdown && !userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
@@ -281,7 +309,7 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
             updateCartCount();
             loadFeaturedProducts();
@@ -290,4 +318,3 @@
 </body>
 
 </html>
-
