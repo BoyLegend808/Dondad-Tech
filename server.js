@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const Stripe = require("stripe");
 const https = require('https');
 const querystring = require('querystring');
 
@@ -18,10 +19,22 @@ const PORT = process.env.PORT || 3000;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
 const loginAttempts = new Map();
+const apiRateAttempts = new Map();
+const sensitiveRateAttempts = new Map();
+let globalApiRateLimit = (req, res, next) => next();
+let globalSensitiveRateLimit = (req, res, next) => next();
+function apiRateLimit(req, res, next) {
+  return globalApiRateLimit(req, res, next);
+}
+function sensitiveRateLimit(req, res, next) {
+  return globalSensitiveRateLimit(req, res, next);
+}
 
 // MongoDB Connection
-const MONGODB_URI =
-  "mongodb+srv://ugwunekejohn5_db_user:Legend1@cluster0.r5kxjyu.mongodb.net/pajaygadgets?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  throw new Error("Missing MONGODB_URI environment variable");
+}
 
 mongoose
   .connect(MONGODB_URI)
@@ -92,9 +105,12 @@ const cartSchema = new mongoose.Schema({
 // Flutterwave/Paystack Configuration (use environment variables in production)
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'sk_test_your_key_here';
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // Initialize payment
-app.post('/api/payment/initialize', async (req, res) => {
+app.post('/api/payment/initialize', sensitiveRateLimit, async (req, res) => {
     try {
         const email = normalizeEmail(req.body?.email || "");
         const amount = parseMoney(req.body?.amount, null);
@@ -139,7 +155,7 @@ app.post('/api/payment/initialize', async (req, res) => {
 });
 
 // Verify payment
-app.get('/api/payment/verify/:reference', async (req, res) => {
+app.get('/api/payment/verify/:reference', sensitiveRateLimit, async (req, res) => {
     try {
         const reference = sanitizeText(req.params?.reference || "", 120);
         if (!reference) {
@@ -164,6 +180,88 @@ app.get('/api/payment/verify/:reference', async (req, res) => {
         console.error('Payment verify error:', error);
         res.status(500).json({ error: 'Payment verification failed' });
     }
+});
+
+// Stripe Checkout Session
+app.post("/api/payment/stripe/checkout", sensitiveRateLimit, async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe is not configured on server" });
+    }
+    const email = normalizeEmail(req.body?.email || "");
+    const amount = parseMoney(req.body?.amount, null);
+    const orderId = String(req.body?.orderId || "");
+    if (!isValidEmail(email) || amount === null || amount <= 0 || !isValidObjectId(orderId)) {
+      return res.status(400).json({ error: "Invalid Stripe checkout payload" });
+    }
+
+    const origin = `${req.protocol}://${req.get("host")}`;
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      customer_email: email,
+      line_items: [
+        {
+          price_data: {
+            currency: "ngn",
+            product_data: {
+              name: `Order ${orderId}`,
+              description: "Pajay Gadgets checkout",
+            },
+            unit_amount: Math.round(amount * 100),
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: { orderId },
+      success_url: `${origin}/checkout.html?payment=stripe_success&orderId=${orderId}`,
+      cancel_url: `${origin}/checkout.html?payment=stripe_cancel&orderId=${orderId}`,
+    });
+
+    res.json({ success: true, url: session.url, sessionId: session.id });
+  } catch (error) {
+    console.error("Stripe checkout error:", error);
+    res.status(500).json({ error: "Failed to initialize Stripe checkout" });
+  }
+});
+
+// Stripe Webhook (raw body required for signature validation)
+app.post("/api/payment/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  try {
+    if (!stripe || !STRIPE_WEBHOOK_SECRET) {
+      return res.status(500).send("Stripe webhook not configured");
+    }
+    const signature = req.headers["stripe-signature"];
+    if (!signature) {
+      return res.status(400).send("Missing Stripe signature");
+    }
+
+    const event = stripe.webhooks.constructEvent(req.body, signature, STRIPE_WEBHOOK_SECRET);
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      const orderId = session?.metadata?.orderId;
+      if (isValidObjectId(orderId)) {
+        const order = await Order.findByIdAndUpdate(
+          orderId,
+          {
+            paymentStatus: "paid",
+            paymentReference: sanitizeText(session.payment_intent || session.id || "", 120),
+            status: "confirmed",
+            updatedAt: Date.now(),
+          },
+          { new: true },
+        );
+        if (order) {
+          await Cart.deleteMany({ userId: order.userId });
+        }
+      }
+    }
+
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error("Stripe webhook error:", error.message || error);
+    return res.status(400).send(`Webhook Error: ${error.message || "Invalid event"}`);
+  }
 });
 
 // Order Schema
@@ -366,6 +464,53 @@ function loginRateLimit(req, res, next) {
 
   record.count += 1;
   loginAttempts.set(key, record);
+  next();
+}
+
+function createIpRateLimiter(store, windowMs, max, errorMessage) {
+  return (req, res, next) => {
+    const key = req.ip || req.connection.remoteAddress || "unknown";
+    const now = Date.now();
+    const record = store.get(key);
+
+    if (!record || now > record.expiresAt) {
+      store.set(key, { count: 1, expiresAt: now + windowMs });
+      return next();
+    }
+
+    if (record.count >= max) {
+      return res.status(429).json({ error: errorMessage });
+    }
+
+    record.count += 1;
+    store.set(key, record);
+    next();
+  };
+}
+
+globalApiRateLimit = createIpRateLimiter(
+  apiRateAttempts,
+  15 * 60 * 1000,
+  600,
+  "Too many API requests. Please try again later.",
+);
+
+globalSensitiveRateLimit = createIpRateLimiter(
+  sensitiveRateAttempts,
+  15 * 60 * 1000,
+  120,
+  "Too many requests on this endpoint. Please try again later.",
+);
+
+function requireInternalAccess(req, res, next) {
+  if (process.env.NODE_ENV !== "production") {
+    return next();
+  }
+  const token = req.headers["x-admin-token"];
+  const expected = process.env.ADMIN_API_TOKEN;
+  if (!expected || token !== expected) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
   next();
 }
 
@@ -588,10 +733,40 @@ async function seedDatabase() {
 }
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
+const defaultAllowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://dondad-tech-production-0b1a.up.railway.app",
+];
+const allowedOrigins = (
+  process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+    : defaultAllowedOrigins
+);
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
+    credentials: false,
+  }),
+);
+const jsonParser = bodyParser.json();
+app.use((req, res, next) => {
+  if (req.path === "/api/payment/stripe/webhook") {
+    return next();
+  }
+  return jsonParser(req, res, next);
+});
 app.use(express.static(__dirname));
 app.use("/api", (req, res, next) => {
+  if (req.path === "/payment/stripe/webhook") {
+    return next();
+  }
   if (
     hasUnsafeKeys(req.body) ||
     hasUnsafeKeys(req.query) ||
@@ -601,6 +776,7 @@ app.use("/api", (req, res, next) => {
   }
   next();
 });
+app.use("/api", apiRateLimit);
 
 // --- API ROUTES ---
 
@@ -703,7 +879,7 @@ app.delete("/api/products/:id", async (req, res) => {
 });
 
 // Migrate existing products to add variant fields
-app.get("/api/products/migrate-variants", async (req, res) => {
+app.get("/api/products/migrate-variants", requireInternalAccess, async (req, res) => {
   try {
     const result = await Product.updateMany(
       { hasVariants: { $exists: false } },
@@ -887,7 +1063,7 @@ app.delete("/api/cart/:userId/:productId", async (req, res) => {
 // ============= ORDER ENDPOINTS =============
 
 // Create Order
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", sensitiveRateLimit, async (req, res) => {
   try {
     const userId = String(req.body?.userId || "");
     const userName = sanitizeText(req.body?.userName || "", 120);
@@ -908,6 +1084,10 @@ app.post("/api/orders", async (req, res) => {
     if (!items.length || items.length > 100) {
       return res.status(400).json({ error: "Order items are required" });
     }
+    const allowedPaymentMethods = new Set(["cash", "transfer", "stripe"]);
+    if (!allowedPaymentMethods.has(paymentMethod)) {
+      return res.status(400).json({ error: "Invalid payment method" });
+    }
     
     const order = await Order.create({
       userId,
@@ -921,8 +1101,10 @@ app.post("/api/orders", async (req, res) => {
       status: "pending"
     });
     
-    // Clear user's cart after order
-    await Cart.deleteMany({ userId });
+    // Keep cart for Stripe until payment confirmation via webhook
+    if (paymentMethod !== "stripe") {
+      await Cart.deleteMany({ userId });
+    }
     
     res.json({ success: true, order });
   } catch (error) {
@@ -990,7 +1172,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 // Update order status (for admin)
-app.put("/api/orders/:orderId", async (req, res) => {
+app.put("/api/orders/:orderId", sensitiveRateLimit, async (req, res) => {
   try {
     const orderId = String(req.params?.orderId || "");
     if (!isValidObjectId(orderId)) {
@@ -1040,7 +1222,7 @@ app.get("/api/reviews/:productId", async (req, res) => {
 });
 
 // Add review
-app.post("/api/reviews", async (req, res) => {
+app.post("/api/reviews", sensitiveRateLimit, async (req, res) => {
   try {
     const productId = String(req.body?.productId || "");
     const userId = String(req.body?.userId || "");
@@ -1108,7 +1290,7 @@ app.get("/api/wishlist/:userId", async (req, res) => {
 });
 
 // Add to wishlist
-app.post("/api/wishlist/:userId", async (req, res) => {
+app.post("/api/wishlist/:userId", sensitiveRateLimit, async (req, res) => {
   try {
     const userId = String(req.params?.userId || "");
     const productId = String(req.body?.productId || "");
@@ -1186,7 +1368,7 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
 });
 
 // Seed Admin User (Run this to create admin if missing)
-app.get("/api/seed-admin", async (req, res) => {
+app.get("/api/seed-admin", requireInternalAccess, sensitiveRateLimit, async (req, res) => {
   try {
     const existing = await User.findOne({ email: "admin@dondad.com" });
     if (existing) {
@@ -1207,7 +1389,7 @@ app.get("/api/seed-admin", async (req, res) => {
 });
 
 // Register
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", sensitiveRateLimit, async (req, res) => {
   try {
     const name = sanitizeText(req.body?.name || "", 120);
     const password = String(req.body?.password || "");

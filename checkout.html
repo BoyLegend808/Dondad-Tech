@@ -90,6 +90,7 @@
                             <option value="">Select payment option</option>
                             <option value="cash">Cash on Delivery</option>
                             <option value="transfer">Bank Transfer</option>
+                            <option value="stripe">Stripe Card Payment</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -133,6 +134,17 @@
                 alert('Please login to proceed to checkout.');
                 window.location.href = 'login.html';
                 return;
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const paymentState = params.get('payment');
+            if (paymentState === 'stripe_success') {
+                alert('Payment successful. Your order has been confirmed.');
+                window.location.href = 'index.html';
+                return;
+            }
+            if (paymentState === 'stripe_cancel') {
+                alert('Stripe payment was canceled. You can retry payment from checkout.');
             }
 
             // Show admin link only for admin users
@@ -309,6 +321,7 @@
                 }
                 
                 // Prepare order data
+                const paymentMethod = document.getElementById('payment').value;
                 const orderData = {
                     userId: currentUser._id || currentUser.id,
                     userName: document.getElementById('name').value,
@@ -327,7 +340,7 @@
                         method: document.getElementById('delivery').value,
                         notes: document.getElementById('notes').value
                     },
-                    paymentMethod: document.getElementById('payment').value,
+                    paymentMethod,
                     subtotal: getCartTotal()
                 };
                 
@@ -340,6 +353,25 @@
                     
                     const result = await response.json();
                     if (result.success) {
+                        if (paymentMethod === 'stripe') {
+                            const stripeResp = await fetch('/api/payment/stripe/checkout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    email: orderData.userEmail,
+                                    amount: orderData.subtotal,
+                                    orderId: result.order._id
+                                })
+                            });
+                            const stripeData = await stripeResp.json();
+                            if (stripeResp.ok && stripeData.success && stripeData.url) {
+                                window.location.href = stripeData.url;
+                                return;
+                            }
+                            alert(stripeData.error || 'Failed to start Stripe payment');
+                            return;
+                        }
+
                         alert('Thank you for your order! Order ID: ' + result.order._id + '\nWe will contact you shortly to confirm.');
                         window.location.href = 'index.html';
                     } else {
