@@ -246,9 +246,12 @@
             }
         });
 
+        // Toggle hamburger menu
         function toggleMenu() {
-            document.querySelector('.nav-links').classList.toggle('active');
-            document.querySelector('.hamburger').classList.toggle('active');
+            var navLinks = document.querySelector('.nav-links');
+            var hamburger = document.querySelector('.hamburger');
+            if (navLinks) navLinks.classList.toggle('active');
+            if (hamburger) hamburger.classList.toggle('active');
         }
 
         function updateCartCount() {
@@ -295,8 +298,15 @@
                 });
         }
 
-        
-        document.addEventListener('DOMContentLoaded', () => {
+        // Toggle hamburger menu
+        function toggleMenu() {
+            var navLinks = document.querySelector('.nav-links');
+            var hamburger = document.querySelector('.hamburger');
+            if (navLinks) navLinks.classList.toggle('active');
+            if (hamburger) hamburger.classList.toggle('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             updateCartCount();
             loadFeaturedProducts();
