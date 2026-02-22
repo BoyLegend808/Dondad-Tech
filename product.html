@@ -64,16 +64,6 @@
             <div class="product-nav-actions">
                 <a href="shop.html" class="btn back-to-shop-btn" onclick="return handleBackToShop(event)">← Back to Shop</a>
             </div>
-            <!-- Breadcrumb -->
-            <div class="breadcrumb">
-                <a href="index.html">Home</a>
-                <span>/</span>
-                <a href="shop.html">Shop</a>
-                <span>/</span>
-                <span id="breadcrumb-category">Category</span>
-                <span>/</span>
-                <span id="breadcrumb-name" class="current">Product</span>
-            </div>
 
             <!-- Product Detail Section -->
             <div class="product-container" id="product-container">
@@ -244,10 +234,6 @@
             const container = document.getElementById('product-container');
             const categoryDisplay = product.category.charAt(0).toUpperCase() + product.category.slice(1);
             const basePrice = product.price;
-            
-            // Update breadcrumb
-            document.getElementById('breadcrumb-category').textContent = categoryDisplay;
-            document.getElementById('breadcrumb-name').textContent = product.name;
             
             // Generate variant selectors if product has variants
             let variantSelectorsHTML = '';
@@ -587,7 +573,7 @@
         .product-page {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: 6rem 1rem 2rem;
         }
 
         .product-nav-actions {
