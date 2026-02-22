@@ -60,14 +60,13 @@ header {
 
 .nav-links {
     list-style: none;
-    display: none;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background: var(--card);
-    padding: 1rem;
-    flex-direction: column;
+    display: flex;
+    position: static;
+    background: transparent;
+    padding: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .nav-links.active {

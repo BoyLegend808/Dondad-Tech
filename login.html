@@ -4,41 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Pajay Gadgets</title>
-    <meta name="description" content="Login to your Pajay Gadgets account">
+    <meta name="description" content="Login to your Pajay Gadgets account to manage cart, orders, and profile.">
+    <meta property="og:title" content="Login - Pajay Gadgets">
+    <meta property="og:description" content="Access your account securely.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="logo.png">
     <link rel="canonical" href="login.html">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .auth-container { width: 100%; max-width: 420px; }
-        .auth-card { background: white; border-radius: 16px; padding: 2.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .auth-header { text-align: center; margin-bottom: 2rem; }
-        .auth-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; color: #333; }
-        .auth-header p { color: #666; }
-        .form-group { margin-bottom: 1.25rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: #555; font-weight: 500; }
-        .form-group input { width: 100%; padding: 0.875rem 1rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s; box-sizing: border-box; }
-        .form-group input:focus { outline: none; border-color: #667eea; }
-        .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 0.875rem; }
-        .form-options a { color: #667eea; text-decoration: none; }
-        .btn { width: 100%; padding: 1rem; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.3s; }
-        .btn:hover { background: #5568d3; }
-        .btn:disabled { background: #999; cursor: not-allowed; }
-        .auth-footer { text-align: center; margin-top: 1.5rem; color: #666; }
-        .auth-footer a { color: #667eea; text-decoration: none; font-weight: 500; }
-        .error-message { background: #fee; color: #c00; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; text-align: center; }
-        .success-message { background: #efe; color: #060; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; text-align: center; }
-        .navbar { position: fixed; top: 0; left: 0; right: 0; background: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; }
-        .logo { font-size: 1.5rem; font-weight: bold; color: #667eea; text-decoration: none; }
-        .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
-        .hamburger span { display: block; width: 25px; height: 3px; background: #333; margin: 5px 0; transition: 0.3s; }
-        @media (max-width: 768px) {
-            .hamburger { display: block; }
-            .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; padding: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-            .nav-links.active { display: flex; flex-direction: column; }
-            .nav-links li { margin: 0.5rem 0; }
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -49,9 +22,12 @@
                 <li><a href="shop.html">Shop</a></li>
                 <li><a href="contact.html">Contact</a></li>
             </ul>
-            <button class="hamburger" onclick="toggleMenu()">
-                <span></span><span></span><span></span>
-            </button>
+            <div class="nav-right">
+                <a href="register.html" class="auth-btn register">Register</a>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
         </nav>
     </header>
 
@@ -59,114 +35,218 @@
         <div class="auth-container">
             <div class="auth-card">
                 <div class="auth-header">
+                    <div class="auth-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
                     <h1>Welcome Back</h1>
                     <p>Login to your account</p>
                 </div>
-                
-                <div id="successMessage" class="success-message"></div>
-                <div id="errorMessage" class="error-message"></div>
-                
-                <form id="loginForm">
+
+                <form id="login-form">
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" placeholder="Enter your email" required>
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" placeholder="Enter your email" required>
+                        </div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <label for="password"><i class="fas fa-lock"></i> Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" placeholder="Enter your password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye" id="eye-icon"></i>
+                            </button>
+                        </div>
                     </div>
-                    
+
                     <div class="form-options">
-                        <label><input type="checkbox" id="remember"> Remember me</label>
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-password" onclick="return false;">Forgot Password?</a>
                     </div>
-                    
-                    <button type="submit" class="btn" id="loginBtn">Login</button>
+
+                    <p id="error" class="error-message"></p>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
                 </form>
-                
+
                 <div class="auth-footer">
-                    <p>Don't have an account? <a href="register.html">Register</a></p>
+                    <p>Don't have an account? <a href="register.html">Create one</a></p>
                 </div>
             </div>
         </div>
     </main>
 
+    <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
     <script>
-        // Toggle hamburger menu
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        function normalizeEmail(email) {
+            return String(email || '').trim().toLowerCase();
+        }
+
+        function persistLoginUser(user, remember) {
+            sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
+            if (remember) {
+                localStorage.setItem('dondad_currentUser', JSON.stringify(user));
+            } else {
+                localStorage.removeItem('dondad_currentUser');
+            }
+        }
+
+        function ensureLocalFallbackUsers() {
+            const key = 'dondad_users';
+            const existing = JSON.parse(localStorage.getItem(key) || '[]');
+            const users = Array.isArray(existing) ? existing : [];
+            const defaults = [
+                { name: 'Admin', email: 'admin@dondad.com', password: 'admin123', role: 'admin' },
+                { name: 'Admin', email: 'admin@dondadtech.com', password: 'admin123', role: 'admin' },
+                { name: 'John', email: 'ugwunekejohn5@gmail.com', password: 'customer123', role: 'customer' }
+            ];
+
+            let changed = false;
+            defaults.forEach(d => {
+                const found = users.some(u => normalizeEmail(u.email) === normalizeEmail(d.email));
+                if (!found) {
+                    users.push(d);
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                localStorage.setItem(key, JSON.stringify(users));
+            }
+        }
+
+        function loginWithLocalUsers(email, password) {
+            const users = JSON.parse(localStorage.getItem('dondad_users') || '[]');
+            if (!Array.isArray(users)) return null;
+
+            const match = users.find(u => normalizeEmail(u.email) === normalizeEmail(email) && String(u.password || '') === String(password));
+            if (!match) return null;
+
+            return {
+                _id: match._id || match.id || `local-${normalizeEmail(match.email)}`,
+                name: match.name || 'User',
+                email: match.email,
+                role: match.role || 'customer'
+            };
+        }
+
         function toggleMenu() {
-            var navLinks = document.getElementById('navLinks');
-            var hamburger = document.querySelector('.hamburger');
+            const navLinks = document.getElementById('navLinks');
+            const hamburger = document.querySelector('.hamburger');
             if (navLinks) navLinks.classList.toggle('active');
             if (hamburger) hamburger.classList.toggle('active');
         }
 
-        // Check if already logged in
-        var currentUser = localStorage.getItem('dondad_currentUser');
-        if (currentUser) {
-            try {
-                var user = JSON.parse(currentUser);
-                if (user.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
-            } catch(e) {}
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eye-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
         }
 
-        // Login form handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            var email = document.getElementById('email').value.trim().toLowerCase();
-            var password = document.getElementById('password').value;
-            var remember = document.getElementById('remember').checked;
-            var btn = document.getElementById('loginBtn');
-            var errorMsg = document.getElementById('errorMessage');
-            var successMsg = document.getElementById('successMessage');
-            
-            // Hide messages
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
-            
-            // Disable button
-            btn.disabled = true;
-            btn.textContent = 'Logging in...';
-            
-            // Define default users
-            var defaultUsers = [
-                { email: 'admin@dondad.com', password: 'admin123', name: 'Admin', role: 'admin' },
-                { email: 'admin@dondadtech.com', password: 'admin123', name: 'Admin', role: 'admin' },
-                { email: 'ugwunekejohn5@gmail.com', password: 'customer123', name: 'John', role: 'customer' }
-            ];
-            
-            // Find matching user
-            var user = null;
-            for (var i = 0; i < defaultUsers.length; i++) {
-                if (defaultUsers[i].email === email && defaultUsers[i].password === password) {
-                    user = defaultUsers[i];
-                    break;
-                }
+        async function tryApiLogin(email, password) {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const contentType = (response.headers.get('content-type') || '').toLowerCase();
+            const data = contentType.includes('application/json') ? await response.json() : null;
+
+            if (response.ok && data && data.success && data.user) {
+                return data.user;
             }
-            
-            if (user) {
-                // Save user to localStorage
-                localStorage.setItem('dondad_currentUser', JSON.stringify(user));
-                successMsg.textContent = 'Login successful! Redirecting...';
-                successMsg.style.display = 'block';
-                
-                setTimeout(function() {
-                    if (user.role === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'index.html';
+
+            if (data && data.error) {
+                throw new Error(data.error);
+            }
+
+            throw new Error('Invalid credentials');
+        }
+
+        document.addEventListener('click', function(e) {
+            const navLinks = document.getElementById('navLinks');
+            const hamburger = document.querySelector('.hamburger');
+            if (navLinks && hamburger && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
+                navLinks.classList.remove('active');
+                hamburger.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
+                return;
+            }
+
+            const form = document.getElementById('login-form');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = normalizeEmail(document.getElementById('email').value);
+                const password = document.getElementById('password').value;
+                const remember = document.getElementById('remember').checked;
+                const error = document.getElementById('error');
+                const btn = document.getElementById('login-btn');
+
+                error.style.display = 'none';
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+                try {
+                    let user;
+                    try {
+                        user = await tryApiLogin(email, password);
+                    } catch (apiErr) {
+                        ensureLocalFallbackUsers();
+                        user = loginWithLocalUsers(email, password);
+                        if (!user) throw apiErr;
                     }
-                }, 500);
-            } else {
-                errorMsg.textContent = 'Invalid email or password';
-                errorMsg.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = 'Login';
-            }
+
+                    persistLoginUser(user, remember);
+                    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+                } catch (err) {
+                    error.textContent = err.message || 'Login failed';
+                    error.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                }
+            });
         });
     </script>
 </body>

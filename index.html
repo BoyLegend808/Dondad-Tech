@@ -167,31 +167,34 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-    <script>
-        const API_URL = '';
+        <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
 
-        // Check auth
         function checkAuth() {
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            const user = getCurrentUser();
             const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
             const userName = document.getElementById('user-name');
             const userAvatar = document.getElementById('user-avatar');
             const adminLink = document.getElementById('admin-nav-link');
 
+            if (!authButtons || !userMenu) return;
+
             if (user) {
                 authButtons.style.display = 'none';
                 userMenu.style.display = 'flex';
-
-                // Get initials for avatar
-                const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || user.name.charAt(0);
-                userName.textContent = user.name;
-
-                // Show admin link only for admin users
-                if (user.role === 'admin') {
-                    adminLink.style.display = 'block';
-                }
+                const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2);
+                if (userAvatar) userAvatar.textContent = initials || 'U';
+                if (userName) userName.textContent = user.name || 'User';
+                if (adminLink) adminLink.style.display = user.role === 'admin' ? 'block' : 'none';
             } else {
                 authButtons.style.display = 'flex';
                 userMenu.style.display = 'none';
@@ -202,54 +205,21 @@
         function logout() {
             sessionStorage.removeItem('dondad_currentUser');
             localStorage.removeItem('dondad_currentUser');
-            location.reload();
+            window.location.href = 'index.html';
         }
 
         function toggleUserMenu(e) {
-            // Prevent the click from propagating to parent elements
             e.stopPropagation();
-
-            // Find the user-menu element (can be either class or id)
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-
-            // Don't toggle if clicking inside the dropdown
-            if (userDropdown && userDropdown.contains(e.target)) {
-                return;
-            }
-
-            if (userMenu) {
-                userMenu.classList.toggle('active');
-                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
-            }
+            const menu = document.querySelector('.user-menu');
+            const dropdown = document.querySelector('.user-dropdown');
+            if (!menu) return;
+            if (dropdown && dropdown.contains(e.target)) return;
+            menu.classList.toggle('active');
         }
 
-        // Close dropdown and hamburger when clicking on the page
-        document.addEventListener('click', function (e) {
-            // Close user dropdown
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            if (userMenu && userDropdown) {
-                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userMenu.classList.remove('active');
-                }
-            }
-
-            // Close hamburger menu
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                    hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
-                }
-            }
-        });
-
-        // Toggle hamburger menu
         function toggleMenu() {
-            var navLinks = document.querySelector('.nav-links');
-            var hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
             if (navLinks) navLinks.classList.toggle('active');
             if (hamburger) hamburger.classList.toggle('active');
         }
@@ -258,53 +228,58 @@
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
 
-            // Show localStorage count immediately (fast)
-            const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-            cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
+            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cartCountEl.textContent = localCart.reduce((sum, item) => sum + (item.qty || 0), 0);
 
-            // Then try API to get accurate count
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
-            if (user) {
-            if (user) {
-                const userId = user._id || user.id;
-                if (userId) {
-                    fetch(`/api/cart/${userId}`)
-                        .then(r => r.json())
-                        .then(cart => {
-                            if (Array.isArray(cart) && cart.length > 0) {
-                                const count = cart.reduce((sum, item) => sum + item.qty, 0);
-                                cartCountEl.textContent = count;
-                            }
-                        })
-                        .catch(() => {});
-                }
-            }
+            const user = getCurrentUser();
+            if (!user) return;
+            const userId = user._id || user.id;
+            if (!userId) return;
+
+            fetch(`/api/cart/${userId}`)
+                .then(r => (r.ok ? r.json() : []))
+                .then(cart => {
+                    if (Array.isArray(cart)) {
+                        const count = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+                        cartCountEl.textContent = count;
+                    }
+                })
+                .catch(() => {});
         }
 
         function loadFeaturedProducts() {
             fetch('/api/featured')
-                .then(r => r.json())
+                .then(r => (r.ok ? r.json() : []))
                 .then(products => {
                     const container = document.getElementById('featured-products');
+                    if (!container || !Array.isArray(products)) return;
                     container.innerHTML = products.map(p => `
                         <div class="product-card">
                             <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
                             <h3>${p.name}</h3>
                             <p>${p.desc}</p>
-                            <p class="price">₦${p.price.toLocaleString()}</p>
+                            <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
                             <a href="product.html?id=${p._id}" class="btn">View</a>
                         </div>
                     `).join('');
-                });
+                })
+                .catch(() => {});
         }
 
-        // Toggle hamburger menu
-        function toggleMenu() {
-            var navLinks = document.querySelector('.nav-links');
-            var hamburger = document.querySelector('.hamburger');
-            if (navLinks) navLinks.classList.toggle('active');
-            if (hamburger) hamburger.classList.toggle('active');
-        }
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown && !userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                userMenu.classList.remove('active');
+            }
+
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks && !hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
@@ -315,3 +290,4 @@
 </body>
 
 </html>
+
