@@ -104,9 +104,19 @@
     <script src="products.js"></script>
     <script src="script.js"></script>
     <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
         // Check if user is logged in and update UI
         document.addEventListener('DOMContentLoaded', function () {
-            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            const currentUser = getCurrentUser();
             const adminLink = document.getElementById('admin-nav-link');
             const authLinks = document.getElementById('auth-links');
             const userMenu = document.getElementById('user-menu');
@@ -462,7 +472,7 @@
             if (!product) return;
             
             // Check if user is logged in - check both sessionStorage and localStorage
-            const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            const currentUser = getCurrentUser();
             if (!currentUser) {
                 alert('Please login to add items to cart');
                 window.location.href = 'login.html';

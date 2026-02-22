@@ -199,7 +199,11 @@ function setUsers(users) {
 }
 
 function getCurrentUser() {
-  return JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
+  const sessionUser = JSON.parse(
+    sessionStorage.getItem(CURRENT_USER_KEY) || "null",
+  );
+  if (sessionUser) return sessionUser;
+  return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null");
 }
 
 function setCurrentUser(user) {
