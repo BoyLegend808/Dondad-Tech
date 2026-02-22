@@ -17,6 +17,12 @@
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
             <div class="nav-right">
                 <a href="register.html" class="auth-btn register">Register</a>
                 <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
@@ -172,12 +178,8 @@
         }
 
         function persistLoginUser(user, remember) {
-            sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
-            if (remember) {
-                localStorage.setItem('dondad_currentUser', JSON.stringify(user));
-            } else {
-                localStorage.removeItem('dondad_currentUser');
-            }
+            // Always save to localStorage for persistence across sessions
+            localStorage.setItem('dondad_currentUser', JSON.stringify(user));
         }
 
         document.getElementById('login-form').onsubmit = async (e) => {

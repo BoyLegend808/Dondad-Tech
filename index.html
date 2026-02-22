@@ -213,9 +213,6 @@
             const userMenu = document.querySelector('.user-menu');
             const userDropdown = document.querySelector('.user-dropdown');
 
-            console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu ? .classList ? .contains('active'));
-
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
                 return;
@@ -241,19 +238,17 @@
             // Close hamburger menu
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
-            console.log('Checking hamburger close - hamburger:', hamburger, 'navLinks:', navLinks);
-            console.log('Hamburger active:', hamburger ? .classList ? .contains('active'));
             if (hamburger && navLinks) {
                 if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                     hamburger.classList.remove('active');
                     navLinks.classList.remove('active');
-                    console.log('Closed hamburger');
                 }
             }
         });
 
         function toggleMenu() {
             document.querySelector('.nav-links').classList.toggle('active');
+            document.querySelector('.hamburger').classList.toggle('active');
         }
 
         function updateCartCount() {
@@ -265,7 +260,8 @@
             cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
 
             // Then try API to get accurate count
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (user) {
             if (user) {
                 const userId = user._id || user.id;
                 if (userId) {
@@ -299,6 +295,7 @@
                 });
         }
 
+        
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
             updateCartCount();
