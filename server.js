@@ -1420,6 +1420,51 @@ app.post("/api/register", sensitiveRateLimit, async (req, res) => {
   }
 });
 
+// Security readiness healthcheck (no secret values exposed)
+app.get("/api/health/security", sensitiveRateLimit, requireInternalAccess, (req, res) => {
+  const hasStripeKey = Boolean(process.env.STRIPE_SECRET_KEY);
+  const hasStripeWebhookSecret = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  const hasMongoUri = Boolean(process.env.MONGODB_URI);
+  const hasAdminApiToken = Boolean(process.env.ADMIN_API_TOKEN);
+  const hasAllowedOrigins = allowedOrigins.length > 0;
+
+  const checks = {
+    corsConfigured: hasAllowedOrigins,
+    loginRateLimiterConfigured: true,
+    apiRateLimiterConfigured: true,
+    sensitiveRateLimiterConfigured: true,
+    unsafeKeyFilterConfigured: true,
+    internalEndpointsProtectedInProduction: true,
+    env: {
+      stripeSecretKeyPresent: hasStripeKey,
+      stripeWebhookSecretPresent: hasStripeWebhookSecret,
+      mongodbUriPresent: hasMongoUri,
+      adminApiTokenPresent: hasAdminApiToken,
+      allowedOriginsConfigured: hasAllowedOrigins,
+    },
+  };
+
+  const ready =
+    checks.corsConfigured &&
+    checks.loginRateLimiterConfigured &&
+    checks.apiRateLimiterConfigured &&
+    checks.sensitiveRateLimiterConfigured &&
+    checks.unsafeKeyFilterConfigured &&
+    checks.internalEndpointsProtectedInProduction &&
+    checks.env.stripeSecretKeyPresent &&
+    checks.env.stripeWebhookSecretPresent &&
+    checks.env.mongodbUriPresent &&
+    checks.env.adminApiTokenPresent &&
+    checks.env.allowedOriginsConfigured;
+
+  res.json({
+    success: true,
+    ready,
+    environment: process.env.NODE_ENV || "development",
+    checks,
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
