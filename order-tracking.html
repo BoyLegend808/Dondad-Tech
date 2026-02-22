@@ -81,15 +81,25 @@
     </footer>
 
     <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
         // Check login
-        const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+        const currentUser = getCurrentUser();
         if (!currentUser) {
             window.location.href = 'login.html';
         }
 
         // Update UI
         function updateAuthUI() {
-            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            const user = getCurrentUser();
             if (user) {
                 document.getElementById('auth-buttons').style.display = 'none';
                 document.getElementById('user-menu').style.display = 'flex';

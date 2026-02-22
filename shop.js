@@ -1,10 +1,12 @@
 // Shop Page JavaScript
 const API_BASE = '';
 
-// Get current user from localStorage
+// Get current user from sessionStorage first, then localStorage
 function getCurrentUser() {
     try {
-        return JSON.parse(localStorage.getItem('dondad_currentUser'));
+        const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+        if (sessionUser) return sessionUser;
+        return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
     } catch {
         return null;
     }
