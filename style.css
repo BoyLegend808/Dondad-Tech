@@ -2023,3 +2023,111 @@ footer {
         font-size: 0.8rem;
     }
 }
+
+/* Shop Page Responsive Fixes */
+.shop-page main {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.shop-page .shop-header {
+    padding-top: 6.2rem;
+    margin-bottom: 0.25rem;
+}
+
+.shop-page .shop-header h1 {
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+    margin-bottom: 0.6rem;
+}
+
+.shop-page .filters {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.55rem;
+    margin: 0.8rem 0 0.6rem;
+    padding: 0.2rem 0.2rem 0.45rem;
+    scrollbar-width: thin;
+}
+
+.shop-page .filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.88rem;
+}
+
+.shop-page #search {
+    width: 100%;
+    max-width: 100%;
+    margin: 0.15rem 0 0.3rem;
+}
+
+.shop-page .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.95rem;
+}
+
+.shop-page .product-card {
+    height: 100%;
+    padding: 0.95rem;
+}
+
+.shop-page .product-card img {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.shop-page .product-card .btn {
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .shop-page .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .shop-page .shop-header {
+        padding-top: 5.2rem;
+    }
+
+    .shop-page .shop-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .shop-page .product-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+
+    .shop-page .product-card {
+        display: grid;
+        grid-template-columns: 88px 1fr;
+        gap: 0.75rem;
+        text-align: left;
+        align-items: center;
+    }
+
+    .shop-page .product-card a:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .shop-page .product-card img {
+        max-width: 82px;
+        max-height: 82px;
+        margin: 0;
+    }
+
+    .shop-page .product-card .product-card-content {
+        display: grid;
+        gap: 0.35rem;
+    }
+
+    .shop-page .product-card .price {
+        margin: 0.1rem 0;
+    }
+}
