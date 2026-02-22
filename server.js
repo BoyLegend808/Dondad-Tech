@@ -96,9 +96,11 @@ const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 // Initialize payment
 app.post('/api/payment/initialize', async (req, res) => {
     try {
-        const { email, amount, orderId } = req.body;
+        const email = normalizeEmail(req.body?.email || "");
+        const amount = parseMoney(req.body?.amount, null);
+        const orderId = sanitizeText(req.body?.orderId || "", 80);
         
-        if (!email || !amount || !orderId) {
+        if (!email || amount === null || !orderId || !isValidEmail(email) || amount <= 0) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
@@ -139,7 +141,10 @@ app.post('/api/payment/initialize', async (req, res) => {
 // Verify payment
 app.get('/api/payment/verify/:reference', async (req, res) => {
     try {
-        const { reference } = req.params;
+        const reference = sanitizeText(req.params?.reference || "", 120);
+        if (!reference) {
+          return res.status(400).json({ error: "Invalid reference" });
+        }
 
         const response = await fetch(`${PAYSTACK_BASE_URL}/transaction/verify/${reference}`, {
             method: 'GET',
@@ -249,6 +254,57 @@ const DEFAULT_USERS = [
 
 function normalizeEmail(email = "") {
   return email.trim().toLowerCase();
+}
+
+function sanitizeText(input = "", maxLen = 500) {
+  return String(input || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, maxLen);
+}
+
+function escapeRegex(input = "") {
+  return String(input).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isValidObjectId(id) {
+  return mongoose.Types.ObjectId.isValid(String(id || ""));
+}
+
+function parsePositiveInt(value, fallback = 1) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+function parseMoney(value, fallback = null) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return parsed;
+}
+
+function isValidEmail(email = "") {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email));
+}
+
+function hasUnsafeKeys(value) {
+  if (!value || typeof value !== "object") return false;
+  if (Array.isArray(value)) {
+    return value.some((item) => hasUnsafeKeys(item));
+  }
+  return Object.entries(value).some(([key, nested]) => {
+    if (String(key).startsWith("$") || String(key).includes(".")) return true;
+    return hasUnsafeKeys(nested);
+  });
+}
+
+function safeVariant(raw) {
+  const variant = raw && typeof raw === "object" ? raw : {};
+  return {
+    storage: sanitizeText(variant.storage || "", 40),
+    ram: sanitizeText(variant.ram || "", 40),
+    color: sanitizeText(variant.color || "", 40),
+  };
 }
 
 function hashPassword(password) {
@@ -535,19 +591,35 @@ async function seedDatabase() {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
+app.use("/api", (req, res, next) => {
+  if (
+    hasUnsafeKeys(req.body) ||
+    hasUnsafeKeys(req.query) ||
+    hasUnsafeKeys(req.params)
+  ) {
+    return res.status(400).json({ error: "Unsafe input detected" });
+  }
+  next();
+});
 
 // --- API ROUTES ---
 
 // Get all products
 app.get("/api/products", async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const category = sanitizeText(req.query?.category || "", 40).toLowerCase();
+    const search = sanitizeText(req.query?.search || "", 120);
     let query = {};
+    const allowedCategories = new Set(["phones", "laptops", "tablets", "accessories", "all", ""]);
+    if (!allowedCategories.has(category)) {
+      return res.status(400).json({ error: "Invalid category" });
+    }
     if (category && category !== "all") query.category = category;
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { desc: { $regex: search, $options: "i" } },
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { desc: { $regex: escapedSearch, $options: "i" } },
       ];
     }
     const products = await Product.find(query).sort({ _id: 1 });
@@ -560,7 +632,11 @@ app.get("/api/products", async (req, res) => {
 // Get single product by ID
 app.get("/api/products/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const productId = String(req.params?.id || "");
+    if (!isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid product id" });
+    }
+    const product = await Product.findById(productId);
     if (product) {
       res.json(product);
     } else {
@@ -574,9 +650,28 @@ app.get("/api/products/:id", async (req, res) => {
 // Update product
 app.put("/api/products/:id", async (req, res) => {
   try {
+    const productId = String(req.params?.id || "");
+    if (!isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid product id" });
+    }
+    const update = {};
+    if (req.body?.name !== undefined) update.name = sanitizeText(req.body.name, 120);
+    if (req.body?.category !== undefined) update.category = sanitizeText(req.body.category, 40).toLowerCase();
+    if (req.body?.image !== undefined) update.image = sanitizeText(req.body.image, 400);
+    if (req.body?.desc !== undefined) update.desc = sanitizeText(req.body.desc, 600);
+    if (req.body?.fullDesc !== undefined) update.fullDesc = sanitizeText(req.body.fullDesc, 4000);
+    if (req.body?.price !== undefined) {
+      const price = parseMoney(req.body.price, null);
+      if (price === null) return res.status(400).json({ error: "Invalid price" });
+      update.price = price;
+    }
+    if (req.body?.hasVariants !== undefined) update.hasVariants = Boolean(req.body.hasVariants);
+    if (req.body?.variants !== undefined && typeof req.body.variants === "object") {
+      update.variants = req.body.variants;
+    }
     const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      productId,
+      update,
       { new: true }
     );
     if (product) {
@@ -592,7 +687,11 @@ app.put("/api/products/:id", async (req, res) => {
 // Delete product
 app.delete("/api/products/:id", async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const productId = String(req.params?.id || "");
+    if (!isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid product id" });
+    }
+    const product = await Product.findByIdAndDelete(productId);
     if (product) {
       res.json({ success: true });
     } else {
@@ -661,7 +760,7 @@ app.get("/api/featured", async (req, res) => {
 app.get("/api/cart/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    if (!userId || userId === "undefined" || userId.length < 12) {
+    if (!isValidObjectId(userId)) {
       return res.status(400).json({ error: "Valid User ID is required" });
     }
     const cartItems = await Cart.find({ userId }).populate("productId");
@@ -676,9 +775,11 @@ app.get("/api/cart/:userId", async (req, res) => {
 app.post("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
-    const { qty, selectedVariant, unitPrice } = req.body;
+    const qty = parsePositiveInt(req.body?.qty, 1);
+    const selectedVariant = safeVariant(req.body?.selectedVariant);
+    const unitPrice = parseMoney(req.body?.unitPrice, null);
     
-    if (!userId || !productId) {
+    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
       return res.status(400).json({ error: "User ID and Product ID are required" });
     }
     
@@ -694,11 +795,9 @@ app.post("/api/cart/:userId/:productId", async (req, res) => {
     
     // Check for existing cart item with same product and variant
     const existingQuery = { userId, productId };
-    if (selectedVariant) {
-      existingQuery["selectedVariant.storage"] = selectedVariant.storage || "";
-      existingQuery["selectedVariant.ram"] = selectedVariant.ram || "";
-      existingQuery["selectedVariant.color"] = selectedVariant.color || "";
-    }
+    existingQuery["selectedVariant.storage"] = selectedVariant.storage || "";
+    existingQuery["selectedVariant.ram"] = selectedVariant.ram || "";
+    existingQuery["selectedVariant.color"] = selectedVariant.color || "";
     
     const existing = await Cart.findOne(existingQuery);
     if (existing) {
@@ -709,7 +808,7 @@ app.post("/api/cart/:userId/:productId", async (req, res) => {
         userId,
         productId,
         qty: qty || 1,
-        selectedVariant: selectedVariant || { storage: "", ram: "", color: "" },
+        selectedVariant,
         unitPrice: price
       });
     }
@@ -725,7 +824,12 @@ app.post("/api/cart/:userId/:productId", async (req, res) => {
 app.put("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
-    const { qty, selectedVariant } = req.body;
+    const rawQty = req.body?.qty;
+    const qty = rawQty !== undefined ? parsePositiveInt(rawQty, 1) : undefined;
+    const selectedVariant = req.body?.selectedVariant ? safeVariant(req.body.selectedVariant) : undefined;
+    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
     
     const query = { userId, productId };
     if (selectedVariant) {
@@ -734,7 +838,7 @@ app.put("/api/cart/:userId/:productId", async (req, res) => {
       query["selectedVariant.color"] = selectedVariant.color || "";
     }
     
-    if (qty !== undefined && qty <= 0) {
+    if (rawQty !== undefined && Number(rawQty) <= 0) {
       await Cart.findOneAndDelete(query);
     } else if (qty !== undefined) {
       await Cart.findOneAndUpdate(query, { qty });
@@ -755,14 +859,18 @@ app.delete("/api/cart/:userId/:productId", async (req, res) => {
   try {
     const { userId, productId } = req.params;
     const { selectedVariant } = req.query;
+    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
     
     const query = { userId, productId };
     if (selectedVariant) {
       try {
         const variant = JSON.parse(selectedVariant);
-        query["selectedVariant.storage"] = variant.storage || "";
-        query["selectedVariant.ram"] = variant.ram || "";
-        query["selectedVariant.color"] = variant.color || "";
+        const safe = safeVariant(variant);
+        query["selectedVariant.storage"] = safe.storage || "";
+        query["selectedVariant.ram"] = safe.ram || "";
+        query["selectedVariant.color"] = safe.color || "";
       } catch (e) {
         // Invalid JSON, remove without variant filter
       }
@@ -781,7 +889,25 @@ app.delete("/api/cart/:userId/:productId", async (req, res) => {
 // Create Order
 app.post("/api/orders", async (req, res) => {
   try {
-    const { userId, userName, userEmail, userPhone, items, deliveryInfo, paymentMethod, subtotal } = req.body;
+    const userId = String(req.body?.userId || "");
+    const userName = sanitizeText(req.body?.userName || "", 120);
+    const userEmail = normalizeEmail(req.body?.userEmail || "");
+    const userPhone = sanitizeText(req.body?.userPhone || "", 40);
+    const items = Array.isArray(req.body?.items) ? req.body.items : [];
+    const paymentMethod = sanitizeText(req.body?.paymentMethod || "", 40);
+    const subtotal = parseMoney(req.body?.subtotal, null);
+    const deliveryInfoRaw = req.body?.deliveryInfo && typeof req.body.deliveryInfo === "object" ? req.body.deliveryInfo : {};
+    const deliveryInfo = {
+      address: sanitizeText(deliveryInfoRaw.address || "", 300),
+      method: sanitizeText(deliveryInfoRaw.method || "", 40),
+      notes: sanitizeText(deliveryInfoRaw.notes || "", 800),
+    };
+    if (!isValidObjectId(userId) || !userName || !isValidEmail(userEmail) || subtotal === null) {
+      return res.status(400).json({ error: "Invalid order payload" });
+    }
+    if (!items.length || items.length > 100) {
+      return res.status(400).json({ error: "Order items are required" });
+    }
     
     const order = await Order.create({
       userId,
@@ -808,7 +934,11 @@ app.post("/api/orders", async (req, res) => {
 // Get user's orders
 app.get("/api/orders/user/:userId", async (req, res) => {
   try {
-    const orders = await Order.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    const userId = String(req.params?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.error("Get Orders Error:", error);
@@ -819,7 +949,11 @@ app.get("/api/orders/user/:userId", async (req, res) => {
 // Get single order by ID
 app.get("/api/orders/:orderId", async (req, res) => {
   try {
-    const order = await Order.findById(req.params.orderId);
+    const orderId = String(req.params?.orderId || "");
+    if (!isValidObjectId(orderId)) {
+      return res.status(400).json({ error: "Invalid order id" });
+    }
+    const order = await Order.findById(orderId);
     if (order) {
       res.json(order);
     } else {
@@ -858,7 +992,17 @@ app.get("/api/users", async (req, res) => {
 // Update order status (for admin)
 app.put("/api/orders/:orderId", async (req, res) => {
   try {
-    const { status, trackingNumber, estimatedDelivery } = req.body;
+    const orderId = String(req.params?.orderId || "");
+    if (!isValidObjectId(orderId)) {
+      return res.status(400).json({ error: "Invalid order id" });
+    }
+    const status = sanitizeText(req.body?.status || "", 24);
+    const trackingNumber = sanitizeText(req.body?.trackingNumber || "", 80);
+    const estimatedDelivery = req.body?.estimatedDelivery;
+    const allowedStatuses = new Set(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]);
+    if (!allowedStatuses.has(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
     const updateData = { status, updatedAt: Date.now() };
     
     if (trackingNumber) updateData['deliveryInfo.trackingNumber'] = trackingNumber;
@@ -867,7 +1011,7 @@ app.put("/api/orders/:orderId", async (req, res) => {
     if (status === 'delivered') updateData['deliveryInfo.deliveredDate'] = Date.now();
     
     const order = await Order.findByIdAndUpdate(
-      req.params.orderId,
+      orderId,
       updateData,
       { new: true }
     );
@@ -883,7 +1027,11 @@ app.put("/api/orders/:orderId", async (req, res) => {
 // Get reviews for a product
 app.get("/api/reviews/:productId", async (req, res) => {
   try {
-    const reviews = await Review.find({ productId: req.params.productId })
+    const productId = String(req.params?.productId || "");
+    if (!isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid product id" });
+    }
+    const reviews = await Review.find({ productId })
       .sort({ createdAt: -1 });
     res.json(reviews);
   } catch (error) {
@@ -894,7 +1042,17 @@ app.get("/api/reviews/:productId", async (req, res) => {
 // Add review
 app.post("/api/reviews", async (req, res) => {
   try {
-    const { productId, userId, userName, rating, comment } = req.body;
+    const productId = String(req.body?.productId || "");
+    const userId = String(req.body?.userId || "");
+    const userName = sanitizeText(req.body?.userName || "", 120);
+    const rating = Number.parseInt(req.body?.rating, 10);
+    const comment = sanitizeText(req.body?.comment || "", 1200);
+    if (!isValidObjectId(productId) || !isValidObjectId(userId) || !userName) {
+      return res.status(400).json({ error: "Invalid review payload" });
+    }
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Invalid rating" });
+    }
     
     // Check if user already reviewed this product
     const existing = await Review.findOne({ productId, userId });
@@ -912,8 +1070,12 @@ app.post("/api/reviews", async (req, res) => {
 // Get product average rating
 app.get("/api/reviews/:productId/average", async (req, res) => {
   try {
+    const productId = String(req.params?.productId || "");
+    if (!isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid product id" });
+    }
     const result = await Review.aggregate([
-      { $match: { productId: req.params.productId } },
+      { $match: { productId: new mongoose.Types.ObjectId(productId) } },
       { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } }
     ]);
     res.json({ 
@@ -930,10 +1092,14 @@ app.get("/api/reviews/:productId/average", async (req, res) => {
 // Get user's wishlist
 app.get("/api/wishlist/:userId", async (req, res) => {
   try {
-    let wishlist = await Wishlist.findOne({ userId: req.params.userId })
+    const userId = String(req.params?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+    let wishlist = await Wishlist.findOne({ userId })
       .populate('products');
     if (!wishlist) {
-      wishlist = await Wishlist.create({ userId: req.params.userId, products: [] });
+      wishlist = await Wishlist.create({ userId, products: [] });
     }
     res.json(wishlist);
   } catch (error) {
@@ -944,11 +1110,15 @@ app.get("/api/wishlist/:userId", async (req, res) => {
 // Add to wishlist
 app.post("/api/wishlist/:userId", async (req, res) => {
   try {
-    const { productId } = req.body;
-    let wishlist = await Wishlist.findOne({ userId: req.params.userId });
+    const userId = String(req.params?.userId || "");
+    const productId = String(req.body?.productId || "");
+    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
+    let wishlist = await Wishlist.findOne({ userId });
     
     if (!wishlist) {
-      wishlist = await Wishlist.create({ userId: req.params.userId, products: [productId] });
+      wishlist = await Wishlist.create({ userId, products: [productId] });
     } else {
       if (!wishlist.products.includes(productId)) {
         wishlist.products.push(productId);
@@ -965,10 +1135,15 @@ app.post("/api/wishlist/:userId", async (req, res) => {
 // Remove from wishlist
 app.delete("/api/wishlist/:userId/:productId", async (req, res) => {
   try {
-    const wishlist = await Wishlist.findOne({ userId: req.params.userId });
+    const userId = String(req.params?.userId || "");
+    const productId = String(req.params?.productId || "");
+    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
+    const wishlist = await Wishlist.findOne({ userId });
     if (wishlist) {
       wishlist.products = wishlist.products.filter(
-        p => p.toString() !== req.params.productId
+        p => p.toString() !== productId
       );
       wishlist.updatedAt = Date.now();
       await wishlist.save();
@@ -983,7 +1158,10 @@ app.delete("/api/wishlist/:userId/:productId", async (req, res) => {
 app.post("/api/login", loginRateLimit, async (req, res) => {
   try {
     const email = normalizeEmail(req.body?.email || "");
-    const password = (req.body?.password || "").trim();
+    const password = String(req.body?.password || "").trim();
+    if (!email || !password || !isValidEmail(email) || password.length > 200) {
+      return res.status(400).json({ success: false, error: "Invalid login payload" });
+    }
     const user = await User.findOne({ email }).select(
       "_id name email role password",
     );
@@ -1031,8 +1209,16 @@ app.get("/api/seed-admin", async (req, res) => {
 // Register
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, password, phone } = req.body;
+    const name = sanitizeText(req.body?.name || "", 120);
+    const password = String(req.body?.password || "");
+    const phone = sanitizeText(req.body?.phone || "", 40);
     const email = normalizeEmail(req.body?.email || "");
+    if (!name || !password || !email || !isValidEmail(email)) {
+      return res.status(400).json({ success: false, error: "Invalid registration payload" });
+    }
+    if (password.length < 6 || password.length > 128) {
+      return res.status(400).json({ success: false, error: "Password must be 6-128 characters" });
+    }
     const existing = await User.findOne({ email });
     if (existing)
       return res.status(400).json({ success: false, error: "Email exists" });
