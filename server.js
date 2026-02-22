@@ -9,6 +9,8 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const https = require('https');
+const querystring = require('querystring');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -87,6 +89,78 @@ const cartSchema = new mongoose.Schema({
   unitPrice: { type: Number, required: true }
 });
 
+// Flutterwave/Paystack Configuration (use environment variables in production)
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'sk_test_your_key_here';
+const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+
+// Initialize payment
+app.post('/api/payment/initialize', async (req, res) => {
+    try {
+        const { email, amount, orderId } = req.body;
+        
+        if (!email || !amount || !orderId) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Convert amount to kobo (Paystack uses kobo)
+        const amountInKobo = Math.round(amount * 100);
+
+        const response = await fetch(`${PAYSTACK_BASE_URL}/transaction/initialize`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email,
+                amount: amountInKobo,
+                reference: `ORD_${orderId}_${Date.now()}`,
+                callback_url: `${req.protocol}://${req.get('host')}/checkout.html?payment=success`
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.status) {
+            res.json({ 
+                success: true, 
+                authorizationUrl: data.data.authorization_url,
+                reference: data.data.reference 
+            });
+        } else {
+            res.status(400).json({ success: false, error: data.message });
+        }
+    } catch (error) {
+        console.error('Payment init error:', error);
+        res.status(500).json({ error: 'Payment initialization failed' });
+    }
+});
+
+// Verify payment
+app.get('/api/payment/verify/:reference', async (req, res) => {
+    try {
+        const { reference } = req.params;
+
+        const response = await fetch(`${PAYSTACK_BASE_URL}/transaction/verify/${reference}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.status && data.data.status === 'success') {
+            res.json({ success: true, verified: true, data: data.data });
+        } else {
+            res.json({ success: true, verified: false });
+        }
+    } catch (error) {
+        console.error('Payment verify error:', error);
+        res.status(500).json({ error: 'Payment verification failed' });
+    }
+});
+
 // Order Schema
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -108,18 +182,46 @@ const orderSchema = new mongoose.Schema({
   deliveryInfo: {
     address: { type: String },
     method: { type: String },
-    notes: { type: String }
+    notes: { type: String },
+    // Tracking info
+    trackingNumber: { type: String, default: "" },
+    estimatedDelivery: { type: Date },
+    shippedDate: { type: Date },
+    deliveredDate: { type: Date }
   },
   paymentMethod: { type: String },
+  paymentStatus: { type: String, default: "pending" }, // pending, paid, failed
+  paymentReference: { type: String, default: "" },
   subtotal: { type: Number },
-  status: { type: String, default: "pending" }, // pending, confirmed, shipped, delivered, cancelled
-  createdAt: { type: Date, default: Date.now }
+  status: { type: String, default: "pending" }, // pending, confirmed, processing, shipped, delivered, cancelled
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
 const Cart = mongoose.model("Cart", cartSchema);
 const Order = mongoose.model("Order", orderSchema);
+
+// Review Schema
+const reviewSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userName: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now }
+});
+
+// Wishlist Schema
+const wishlistSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Review = mongoose.model("Review", reviewSchema);
+const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 
 const DEFAULT_USERS = [
   {
@@ -714,6 +816,21 @@ app.get("/api/orders/user/:userId", async (req, res) => {
   }
 });
 
+// Get single order by ID
+app.get("/api/orders/:orderId", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404).json({ error: "Order not found" });
+    }
+  } catch (error) {
+    console.error("Get Order Error:", error);
+    res.status(500).json({ error: "Failed to get order" });
+  }
+});
+
 // Get all orders (for admin)
 app.get("/api/orders", async (req, res) => {
   try {
@@ -741,16 +858,124 @@ app.get("/api/users", async (req, res) => {
 // Update order status (for admin)
 app.put("/api/orders/:orderId", async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, trackingNumber, estimatedDelivery } = req.body;
+    const updateData = { status, updatedAt: Date.now() };
+    
+    if (trackingNumber) updateData['deliveryInfo.trackingNumber'] = trackingNumber;
+    if (estimatedDelivery) updateData['deliveryInfo.estimatedDelivery'] = estimatedDelivery;
+    if (status === 'shipped') updateData['deliveryInfo.shippedDate'] = Date.now();
+    if (status === 'delivered') updateData['deliveryInfo.deliveredDate'] = Date.now();
+    
     const order = await Order.findByIdAndUpdate(
       req.params.orderId,
-      { status },
+      updateData,
       { new: true }
     );
     res.json({ success: true, order });
   } catch (error) {
     console.error("Update Order Error:", error);
     res.status(500).json({ error: "Failed to update order" });
+  }
+});
+
+// ============= REVIEW ENDPOINTS =============
+
+// Get reviews for a product
+app.get("/api/reviews/:productId", async (req, res) => {
+  try {
+    const reviews = await Review.find({ productId: req.params.productId })
+      .sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get reviews" });
+  }
+});
+
+// Add review
+app.post("/api/reviews", async (req, res) => {
+  try {
+    const { productId, userId, userName, rating, comment } = req.body;
+    
+    // Check if user already reviewed this product
+    const existing = await Review.findOne({ productId, userId });
+    if (existing) {
+      return res.status(400).json({ error: "You have already reviewed this product" });
+    }
+    
+    const review = await Review.create({ productId, userId, userName, rating, comment });
+    res.json({ success: true, review });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add review" });
+  }
+});
+
+// Get product average rating
+app.get("/api/reviews/:productId/average", async (req, res) => {
+  try {
+    const result = await Review.aggregate([
+      { $match: { productId: req.params.productId } },
+      { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } }
+    ]);
+    res.json({ 
+      average: result.length > 0 ? result[0].average.toFixed(1) : 0, 
+      count: result.length > 0 ? result[0].count : 0 
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get rating" });
+  }
+});
+
+// ============= WISHLIST ENDPOINTS =============
+
+// Get user's wishlist
+app.get("/api/wishlist/:userId", async (req, res) => {
+  try {
+    let wishlist = await Wishlist.findOne({ userId: req.params.userId })
+      .populate('products');
+    if (!wishlist) {
+      wishlist = await Wishlist.create({ userId: req.params.userId, products: [] });
+    }
+    res.json(wishlist);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get wishlist" });
+  }
+});
+
+// Add to wishlist
+app.post("/api/wishlist/:userId", async (req, res) => {
+  try {
+    const { productId } = req.body;
+    let wishlist = await Wishlist.findOne({ userId: req.params.userId });
+    
+    if (!wishlist) {
+      wishlist = await Wishlist.create({ userId: req.params.userId, products: [productId] });
+    } else {
+      if (!wishlist.products.includes(productId)) {
+        wishlist.products.push(productId);
+        wishlist.updatedAt = Date.now();
+        await wishlist.save();
+      }
+    }
+    res.json({ success: true, wishlist });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add to wishlist" });
+  }
+});
+
+// Remove from wishlist
+app.delete("/api/wishlist/:userId/:productId", async (req, res) => {
+  try {
+    const wishlist = await Wishlist.findOne({ userId: req.params.userId });
+    if (wishlist) {
+      wishlist.products = wishlist.products.filter(
+        p => p.toString() !== req.params.productId
+      );
+      wishlist.updatedAt = Date.now();
+      await wishlist.save();
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to remove from wishlist" });
   }
 });
 

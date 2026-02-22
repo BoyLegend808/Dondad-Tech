@@ -7,8 +7,8 @@ let cart = JSON.parse(localStorage.getItem("cart")) || [];
 const USERS_KEY = "dondad_users";
 const CURRENT_USER_KEY = "dondad_currentUser";
 
-// Session configuration for auto-logout
-const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
+// Session configuration for auto-logout (24 hours)
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 let sessionTimer = null;
 let isOffline = false;
 let offlineTimer = null;
@@ -47,12 +47,9 @@ function handleOnline() {
     resetSessionTimer();
 }
 
-// Handle tab close - logout immediately
+// Handle tab close - persist session (no longer clear on tab close)
 function handleTabClose() {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        sessionStorage.removeItem(CURRENT_USER_KEY);
-    }
+    // Session now persists across tab closes
 }
 
 // Setup auto-logout listeners
@@ -71,13 +68,10 @@ function setupAutoLogout() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
     
-    // Handle tab close
-    window.addEventListener('beforeunload', handleTabClose);
-    
-    // Handle visibility change (mobile)
+    // Handle visibility change (mobile) - but don't logout on tab close anymore
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
-            handleTabClose();
+            // Just update timestamp, don't logout
         }
     });
 }
@@ -205,15 +199,14 @@ function setUsers(users) {
 }
 
 function getCurrentUser() {
-  return JSON.parse(sessionStorage.getItem(CURRENT_USER_KEY));
+  return JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
 }
 
 function setCurrentUser(user) {
-  sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 }
 
 function logoutUser(message = null) {
-  sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
   updateAuthUI();
   if (message) {
@@ -339,7 +332,7 @@ function saveCart() {
 function updateCartCount() {
   const cartCount = document.getElementById("cart-count");
   if (cartCount) {
-    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    const currentUser = getCurrentUser();
     if (!currentUser) {
       cartCount.textContent = '0';
       return;
@@ -349,22 +342,22 @@ function updateCartCount() {
       cartCount.textContent = '0';
       return;
     }
+    // Fetch cart from server only - cart is server-side now
     fetch(`/api/cart/${userId}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('Cart fetch failed');
+        return r.json();
+      })
       .then(cart => {
         let totalItems = 0;
         if (Array.isArray(cart) && cart.length > 0) {
           totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        } else {
-          const localCart = JSON.parse(localStorage.getItem("cart")) || [];
-          totalItems = localCart.reduce((sum, item) => sum + item.qty, 0);
         }
         cartCount.textContent = totalItems;
       })
       .catch(() => {
-        const localCart = JSON.parse(localStorage.getItem("cart")) || [];
-        const totalItems = localCart.reduce((sum, item) => sum + item.qty, 0);
-        cartCount.textContent = totalItems;
+        // If server fails, show 0
+        cartCount.textContent = '0';
       });
   }
 }

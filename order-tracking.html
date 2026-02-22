@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Tracking - Pajay Gadgets</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                    </div>
+                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="tracking-page">
+            <h1>Track Your Order</h1>
+            <div class="tracking-form">
+                <input type="text" id="order-id" placeholder="Enter Order ID">
+                <button onclick="trackOrder()" class="btn">Track Order</button>
+            </div>
+            
+            <div id="tracking-result" style="display:none;">
+                <div class="order-status-timeline">
+                    <div class="status-step" id="status-pending">
+                        <div class="status-icon">📋</div>
+                        <div class="status-label">Order Placed</div>
+                    </div>
+                    <div class="status-step" id="status-confirmed">
+                        <div class="status-icon">✅</div>
+                        <div class="status-label">Confirmed</div>
+                    </div>
+                    <div class="status-step" id="status-processing">
+                        <div class="status-icon">📦</div>
+                        <div class="status-label">Processing</div>
+                    </div>
+                    <div class="status-step" id="status-shipped">
+                        <div class="status-icon">🚚</div>
+                        <div class="status-label">Shipped</div>
+                    </div>
+                    <div class="status-step" id="status-delivered">
+                        <div class="status-icon">🏠</div>
+                        <div class="status-label">Delivered</div>
+                    </div>
+                </div>
+                
+                <div class="order-details" id="order-details"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check login
+        const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Update UI
+        function updateAuthUI() {
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (user) {
+                document.getElementById('auth-buttons').style.display = 'none';
+                document.getElementById('user-menu').style.display = 'flex';
+                document.getElementById('user-name').textContent = user.name;
+            }
+        }
+        updateAuthUI();
+
+        async function trackOrder() {
+            const orderId = document.getElementById('order-id').value.trim();
+            if (!orderId) {
+                alert('Please enter an order ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}`);
+                const order = await response.json();
+
+                if (order) {
+                    displayOrder(order);
+                } else {
+                    alert('Order not found');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to track order');
+            }
+        }
+
+        function displayOrder(order) {
+            document.getElementById('tracking-result').style.display = 'block';
+            
+            // Update timeline
+            const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+            const currentIndex = statuses.indexOf(order.status);
+            
+            statuses.forEach((status, index) => {
+                const el = document.getElementById(`status-${status}`);
+                if (index <= currentIndex) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+
+            // Show order details
+            const detailsHtml = `
+                <h3>Order #${order._id}</h3>
+                <p><strong>Status:</strong> ${order.status.toUpperCase()}</p>
+                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                <p><strong>Total:</strong> ₦${order.subtotal.toLocaleString()}</p>
+                ${order.deliveryInfo.trackingNumber ? `<p><strong>Tracking:</strong> ${order.deliveryInfo.trackingNumber}</p>` : ''}
+                ${order.deliveryInfo.estimatedDelivery ? `<p><strong>Est. Delivery:</strong> ${new Date(order.deliveryInfo.estimatedDelivery).toLocaleDateString()}</p>` : ''}
+            `;
+            document.getElementById('order-details').innerHTML = detailsHtml;
+        }
+    </script>
+</body>
+</html>

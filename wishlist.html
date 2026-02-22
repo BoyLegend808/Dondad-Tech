@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - Pajay Gadgets</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html">Shop</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                    </div>
+                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="shop-header">
+            <h1>My Wishlist</h1>
+        </section>
+
+        <section>
+            <div class="product-grid" id="wishlist-grid">
+                <p style="text-align:center; padding: 2rem;">Loading wishlist...</p>
+            </div>
+            <div class="wishlist-empty" id="wishlist-empty" style="display:none;">
+                <p>Your wishlist is empty</p>
+                <a href="shop.html" class="btn">Start Shopping</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const API_BASE = '';
+        
+        // Check login
+        const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        const userId = currentUser._id || currentUser.id;
+
+        // Update UI
+        function updateAuthUI() {
+            const user = JSON.parse(localStorage.getItem('dondad_currentUser'));
+            if (user) {
+                document.getElementById('auth-buttons').style.display = 'none';
+                document.getElementById('user-menu').style.display = 'flex';
+                document.getElementById('user-name').textContent = user.name;
+                if (document.getElementById('user-avatar')) {
+                    document.getElementById('user-avatar').textContent = user.name.charAt(0);
+                }
+            }
+        }
+        updateAuthUI();
+
+        // Load wishlist
+        async function loadWishlist() {
+            try {
+                const response = await fetch(`${API_BASE}/api/wishlist/${userId}`);
+                const wishlist = await response.json();
+                
+                if (wishlist.products && wishlist.products.length > 0) {
+                    renderWishlist(wishlist.products);
+                } else {
+                    document.getElementById('wishlist-grid').style.display = 'none';
+                    document.getElementById('wishlist-empty').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('wishlist-grid').innerHTML = '<p style="text-align:center;">Failed to load wishlist</p>';
+            }
+        }
+
+        // Render wishlist products
+        function renderWishlist(products) {
+            const grid = document.getElementById('wishlist-grid');
+            grid.innerHTML = products.map(p => `
+                <article class="product-card">
+                    <a href="product.html?id=${p._id}">
+                        <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                    </a>
+                    <div class="product-card-content">
+                        <a href="product.html?id=${p._id}">
+                            <h3>${p.name}</h3>
+                        </a>
+                        <p class="product-card-desc">${p.desc || ''}</p>
+                        <p class="price">₦${p.price.toLocaleString()}</p>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button onclick="addToCartFromWishlist('${p._id}')" class="btn">Add to Cart</button>
+                            <button onclick="removeFromWishlist('${p._id}')" class="btn" style="background:#dc3545;">Remove</button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // Add to cart from wishlist
+        async function addToCartFromWishlist(productId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/cart/${userId}/${productId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qty: 1 })
+                });
+                
+                if (response.ok) {
+                    alert('Added to cart!');
+                    // Optionally remove from wishlist
+                }
+            } catch (error) {
+                alert('Error adding to cart');
+            }
+        }
+
+        // Remove from wishlist
+        async function removeFromWishlist(productId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/wishlist/${userId}/${productId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadWishlist();
+                }
+            } catch (error) {
+                alert('Error removing from wishlist');
+            }
+        }
+
+        // Add to wishlist (for product page)
+        async function toggleWishlist(productId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/wishlist/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId })
+                });
+                
+                const data = await response.json();
+                if (data.wishlist) {
+                    alert('Added to wishlist!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Update cart count
+        async function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                try {
+                    const response = await fetch(`/api/cart/${userId}`);
+                    const cart = await response.json();
+                    const total = Array.isArray(cart) ? cart.reduce((sum, item) => sum + item.qty, 0) : 0;
+                    cartCount.textContent = total;
+                } catch {
+                    cartCount.textContent = '0';
+                }
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWishlist();
+            updateCartCount();
+        });
+    </script>
+</body>
+</html>

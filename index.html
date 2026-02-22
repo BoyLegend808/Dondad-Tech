@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pajay Gadgets</title>
-    <meta name="description" content="Pajay Gadgets offers quality phones, laptops, tablets, and accessories with reliable support and fast delivery updates.">
+    <meta name="description"
+        content="Pajay Gadgets offers quality phones, laptops, tablets, and accessories with reliable support and fast delivery updates.">
     <meta name="keywords" content="Pajay Gadgets, phones, laptops, tablets, accessories, electronics shop">
     <meta property="og:title" content="Pajay Gadgets - Trusted Gadget Store">
     <meta property="og:description" content="Shop quality gadgets with transparent pricing and responsive support.">
@@ -44,7 +45,8 @@
                         <div class="user-dropdown">
                             <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
+                                    class="dropdown-icon">🚪</span>
                                 Logout</a>
                         </div>
                     </div>
@@ -123,9 +125,6 @@
                         We source quality phones, laptops, tablets, and accessories, then back every order
                         with responsive support.
                     </p>
-                    <p>
-                        Replace this text with your full story, mission, and what makes your brand different.
-                    </p>
                 </div>
                 <div class="about-card">
                     <h3>Why Customers Choose Us</h3>
@@ -154,7 +153,7 @@
                     <p>Lagos, Nigeria</p>
                 </div>
             </div>
-            <p class="contact-cta">You can edit these details later, or use the full <a href="contact.html">Contact Page</a>.</p>
+            <p class="contact-cta"><a href="contact.html">Contact Page</a>.</p>
         </section>
     </main>
 
@@ -215,7 +214,7 @@
             const userDropdown = document.querySelector('.user-dropdown');
 
             console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu?.classList?.contains('active'));
+            console.log('Has active class:', userMenu ? .classList ? .contains('active'));
 
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
@@ -243,7 +242,7 @@
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
             console.log('Checking hamburger close - hamburger:', hamburger, 'navLinks:', navLinks);
-            console.log('Hamburger active:', hamburger?.classList?.contains('active'));
+            console.log('Hamburger active:', hamburger ? .classList ? .contains('active'));
             if (hamburger && navLinks) {
                 if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                     hamburger.classList.remove('active');
@@ -260,11 +259,11 @@
         function updateCartCount() {
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
-            
+
             // Show localStorage count immediately (fast)
             const localCart = JSON.parse(localStorage.getItem('cart')) || [];
             cartCountEl.textContent = localCart.reduce((sum, item) => sum + item.qty, 0);
-            
+
             // Then try API to get accurate count
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (user) {
@@ -309,4 +308,3 @@
 </body>
 
 </html>
-

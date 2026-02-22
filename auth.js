@@ -2,42 +2,26 @@
 const API_BASE = '';
 
 // Session configuration
-const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes of inactivity
-const TAB_CLOSE_TIMEOUT = 0; // 0 = immediate logout on tab close
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours - session persists across tab closes
+const SESSION_KEY = 'pajay_session_valid';
+const SESSION_TIMESTAMP_KEY = 'pajay_session_timestamp';
 let sessionTimer = null;
 let isOffline = false;
 let offlineTimer = null;
 
-// Session key for tracking
-const SESSION_KEY = 'pajay_session_valid';
-const SESSION_TIMESTAMP_KEY = 'pajay_session_timestamp';
-
 // Check and validate session on page load
 function validateSession() {
-    const sessionValid = sessionStorage.getItem(SESSION_KEY);
-    const sessionTimestamp = sessionStorage.getItem(SESSION_TIMESTAMP_KEY);
+    const sessionValid = localStorage.getItem(SESSION_KEY);
+    const sessionTimestamp = localStorage.getItem(SESSION_TIMESTAMP_KEY);
     
     if (sessionValid && sessionTimestamp) {
         const now = Date.now();
         const elapsed = now - parseInt(sessionTimestamp);
         
-        // If session has expired (more than 15 minutes since last activity), logout
+        // If session has expired (more than 24 hours since last activity), logout
         if (elapsed > SESSION_TIMEOUT) {
             clearSession();
             return false;
-        }
-        
-        // Check if this is a new session (tab was closed and reopened)
-        // Use sessionStorage - it should clear on tab close, but we add extra check
-        const lastActivity = sessionStorage.getItem('pajay_last_activity');
-        if (lastActivity) {
-            const timeSinceLastActivity = now - parseInt(lastActivity);
-            // If more than a few seconds have passed since last activity, consider it a new session
-            if (timeSinceLastActivity > 5000) {
-                // This is likely a new tab/session - clear and require re-login
-                clearSession();
-                return false;
-            }
         }
         
         return true;
@@ -47,23 +31,20 @@ function validateSession() {
 
 // Clear session completely
 function clearSession() {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(SESSION_TIMESTAMP_KEY);
-    sessionStorage.removeItem('pajay_last_activity');
-    sessionStorage.removeItem('dondad_currentUser');
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_TIMESTAMP_KEY);
     localStorage.removeItem('dondad_currentUser');
 }
 
 // Mark session as valid and track timestamp
 function markSessionValid() {
-    sessionStorage.setItem(SESSION_KEY, 'true');
-    sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
-    updateLastActivity();
+    localStorage.setItem(SESSION_KEY, 'true');
+    localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
 }
 
 // Update last activity timestamp
 function updateLastActivity() {
-    sessionStorage.setItem('pajay_last_activity', Date.now().toString());
+    localStorage.setItem('pajay_last_activity', Date.now().toString());
 }
 
 // Reset session timer on user activity
@@ -71,13 +52,13 @@ function resetSessionTimer() {
     if (sessionTimer) {
         clearTimeout(sessionTimer);
     }
-    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
     if (currentUser) {
         sessionTimer = setTimeout(() => {
             logoutUser('Session expired due to inactivity. Please login again.');
         }, SESSION_TIMEOUT);
         // Update timestamp
-        sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+        localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
     }
 }
 
@@ -86,7 +67,7 @@ function handleOffline() {
     isOffline = true;
     // Start a timer when going offline
     offlineTimer = setTimeout(() => {
-        const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+        const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
         if (currentUser) {
             logoutUser('You have been logged out due to being offline for too long.');
         }
@@ -104,10 +85,9 @@ function handleOnline() {
     resetSessionTimer();
 }
 
-// Handle tab close - logout immediately
+// Handle tab close - persist session (no longer clear on tab close)
 function handleTabClose() {
-    // Clear the session completely when tab closes
-    clearSession();
+    // Session now persists across tab closes - no action needed
 }
 
 // Hamburger menu setup
@@ -145,7 +125,7 @@ function setupHamburger() {
 
 // Update navigation based on auth state
 function updateAuthNav() {
-    const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
     const authLinks = document.getElementById('auth-links');
     const logoutBtn = document.getElementById('logout-btn');
     const userGreeting = document.getElementById('user-greeting');
@@ -163,9 +143,6 @@ function updateAuthNav() {
         // Mark session as valid and start timer
         markSessionValid();
         resetSessionTimer();
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, updateLastActivity, { passive: true });
-        });
     } else if (currentUser) {
         authLinks.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
@@ -177,9 +154,6 @@ function updateAuthNav() {
         // Mark session as valid and start timer
         markSessionValid();
         resetSessionTimer();
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, updateLastActivity, { passive: true });
-        });
     } else {
         authLinks.style.display = 'flex';
         logoutBtn.style.display = 'none';
@@ -270,7 +244,7 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+            localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
             if (data.user.role === 'admin') {
                 window.location.href = 'admin.html';
             } else {
