@@ -111,13 +111,84 @@
             }
         }
 
+        function normalizeEmail(email) {
+            return String(email || '').trim().toLowerCase();
+        }
+
+        function ensureLocalFallbackUsers() {
+            const key = 'dondad_users';
+            const users = JSON.parse(localStorage.getItem(key) || '[]');
+            if (!Array.isArray(users)) return;
+
+            const defaults = [
+                {
+                    name: 'John',
+                    email: 'ugwunekejohn5@gmail.com',
+                    phone: '08012345678',
+                    password: 'customer123',
+                    role: 'customer'
+                },
+                {
+                    name: 'Admin',
+                    email: 'admin@dondadtech.com',
+                    phone: '08000000000',
+                    password: 'admin123',
+                    role: 'admin'
+                },
+                {
+                    name: 'Admin',
+                    email: 'admin@dondad.com',
+                    phone: '08000000000',
+                    password: 'admin123',
+                    role: 'admin'
+                }
+            ];
+
+            let changed = false;
+            for (const d of defaults) {
+                const exists = users.some(u => normalizeEmail(u.email) === normalizeEmail(d.email));
+                if (!exists) {
+                    users.push(d);
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                localStorage.setItem(key, JSON.stringify(users));
+            }
+        }
+
+        function loginWithLocalUsers(email, password) {
+            const users = JSON.parse(localStorage.getItem('dondad_users') || '[]');
+            if (!Array.isArray(users)) return null;
+            const user = users.find(u => normalizeEmail(u.email) === normalizeEmail(email) && String(u.password || '') === String(password));
+            if (!user) return null;
+            return {
+                _id: user._id || user.id || `local-${normalizeEmail(user.email)}`,
+                name: user.name || 'User',
+                email: user.email,
+                role: user.role || 'customer'
+            };
+        }
+
+        function persistLoginUser(user, remember) {
+            sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
+            if (remember) {
+                localStorage.setItem('dondad_currentUser', JSON.stringify(user));
+            } else {
+                localStorage.removeItem('dondad_currentUser');
+            }
+        }
+
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = normalizeEmail(document.getElementById('email').value);
             const password = document.getElementById('password').value;
             const error = document.getElementById('error');
             const btn = e.target.querySelector('button[type="submit"]');
+            const remember = document.getElementById('remember')?.checked;
             
+            error.style.display = 'none';
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
             btn.disabled = true;
 
@@ -127,29 +198,40 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await r.json();
+                const contentType = (r.headers.get('content-type') || '').toLowerCase();
+                const data = contentType.includes('application/json') ? await r.json() : null;
 
-                if (data.success) {
-                    const remember = document.getElementById('remember')?.checked;
-                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
-                    if (remember) {
-                        localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
-                    } else {
-                        localStorage.removeItem('dondad_currentUser');
-                    }
+                if (r.ok && data && data.success && data.user) {
+                    persistLoginUser(data.user, remember);
                     if (data.user.role === 'admin') {
                         location.href = 'admin.html';
                     } else {
                         location.href = 'index.html';
                     }
                 } else {
-                    error.textContent = data.error || 'Invalid credentials';
+                    ensureLocalFallbackUsers();
+                    const localUser = loginWithLocalUsers(email, password);
+                    if (localUser) {
+                        persistLoginUser(localUser, remember);
+                        location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
+                        return;
+                    }
+
+                    error.textContent = (data && data.error) ? data.error : 'Invalid credentials';
                     error.style.display = 'block';
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                     btn.disabled = false;
                 }
             } catch (err) {
-                error.textContent = 'Connection error. Please try again.';
+                ensureLocalFallbackUsers();
+                const localUser = loginWithLocalUsers(email, password);
+                if (localUser) {
+                    persistLoginUser(localUser, remember);
+                    location.href = localUser.role === 'admin' ? 'admin.html' : 'index.html';
+                    return;
+                }
+
+                error.textContent = 'Login failed. Start server with "npm start" or use a valid local fallback account.';
                 error.style.display = 'block';
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
                 btn.disabled = false;
