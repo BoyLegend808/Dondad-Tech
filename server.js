@@ -23,61 +23,13 @@ const loginAttempts = new Map();
 const apiRateAttempts = new Map();
 const sensitiveRateAttempts = new Map();
 
-// Redis client for production rate limiting (optional)
-let redisClient = null;
-let useRedis = false;
-
-// Try to initialize Redis if REDIS_URL is provided
-if (process.env.REDIS_URL) {
-  try {
-    const Redis = require('ioredis');
-    redisClient = new Redis(process.env.REDIS_URL);
-    useRedis = true;
-    console.log('Redis connected for rate limiting');
-    
-    redisClient.on('error', (err) => {
-      console.error('Redis error, falling back to in-memory:', err.message);
-      useRedis = false;
-    });
-  } catch (err) {
-    console.log('Redis not available, using in-memory rate limiting');
-  }
-}
-
-// Redis-backed rate limiter
-async function redisRateLimit(req, res, next) {
-  const key = `ratelimit:${req.ip || req.connection.remoteAddress || 'unknown'}`;
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const max = 600;
-  
-  try {
-    const current = await redisClient.incr(key);
-    if (current === 1) {
-      await redisClient.pexpire(key, windowMs);
-    }
-    
-    if (current > max) {
-      return res.status(429).json({ error: 'Too many API requests. Please try again later.' });
-    }
-    next();
-  } catch (err) {
-    // Fallback to in-memory
-    return globalApiRateLimit(req, res, next);
-  }
-}
-
+// In-memory rate limiting (can be upgraded to Redis in production)
 let globalApiRateLimit = (req, res, next) => next();
 let globalSensitiveRateLimit = (req, res, next) => next();
 function apiRateLimit(req, res, next) {
-  if (useRedis && redisClient) {
-    return redisRateLimit(req, res, next);
-  }
   return globalApiRateLimit(req, res, next);
 }
 function sensitiveRateLimit(req, res, next) {
-  if (useRedis && redisClient) {
-    return redisRateLimit(req, res, next);
-  }
   return globalSensitiveRateLimit(req, res, next);
 }
 
