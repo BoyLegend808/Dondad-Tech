@@ -1,8 +1,10 @@
 // Authentication JavaScript
 const API_BASE = '';
 
-// Session configuration
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours - session persists across tab closes
+// Session configuration - use sessionStorage for better security (clears on tab close)
+// Change to localStorage if you want persistence across browser restarts
+const SESSION_STORAGE_KEY = 'dondad_currentUser';
+const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 const SESSION_KEY = 'pajay_session_valid';
 const SESSION_TIMESTAMP_KEY = 'pajay_session_timestamp';
 let sessionTimer = null;
@@ -33,18 +35,36 @@ function validateSession() {
 function clearSession() {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_TIMESTAMP_KEY);
-    localStorage.removeItem('dondad_currentUser');
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_TIMESTAMP_KEY);
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+// Get current user (checks both storage types)
+function getCurrentUser() {
+    try {
+        // Check sessionStorage first (more secure)
+        const sessionUser = sessionStorage.getItem(SESSION_STORAGE_KEY);
+        if (sessionUser) return JSON.parse(sessionUser);
+        // Fall back to localStorage
+        const localUser = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (localUser) return JSON.parse(localUser);
+        return null;
+    } catch {
+        return null;
+    }
 }
 
 // Mark session as valid and track timestamp
 function markSessionValid() {
-    localStorage.setItem(SESSION_KEY, 'true');
-    localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+    sessionStorage.setItem(SESSION_KEY, 'true');
+    sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
 }
 
 // Update last activity timestamp
 function updateLastActivity() {
-    localStorage.setItem('pajay_last_activity', Date.now().toString());
+    sessionStorage.setItem('pajay_last_activity', Date.now().toString());
 }
 
 // Reset session timer on user activity
@@ -52,13 +72,13 @@ function resetSessionTimer() {
     if (sessionTimer) {
         clearTimeout(sessionTimer);
     }
-    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+    const currentUser = getCurrentUser();
     if (currentUser) {
         sessionTimer = setTimeout(() => {
             logoutUser('Session expired due to inactivity. Please login again.');
         }, SESSION_TIMEOUT);
-        // Update timestamp
-        localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+        // Update timestamp in sessionStorage
+        sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
     }
 }
 
@@ -67,7 +87,7 @@ function handleOffline() {
     isOffline = true;
     // Start a timer when going offline
     offlineTimer = setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+        const currentUser = getCurrentUser();
         if (currentUser) {
             logoutUser('You have been logged out due to being offline for too long.');
         }
@@ -125,7 +145,7 @@ function setupHamburger() {
 
 // Update navigation based on auth state
 function updateAuthNav() {
-    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser'));
+    const currentUser = getCurrentUser();
     const authLinks = document.getElementById('auth-links');
     const logoutBtn = document.getElementById('logout-btn');
     const userGreeting = document.getElementById('user-greeting');
@@ -250,7 +270,8 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+            // Store in sessionStorage (more secure, clears on tab close)
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.user));
             if (data.user.role === 'admin') {
                 window.location.href = 'admin.html';
             } else {

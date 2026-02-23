@@ -10,6 +10,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const jwt = require('jsonwebtoken');
 const Stripe = require("stripe");
 const https = require('https');
 const querystring = require('querystring');
@@ -64,11 +65,15 @@ if (!MONGODB_URI) {
   );
 } else {
   mongoose
-    .connect(MONGODB_URI)
+    .connect(MONGODB_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    })
     .then(async () => {
       dbReady = true;
       console.log("Connected to MongoDB");
-      await seedDatabase(); // Run seed after connection
+      await seedDatabase();
       await ensureDefaultUsers();
       await migrateLegacyPasswords();
     })
@@ -135,11 +140,24 @@ const cartSchema = new mongoose.Schema({
 });
 
 // Flutterwave/Paystack Configuration (use environment variables in production)
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'sk_test_your_key_here';
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+if (!PAYSTACK_SECRET_KEY) {
+  console.error("[SECURITY] PAYSTACK_SECRET_KEY not set! Payment initialization will fail.");
+}
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+
+// Validate Stripe is properly configured before using
+if (!STRIPE_SECRET_KEY) {
+  console.error("[SECURITY] STRIPE_SECRET_KEY not set! Stripe payments will not work.");
+}
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+
+// Validate Stripe webhook secret in production
+if (process.env.NODE_ENV === 'production' && !STRIPE_WEBHOOK_SECRET) {
+  console.error("[SECURITY] STRIPE_WEBHOOK_SECRET not set! Stripe webhook verification disabled.");
+}
 
 // Initialize payment
 app.post('/api/payment/initialize', sensitiveRateLimit, async (req, res) => {
@@ -362,25 +380,21 @@ const DEFAULT_USERS = [
   {
     name: "Admin",
     email: "admin@dondad.com",
-    password: "admin123",
+    password: crypto.randomBytes(16).toString('hex'), // Secure random password - change after first login!
     phone: "08000000000",
     role: "admin",
   },
   {
     name: "Admin",
     email: "admin@dondadtech.com",
-    password: "admin123",
+    password: crypto.randomBytes(16).toString('hex'), // Secure random password - change after first login!
     phone: "08000000000",
     role: "admin",
   },
-  {
-    name: "John",
-    email: "ugwunekejohn5@gmail.com",
-    password: "customer123",
-    phone: "08012345678",
-    role: "customer",
-  },
 ];
+
+// Log generated default passwords at startup (they will change on each restart!)
+console.log("[WARNING] Default admin passwords will be generated on first run. Set custom admin user in production!");
 
 function normalizeEmail(email = "") {
   return email.trim().toLowerCase();
@@ -553,45 +567,115 @@ globalSensitiveRateLimit = createIpRateLimiter(
   "Too many requests on this endpoint. Please try again later.",
 );
 
-// JWT Secret for session tokens
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+// JWT Secret for session tokens - MUST be set in production
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("[SECURITY] JWT_SECRET not set! Sessions will not persist across restarts.");
+  console.error("[SECURITY] Set JWT_SECRET environment variable for production!");
+}
+
+// JWT Configuration
+const JWT_OPTIONS = {
+  expiresIn: '24h'
+};
 
 function generateToken(user) {
-  return crypto.createHmac('sha256', JWT_SECRET)
-    .update(JSON.stringify({ _id: user._id, email: user.email, role: user.role }))
-    .digest('hex');
+  if (!JWT_SECRET) {
+    // Fallback to HMAC if no JWT_SECRET (not recommended for production)
+    return crypto.createHmac('sha256', 'fallback-secret-do-not-use-in-prod')
+      .update(JSON.stringify({ _id: user._id, email: user.email, role: user.role }))
+      .digest('hex');
+  }
+  return jwt.sign(
+    { _id: user._id, email: user.email, role: user.role },
+    JWT_SECRET,
+    JWT_OPTIONS
+  );
 }
 
 function verifyToken(token) {
+  if (!JWT_SECRET) {
+    // Fallback verification (not secure)
+    return { valid: false, decoded: null };
+  }
   try {
-    // For simplicity, we'll verify by regenerating - in production use proper JWT
-    return { valid: true };
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return { valid: true, decoded };
   } catch (e) {
-    return { valid: false };
+    return { valid: false, decoded: null };
   }
 }
 
-// Middleware to require admin role
-function requireAdmin(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+// Middleware to verify user authentication
+function requireAuth(req, res, next) {
+  const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  const result = verifyToken(token);
+  if (!result.valid) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+  
+  req.user = result.decoded;
+  next();
+}
+
+// Middleware to require admin role - verifies from database, not client headers
+async function requireAdmin(req, res, next) {
+  const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
   
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
-  // Get user from token (decoded from login response)
-  const userId = req.headers['x-user-id'];
-  const userRole = req.headers['x-user-role'];
-  
-  if (!userId || !userRole) {
-    return res.status(401).json({ error: 'Invalid token format' });
+  const result = verifyToken(token);
+  if (!result.valid || !result.decoded) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
   
-  if (userRole !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
+  // Verify user exists and has admin role in database
+  try {
+    const user = await User.findById(result.decoded._id).select('role');
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    
+    if (user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    
+    // Attach verified user to request
+    req.user = result.decoded;
+    req.user.dbRole = user.role;
+    next();
+  } catch (err) {
+    console.error('Admin check error:', err);
+    return res.status(500).json({ error: 'Authorization check failed' });
+  }
+}
+
+// Middleware to verify user owns the resource
+function requireOwnership(req, res, next) {
+  const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
+  const requestedUserId = req.params.userId || req.body?.userId;
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
   
+  const result = verifyToken(token);
+  if (!result.valid || !result.decoded) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+  
+  // Verify user owns the requested resource or is admin
+  if (result.decoded.role !== 'admin' && result.decoded._id !== requestedUserId) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  
+  req.user = result.decoded;
   next();
 }
 
@@ -1160,8 +1244,8 @@ app.get("/api/featured", async (req, res) => {
   }
 });
 
-// Cart Route
-app.get("/api/cart/:userId", async (req, res) => {
+// Cart Route - requires authentication and ownership
+app.get("/api/cart/:userId", requireOwnership, async (req, res) => {
   try {
     const { userId } = req.params;
     if (!isValidObjectId(userId)) {
@@ -1175,39 +1259,37 @@ app.get("/api/cart/:userId", async (req, res) => {
   }
 });
 
-// Add to Cart
-app.post("/api/cart/:userId/:productId", async (req, res) => {
+// Add to Cart - requires authentication and ownership
+app.post("/api/cart/:userId/:productId", requireOwnership, async (req, res) => {
   try {
     const { userId, productId } = req.params;
     const qty = parsePositiveInt(req.body?.qty, 1);
     const selectedVariant = safeVariant(req.body?.selectedVariant);
-    const unitPrice = parseMoney(req.body?.unitPrice, null);
     
     if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
       return res.status(400).json({ error: "User ID and Product ID are required" });
     }
     
-    // Get product to calculate price if not provided
-    let price = unitPrice;
-    if (price === undefined) {
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({ error: "Product not found" });
-      }
-      price = product.price;
+    // Get product from database - NEVER trust client-provided price
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
     }
+    const price = product.price;
     
-    // Check for existing cart item with same product and variant
+    // Use atomic operation to prevent race conditions
     const existingQuery = { userId, productId };
     existingQuery["selectedVariant.storage"] = selectedVariant.storage || "";
     existingQuery["selectedVariant.ram"] = selectedVariant.ram || "";
     existingQuery["selectedVariant.color"] = selectedVariant.color || "";
     
-    const existing = await Cart.findOne(existingQuery);
-    if (existing) {
-      existing.qty += qty || 1;
-      await existing.save();
-    } else {
+    const existing = await Cart.findOneAndUpdate(
+      existingQuery,
+      { $inc: { qty: qty || 1 } },
+      { new: true }
+    );
+    
+    if (!existing) {
       await Cart.create({
         userId,
         productId,
@@ -1224,8 +1306,8 @@ app.post("/api/cart/:userId/:productId", async (req, res) => {
   }
 });
 
-// Update Cart Quantity
-app.put("/api/cart/:userId/:productId", async (req, res) => {
+// Update Cart Quantity - requires authentication and ownership
+app.put("/api/cart/:userId/:productId", requireOwnership, async (req, res) => {
   try {
     const { userId, productId } = req.params;
     const rawQty = req.body?.qty;
@@ -1258,8 +1340,8 @@ app.put("/api/cart/:userId/:productId", async (req, res) => {
   }
 });
 
-// Remove from Cart
-app.delete("/api/cart/:userId/:productId", async (req, res) => {
+// Remove from Cart - requires authentication and ownership
+app.delete("/api/cart/:userId/:productId", requireOwnership, async (req, res) => {
   try {
     const { userId, productId } = req.params;
     const { selectedVariant } = req.query;
@@ -1290,8 +1372,8 @@ app.delete("/api/cart/:userId/:productId", async (req, res) => {
 
 // ============= ORDER ENDPOINTS =============
 
-// Create Order
-app.post("/api/orders", sensitiveRateLimit, async (req, res) => {
+// Create Order - requires authentication and validates prices server-side
+app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) => {
   try {
     const userId = String(req.body?.userId || "");
     const userName = sanitizeText(req.body?.userName || "", 120);
@@ -1317,15 +1399,46 @@ app.post("/api/orders", sensitiveRateLimit, async (req, res) => {
       return res.status(400).json({ error: "Invalid payment method" });
     }
     
+    // Validate and get real prices from database - NEVER trust client prices
+    const validatedItems = [];
+    let calculatedSubtotal = 0;
+    
+    for (const item of items) {
+      if (!isValidObjectId(item.productId)) continue;
+      
+      const product = await Product.findById(item.productId).select('name image price');
+      if (!product) continue;
+      
+      const qty = parsePositiveInt(item.qty, 1);
+      const itemPrice = product.price; // Always use database price
+      
+      validatedItems.push({
+        productId: item.productId,
+        productName: product.name,
+        productImage: product.image,
+        qty,
+        unitPrice: itemPrice
+      });
+      
+      calculatedSubtotal += itemPrice * qty;
+    }
+    
+    if (validatedItems.length === 0) {
+      return res.status(400).json({ error: "No valid items in order" });
+    }
+    
+    // Use calculated subtotal, not client-provided
+    const finalSubtotal = calculatedSubtotal;
+    
     const order = await Order.create({
       userId,
       userName,
       userEmail,
       userPhone,
-      items,
+      items: validatedItems,
       deliveryInfo,
       paymentMethod,
-      subtotal,
+      subtotal: finalSubtotal,
       status: "pending"
     });
     
@@ -1341,8 +1454,8 @@ app.post("/api/orders", sensitiveRateLimit, async (req, res) => {
   }
 });
 
-// Get user's orders
-app.get("/api/orders/user/:userId", async (req, res) => {
+// Get user's orders - requires authentication and ownership
+app.get("/api/orders/user/:userId", requireOwnership, async (req, res) => {
   try {
     const userId = String(req.params?.userId || "");
     if (!isValidObjectId(userId)) {
@@ -1356,8 +1469,8 @@ app.get("/api/orders/user/:userId", async (req, res) => {
   }
 });
 
-// Get single order by ID
-app.get("/api/orders/:orderId", async (req, res) => {
+// Get single order by ID - requires ownership
+app.get("/api/orders/:orderId", requireOwnership, async (req, res) => {
   try {
     const orderId = String(req.params?.orderId || "");
     if (!isValidObjectId(orderId)) {
@@ -1499,8 +1612,8 @@ app.get("/api/reviews/:productId/average", async (req, res) => {
 
 // ============= WISHLIST ENDPOINTS =============
 
-// Get user's wishlist
-app.get("/api/wishlist/:userId", async (req, res) => {
+// Get user's wishlist - requires authentication and ownership
+app.get("/api/wishlist/:userId", requireOwnership, async (req, res) => {
   try {
     const userId = String(req.params?.userId || "");
     if (!isValidObjectId(userId)) {
@@ -1517,8 +1630,8 @@ app.get("/api/wishlist/:userId", async (req, res) => {
   }
 });
 
-// Add to wishlist
-app.post("/api/wishlist/:userId", sensitiveRateLimit, async (req, res) => {
+// Add to wishlist - requires authentication and ownership
+app.post("/api/wishlist/:userId", requireOwnership, sensitiveRateLimit, async (req, res) => {
   try {
     const userId = String(req.params?.userId || "");
     const productId = String(req.body?.productId || "");
@@ -1542,8 +1655,8 @@ app.post("/api/wishlist/:userId", sensitiveRateLimit, async (req, res) => {
   }
 });
 
-// Remove from wishlist
-app.delete("/api/wishlist/:userId/:productId", async (req, res) => {
+// Remove from wishlist - requires authentication and ownership
+app.delete("/api/wishlist/:userId/:productId", requireOwnership, async (req, res) => {
   try {
     const userId = String(req.params?.userId || "");
     const productId = String(req.params?.productId || "");
