@@ -170,7 +170,13 @@ function updateAuthNav() {
 }
 
 // Single logout function
-function logoutUser(message = null) {
+async function logoutUser(message = null) {
+    try {
+        // Call logout API to clear cookies
+        await fetch(`${API_BASE}/api/logout`, { method: 'POST' });
+    } catch (e) {
+        // Ignore API errors, clear local storage anyway
+    }
     clearSession();
     window.location.href = 'index.html';
 }

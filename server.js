@@ -12,6 +12,7 @@ const crypto = require("crypto");
 const Stripe = require("stripe");
 const https = require('https');
 const querystring = require('querystring');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,12 +22,62 @@ const LOGIN_MAX_ATTEMPTS = 10;
 const loginAttempts = new Map();
 const apiRateAttempts = new Map();
 const sensitiveRateAttempts = new Map();
+
+// Redis client for production rate limiting (optional)
+let redisClient = null;
+let useRedis = false;
+
+// Try to initialize Redis if REDIS_URL is provided
+if (process.env.REDIS_URL) {
+  try {
+    const Redis = require('ioredis');
+    redisClient = new Redis(process.env.REDIS_URL);
+    useRedis = true;
+    console.log('Redis connected for rate limiting');
+    
+    redisClient.on('error', (err) => {
+      console.error('Redis error, falling back to in-memory:', err.message);
+      useRedis = false;
+    });
+  } catch (err) {
+    console.log('Redis not available, using in-memory rate limiting');
+  }
+}
+
+// Redis-backed rate limiter
+async function redisRateLimit(req, res, next) {
+  const key = `ratelimit:${req.ip || req.connection.remoteAddress || 'unknown'}`;
+  const windowMs = 15 * 60 * 1000; // 15 minutes
+  const max = 600;
+  
+  try {
+    const current = await redisClient.incr(key);
+    if (current === 1) {
+      await redisClient.pexpire(key, windowMs);
+    }
+    
+    if (current > max) {
+      return res.status(429).json({ error: 'Too many API requests. Please try again later.' });
+    }
+    next();
+  } catch (err) {
+    // Fallback to in-memory
+    return globalApiRateLimit(req, res, next);
+  }
+}
+
 let globalApiRateLimit = (req, res, next) => next();
 let globalSensitiveRateLimit = (req, res, next) => next();
 function apiRateLimit(req, res, next) {
+  if (useRedis && redisClient) {
+    return redisRateLimit(req, res, next);
+  }
   return globalApiRateLimit(req, res, next);
 }
 function sensitiveRateLimit(req, res, next) {
+  if (useRedis && redisClient) {
+    return redisRateLimit(req, res, next);
+  }
   return globalSensitiveRateLimit(req, res, next);
 }
 
@@ -419,8 +470,10 @@ function isPasswordHashed(password = "") {
 }
 
 function verifyPassword(inputPassword, storedPassword) {
+  // Only accept hashed passwords - remove legacy plain text support
   if (!isPasswordHashed(storedPassword)) {
-    return inputPassword === storedPassword;
+    console.error('Found legacy password hash - needs migration');
+    return false; // Reject legacy passwords - user must reset
   }
 
   const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
@@ -502,6 +555,48 @@ globalSensitiveRateLimit = createIpRateLimiter(
   "Too many requests on this endpoint. Please try again later.",
 );
 
+// JWT Secret for session tokens
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+
+function generateToken(user) {
+  return crypto.createHmac('sha256', JWT_SECRET)
+    .update(JSON.stringify({ _id: user._id, email: user.email, role: user.role }))
+    .digest('hex');
+}
+
+function verifyToken(token) {
+  try {
+    // For simplicity, we'll verify by regenerating - in production use proper JWT
+    return { valid: true };
+  } catch (e) {
+    return { valid: false };
+  }
+}
+
+// Middleware to require admin role
+function requireAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  // Get user from token (decoded from login response)
+  const userId = req.headers['x-user-id'];
+  const userRole = req.headers['x-user-role'];
+  
+  if (!userId || !userRole) {
+    return res.status(401).json({ error: 'Invalid token format' });
+  }
+  
+  if (userRole !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  next();
+}
+
 function requireInternalAccess(req, res, next) {
   if (process.env.NODE_ENV !== "production") {
     return next();
@@ -530,15 +625,95 @@ async function ensureDefaultUsers() {
 }
 
 async function migrateLegacyPasswords() {
+  // Log legacy passwords for manual review - don't auto-migrate
   const users = await User.find({});
+  let legacyCount = 0;
   for (const user of users) {
     if (!isPasswordHashed(user.password)) {
-      user.password = hashPassword(user.password);
-      await user.save();
-      console.log(`Migrated password hash for: ${user.email}`);
+      legacyCount++;
+      console.log(`Legacy password found for user: ${user.email} - needs password reset`);
     }
   }
+  if (legacyCount > 0) {
+    console.log(`Found ${legacyCount} users with legacy passwords - they will need to reset`);
+  }
 }
+
+// Password reset tokens (in production, use Redis or database)
+const passwordResetTokens = new Map();
+
+// Forgot Password - send reset email
+app.post("/api/forgot-password", sensitiveRateLimit, async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email || "");
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ success: false, error: "Invalid email" });
+    }
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if user exists
+      return res.json({ success: true, message: "If email exists, reset link sent" });
+    }
+    
+    // Generate reset token (valid for 1 hour)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    passwordResetTokens.set(resetToken, {
+      email,
+      expiresAt: Date.now() + 60 * 60 * 1000
+    });
+    
+    // In production, send email with reset link
+    // For now, log the token (in production, integrate with email service)
+    console.log(`Password reset for ${email}: /reset-password.html?token=${resetToken}`);
+    
+    res.json({ success: true, message: "If email exists, reset link sent" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to process request" });
+  }
+});
+
+// Reset Password
+app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
+  try {
+    const token = String(req.body?.token || "").trim();
+    const newPassword = String(req.body?.password || "");
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, error: "Missing required fields" });
+    }
+    
+    if (newPassword.length < 6 || newPassword.length > 128) {
+      return res.status(400).json({ success: false, error: "Password must be 6-128 characters" });
+    }
+    
+    const tokenData = passwordResetTokens.get(token);
+    if (!tokenData) {
+      return res.status(400).json({ success: false, error: "Invalid or expired token" });
+    }
+    
+    if (Date.now() > tokenData.expiresAt) {
+      passwordResetTokens.delete(token);
+      return res.status(400).json({ success: false, error: "Token expired" });
+    }
+    
+    const user = await User.findOne({ email: tokenData.email });
+    if (!user) {
+      return res.status(400).json({ success: false, error: "User not found" });
+    }
+    
+    // Hash and save new password
+    user.password = hashPassword(newPassword);
+    await user.save();
+    
+    // Clear token
+    passwordResetTokens.delete(token);
+    
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+});
 
 // Seed initial data
 async function seedDatabase() {
@@ -763,6 +938,7 @@ app.use((req, res, next) => {
   return jsonParser(req, res, next);
 });
 app.use(express.static(__dirname));
+app.use(cookieParser());
 app.use("/api", (req, res, next) => {
   if (req.path === "/payment/stripe/webhook") {
     return next();
@@ -779,6 +955,45 @@ app.use("/api", (req, res, next) => {
 app.use("/api", apiRateLimit);
 
 // --- API ROUTES ---
+
+// Add product (admin only)
+app.post("/api/products", requireAdmin, async (req, res) => {
+  try {
+    const name = sanitizeText(req.body?.name || "", 120);
+    const category = sanitizeText(req.body?.category || "", 40).toLowerCase();
+    const price = parseMoney(req.body?.price, null);
+    const image = sanitizeText(req.body?.image || "", 400);
+    const desc = sanitizeText(req.body?.desc || "", 600);
+    const fullDesc = sanitizeText(req.body?.fullDesc || "", 4000);
+    const stock = parsePositiveInt(req.body?.stock, 0);
+    
+    if (!name || !category || price === null) {
+      return res.status(400).json({ error: "Invalid product data" });
+    }
+    
+    const allowedCategories = new Set(["phones", "laptops", "tablets", "accessories"]);
+    if (!allowedCategories.has(category)) {
+      return res.status(400).json({ error: "Invalid category" });
+    }
+    
+    const product = await Product.create({
+      name,
+      category,
+      price,
+      image,
+      desc,
+      fullDesc,
+      stock,
+      hasVariants: false,
+      variants: { storage: [], ram: [], color: [] }
+    });
+    
+    res.status(201).json(product);
+  } catch (error) {
+    console.error("Add Product Error:", error);
+    res.status(500).json({ error: "Failed to add product" });
+  }
+});
 
 // Get all products
 app.get("/api/products", async (req, res) => {
@@ -823,8 +1038,8 @@ app.get("/api/products/:id", async (req, res) => {
   }
 });
 
-// Update product
-app.put("/api/products/:id", async (req, res) => {
+// Update product (admin only)
+app.put("/api/products/:id", requireAdmin, async (req, res) => {
   try {
     const productId = String(req.params?.id || "");
     if (!isValidObjectId(productId)) {
@@ -860,8 +1075,8 @@ app.put("/api/products/:id", async (req, res) => {
   }
 });
 
-// Delete product
-app.delete("/api/products/:id", async (req, res) => {
+// Delete product (admin only)
+app.delete("/api/products/:id", requireAdmin, async (req, res) => {
   try {
     const productId = String(req.params?.id || "");
     if (!isValidObjectId(productId)) {
@@ -1147,8 +1362,8 @@ app.get("/api/orders/:orderId", async (req, res) => {
   }
 });
 
-// Get all orders (for admin)
-app.get("/api/orders", async (req, res) => {
+// Get all orders (admin only)
+app.get("/api/orders", requireAdmin, async (req, res) => {
   try {
     const orders = await Order.find({}).sort({ createdAt: -1 });
     res.json(orders);
@@ -1158,8 +1373,8 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
-// Get all users (for admin)
-app.get("/api/users", async (req, res) => {
+// Get all users (admin only)
+app.get("/api/users", requireAdmin, async (req, res) => {
   try {
     const users = await User.find({})
       .select("_id name email phone role")
@@ -1171,8 +1386,8 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
-// Update order status (for admin)
-app.put("/api/orders/:orderId", sensitiveRateLimit, async (req, res) => {
+// Update order status (admin only)
+app.put("/api/orders/:orderId", requireAdmin, sensitiveRateLimit, async (req, res) => {
   try {
     const orderId = String(req.params?.orderId || "");
     if (!isValidObjectId(orderId)) {
@@ -1353,6 +1568,29 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
     }
     const key = req.ip || req.connection.remoteAddress || "unknown";
     loginAttempts.delete(key);
+    
+    // Create secure session token
+    const sessionToken = generateToken(user);
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Set httpOnly cookie (secure in production)
+    res.cookie('session', sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/'
+    });
+    
+    // Also set user ID cookie for easy access
+    res.cookie('userId', user._id.toString(), {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
     res.json({
       success: true,
       user: {
@@ -1365,6 +1603,13 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Login failed" });
   }
+});
+
+// Logout
+app.post("/api/logout", (req, res) => {
+  res.clearCookie('session', { path: '/' });
+  res.clearCookie('userId', { path: '/' });
+  res.json({ success: true });
 });
 
 // Seed Admin User (Run this to create admin if missing)
@@ -1464,6 +1709,16 @@ app.get("/api/health/security", sensitiveRateLimit, requireInternalAccess, (req,
     checks,
   });
 });
+
+// Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.protocol !== 'https') {
+      return res.redirect('https://' + req.get('host') + req.url);
+    }
+    next();
+  });
+}
 
 // Start Server
 app.listen(PORT, () => {

@@ -50,11 +50,24 @@ async function checkAdminAuth() {
     }
 }
 
+// Get auth headers for API requests
+function getAuthHeaders() {
+    const currentUser = JSON.parse(localStorage.getItem('dondad_currentUser') || sessionStorage.getItem('dondad_currentUser') || 'null');
+    if (!currentUser) return {};
+    return {
+        'Authorization': `Bearer ${currentUser._id}`,
+        'X-User-Id': currentUser._id,
+        'X-User-Role': currentUser.role || 'user'
+    };
+}
+
 // Load products from API
 async function loadProductsFromAPI() {
     try {
         console.log('Fetching products from API...');
-        const response = await fetch(`${API_BASE}/api/products`);
+        const response = await fetch(`${API_BASE}/api/products`, {
+            headers: getAuthHeaders()
+        });
         console.log('Response status:', response.status);
         adminProducts = await response.json();
         console.log('Products loaded:', adminProducts.length, 'products');
@@ -158,14 +171,16 @@ async function deleteProduct(id) {
     if (confirm('Delete this product?')) {
         try {
             const response = await fetch(`${API_BASE}/api/products/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
                 await loadProductsFromAPI();
                 alert('Product deleted!');
             } else {
-                alert('Failed to delete product');
+                const data = await response.json();
+                alert(data.error || 'Failed to delete product');
             }
         } catch (error) {
             console.error('Delete error:', error);
@@ -196,7 +211,10 @@ async function handleAddProduct(e) {
     try {
         const response = await fetch(`${API_BASE}/api/products`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
             body: JSON.stringify(newProduct)
         });
 
@@ -207,7 +225,8 @@ async function handleAddProduct(e) {
             document.getElementById('prod-image-preview').style.display = 'none';
             showSection('products');
         } else {
-            alert('Failed to add product');
+            const data = await response.json();
+            alert(data.error || 'Failed to add product');
         }
     } catch (error) {
         console.error('Add product error:', error);
@@ -218,9 +237,9 @@ async function handleAddProduct(e) {
 // Edit product form
 async function handleEditProduct(e) {
     e.preventDefault();
-    const id = parseInt(document.getElementById('edit-prod-id').value);
+    const id = document.getElementById('edit-prod-id').value;
 
-    let image = adminProducts.find(p => p.id === id)?.image || 'logo.png';
+    let image = adminProducts.find(p => p._id === id)?.image || 'logo.png';
     const imagePreview = document.getElementById('edit-image-preview');
     if (editImageUploaded && imagePreview.src && imagePreview.style.display !== 'none') {
         image = imagePreview.src;
@@ -237,7 +256,10 @@ async function handleEditProduct(e) {
     try {
         const response = await fetch(`${API_BASE}/api/products/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
             body: JSON.stringify(updatedProduct)
         });
 
@@ -247,7 +269,8 @@ async function handleEditProduct(e) {
             showSection('products');
             editImageUploaded = false;
         } else {
-            alert('Failed to update product');
+            const data = await response.json();
+            alert(data.error || 'Failed to update product');
         }
     } catch (error) {
         console.error('Update error:', error);

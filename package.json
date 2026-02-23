@@ -18,8 +18,10 @@
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.2.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^4.22.1",
+    "ioredis": "^5.3.2",
     "mongodb": "^7.1.0",
     "mongoose": "^8.23.0",
     "stripe": "^20.3.1"
