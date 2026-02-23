@@ -450,10 +450,13 @@ function isPasswordHashed(password = "") {
 }
 
 function verifyPassword(inputPassword, storedPassword) {
-  // Only accept hashed passwords - remove legacy plain text support
+  // Check for legacy plain-text password - auto-migrate on successful login
   if (!isPasswordHashed(storedPassword)) {
-    console.error('Found legacy password hash - needs migration');
-    return false; // Reject legacy passwords - user must reset
+    if (inputPassword === storedPassword) {
+      // Legacy password match - return true but it will be re-hashed on login
+      return true;
+    }
+    return false;
   }
 
   const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
@@ -476,6 +479,20 @@ function verifyPassword(inputPassword, storedPassword) {
     return false;
   }
   return crypto.timingSafeEqual(a, b);
+}
+
+// Auto-migrate password on successful login
+async function migratePassword(userId, newPassword) {
+  try {
+    const user = await User.findById(userId);
+    if (user && !isPasswordHashed(user.password)) {
+      user.password = hashPassword(newPassword);
+      await user.save();
+      console.log(`Auto-migrated password for user: ${user.email}`);
+    }
+  } catch (err) {
+    console.error('Password migration error:', err);
+  }
 }
 
 function loginRateLimit(req, res, next) {
@@ -1563,6 +1580,11 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
     }
     const key = req.ip || req.connection.remoteAddress || "unknown";
     loginAttempts.delete(key);
+    
+    // Auto-migrate legacy password
+    if (!isPasswordHashed(user.password)) {
+      migratePassword(user._id, password);
+    }
     
     // Create secure session token
     const sessionToken = generateToken(user);
