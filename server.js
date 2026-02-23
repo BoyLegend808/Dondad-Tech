@@ -35,15 +35,31 @@ function sensitiveRateLimit(req, res, next) {
 }
 
 // MongoDB Connection
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  process.env.MONGODB_URL ||
-  process.env.MONGO_URL ||
-  process.env.DATABASE_URL;
+function resolveMongoUri() {
+  const candidates = [
+    "MONGODB_URI",
+    "MONGO_URI",
+    "MONGODB_URL",
+    "MONGO_URL",
+    "DATABASE_URL",
+    "DATABASE_PRIVATE_URL",
+    "MONGODB_PRIVATE_URL",
+    "MONGODB_PUBLIC_URL",
+  ];
+  for (const key of candidates) {
+    const raw = process.env[key];
+    if (!raw) continue;
+    const cleaned = String(raw).trim().replace(/^['"]|['"]$/g, "");
+    if (cleaned) return cleaned;
+  }
+  return "";
+}
+
+const MONGODB_URI = resolveMongoUri();
 
 if (!MONGODB_URI) {
   console.error(
-    "[Startup] Missing DB URI env var. Set one of: MONGODB_URI, MONGODB_URL, MONGO_URL, DATABASE_URL",
+    "[Startup] Missing DB URI env var. Set one of: MONGODB_URI, MONGO_URI, MONGODB_URL, MONGO_URL, DATABASE_URL, DATABASE_PRIVATE_URL, MONGODB_PRIVATE_URL, MONGODB_PUBLIC_URL",
   );
 } else {
   mongoose
@@ -1650,9 +1666,13 @@ app.get("/api/health/security", sensitiveRateLimit, requireInternalAccess, (req,
   const hasStripeWebhookSecret = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
   const hasMongoUri = Boolean(
     process.env.MONGODB_URI ||
+      process.env.MONGO_URI ||
       process.env.MONGODB_URL ||
       process.env.MONGO_URL ||
-      process.env.DATABASE_URL,
+      process.env.DATABASE_URL ||
+      process.env.DATABASE_PRIVATE_URL ||
+      process.env.MONGODB_PRIVATE_URL ||
+      process.env.MONGODB_PUBLIC_URL,
   );
   const hasAdminApiToken = Boolean(process.env.ADMIN_API_TOKEN);
   const hasAllowedOrigins = allowedOrigins.length > 0;
