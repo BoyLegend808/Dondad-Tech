@@ -16,6 +16,7 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+let dbReady = false;
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 10;
@@ -34,20 +35,31 @@ function sensitiveRateLimit(req, res, next) {
 }
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-  throw new Error("Missing MONGODB_URI environment variable");
-}
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  process.env.MONGODB_URL ||
+  process.env.MONGO_URL ||
+  process.env.DATABASE_URL;
 
-mongoose
-  .connect(MONGODB_URI)
-  .then(async () => {
-    console.log("Connected to MongoDB");
-    await seedDatabase(); // Run seed after connection
-    await ensureDefaultUsers();
-    await migrateLegacyPasswords();
-  })
-  .catch((err) => console.error("MongoDB connection error:", err));
+if (!MONGODB_URI) {
+  console.error(
+    "[Startup] Missing DB URI env var. Set one of: MONGODB_URI, MONGODB_URL, MONGO_URL, DATABASE_URL",
+  );
+} else {
+  mongoose
+    .connect(MONGODB_URI)
+    .then(async () => {
+      dbReady = true;
+      console.log("Connected to MongoDB");
+      await seedDatabase(); // Run seed after connection
+      await ensureDefaultUsers();
+      await migrateLegacyPasswords();
+    })
+    .catch((err) => {
+      dbReady = false;
+      console.error("MongoDB connection error:", err);
+    });
+}
 
 // Mongoose Schemas
 const userSchema = new mongoose.Schema({
@@ -905,6 +917,21 @@ app.use("/api", (req, res, next) => {
   next();
 });
 app.use("/api", apiRateLimit);
+app.use("/api", (req, res, next) => {
+  if (dbReady) return next();
+  const allowedWithoutDb = [
+    "/payment/initialize",
+    "/payment/verify/",
+    "/health/security",
+  ];
+  if (allowedWithoutDb.some((p) => req.path.startsWith(p))) {
+    return next();
+  }
+  return res.status(503).json({
+    error:
+      "Database is not configured or not connected. Set MONGODB_URI (or MONGODB_URL/MONGO_URL/DATABASE_URL) and restart.",
+  });
+});
 
 // --- API ROUTES ---
 
@@ -1621,7 +1648,12 @@ app.post("/api/register", sensitiveRateLimit, async (req, res) => {
 app.get("/api/health/security", sensitiveRateLimit, requireInternalAccess, (req, res) => {
   const hasStripeKey = Boolean(process.env.STRIPE_SECRET_KEY);
   const hasStripeWebhookSecret = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
-  const hasMongoUri = Boolean(process.env.MONGODB_URI);
+  const hasMongoUri = Boolean(
+    process.env.MONGODB_URI ||
+      process.env.MONGODB_URL ||
+      process.env.MONGO_URL ||
+      process.env.DATABASE_URL,
+  );
   const hasAdminApiToken = Boolean(process.env.ADMIN_API_TOKEN);
   const hasAllowedOrigins = allowedOrigins.length > 0;
 
