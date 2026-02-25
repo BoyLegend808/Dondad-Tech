@@ -4,8 +4,8 @@
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 // User authentication
-const USERS_KEY = "dondad_users";
 const CURRENT_USER_KEY = "dondad_currentUser";
+const LEGACY_USERS_KEY = "dondad_users";
 
 // Session configuration for auto-logout (24 hours)
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
@@ -112,69 +112,25 @@ function searchProducts(query) {
   );
 }
 
-// Initialize default user accounts
-function initializeDefaultAccounts() {
-  let users = getUsers();
-
-  // Ensure users array exists
-  if (!Array.isArray(users)) {
-    users = [];
-  }
-
-  // Check if customer account already exists
-  const customerExists = users.find(
-    (u) => u.email === "ugwunekejohn5@gmail.com",
-  );
-
-  if (!customerExists) {
-    // Add customer account
-    users.push({
-      name: "John",
-      email: "ugwunekejohn5@gmail.com",
-      phone: "08012345678",
-      password: "customer123",
-      role: "customer",
-    });
-    setUsers(users);
-    console.log(
-      "Customer account created: ugwunekejohn5@gmail.com / customer123",
-    );
-  }
-
-  // Check if admin account already exists
-  const adminExists = users.find((u) => u.email === "admin@dondadtech.com");
-
-  if (!adminExists) {
-    // Add admin account
-    users.push({
-      name: "Admin",
-      email: "admin@dondadtech.com",
-      phone: "08000000000",
-      password: "admin123",
-      role: "admin",
-    });
-    setUsers(users);
-    console.log("Admin account created: admin@dondadtech.com / admin123");
-  }
+function clearLegacyUserStore() {
+  // Remove deprecated client-side account database; auth now uses MongoDB via API.
+  localStorage.removeItem(LEGACY_USERS_KEY);
 }
 
-// Initialize on load
-initializeDefaultAccounts();
+clearLegacyUserStore();
 
-// Debug: Clear all user data (call resetUsers() in console to reset)
+// Debug: clear active browser session
 window.resetUsers = function () {
-  localStorage.removeItem(USERS_KEY);
+  sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
-  initializeDefaultAccounts();
-  console.log("Users reset! Default accounts recreated.");
-  alert(
-    "User data reset! Refresh the page to login.\n\nCustomer: ugwunekejohn5@gmail.com / customer123\nAdmin: admin@dondadtech.com / admin123",
-  );
+  clearLegacyUserStore();
+  console.log("Session cleared.");
   location.reload();
 };
 
 // Force logout and refresh (call forceLogout() in console)
 window.forceLogout = function () {
+  sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
   console.log("Forced logout! Refreshing...");
   location.reload();
@@ -182,6 +138,7 @@ window.forceLogout = function () {
 
 // Clear user session on page load (for testing)
 window.clearUserSession = function () {
+  sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
   console.log("User session cleared!");
   updateAuthUI();
@@ -189,14 +146,6 @@ window.clearUserSession = function () {
 
 // Auto-clear user session on page load (uncomment to always start logged out)
 // localStorage.removeItem(CURRENT_USER_KEY);
-
-function getUsers() {
-  return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-}
-
-function setUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 function getCurrentUser() {
   const sessionUser = JSON.parse(
@@ -207,11 +156,14 @@ function getCurrentUser() {
 }
 
 function setCurrentUser(user) {
+  sessionStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 }
 
 function logoutUser(message = null) {
+  sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
+  fetch("/api/logout", { method: "POST" }).catch(() => {});
   updateAuthUI();
   if (message) {
     alert(message);
@@ -228,36 +180,9 @@ function isLoggedIn() {
   return getCurrentUser() !== null;
 }
 
-function loginUser(email, password) {
-  const users = getUsers();
-  const user = users.find((u) => u.email === email && u.password === password);
-  if (user) {
-    setCurrentUser({
-      _id: user._id || user.id,  // Store the user ID if available
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-    });
-    return true;
-  }
-  return false;
-}
-
 function isAdmin() {
   const user = getCurrentUser();
   return user && user.role === "admin";
-}
-
-function registerUser(name, email, phone, password) {
-  const users = getUsers();
-  if (users.find((u) => u.email === email)) {
-    return { success: false, message: "Email already registered" };
-  }
-  users.push({ name, email, phone, password });
-  setUsers(users);
-  setCurrentUser({ name, email, phone });
-  return { success: true };
 }
 
 function updateAuthUI() {
@@ -685,10 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // View local database (call viewDatabase() in console)
 window.viewDatabase = function () {
   console.log("=== LOCAL DATABASE ===");
-  console.log(
-    "Users:",
-    JSON.parse(localStorage.getItem("dondad_users") || "[]"),
-  );
+  console.log("Legacy Users:", JSON.parse(localStorage.getItem("dondad_users") || "[]"));
   console.log(
     "Current User:",
     JSON.parse(localStorage.getItem("dondad_currentUser") || "null"),
