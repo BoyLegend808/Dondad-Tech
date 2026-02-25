@@ -295,6 +295,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include', // Include session cookie
                 body: JSON.stringify({
                     qty: 1
                 })
@@ -302,8 +303,36 @@
                 if (data.success) {
                     alert('Added to cart!');
                     updateCartCount();
+                } else {
+                    // Fallback to localStorage
+                    addToCartLocal(productId);
                 }
+            }).catch(err => {
+                console.error('Add to cart error:', err);
+                addToCartLocal(productId);
             });
+        }
+        
+        function addToCartLocal(productId) {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existing = cart.find(item => item._id === productId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ _id: productId, qty: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Added to cart! (offline mode)');
+            updateCartCountLocal();
+        }
+        
+        function updateCartCountLocal() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const total = cart.reduce((sum, item) => sum + item.qty, 0);
+                cartCount.textContent = total;
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
