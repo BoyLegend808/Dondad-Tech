@@ -325,12 +325,17 @@ header {
     border: none;
     cursor: pointer;
     padding: 5px;
+    z-index: 1000;
 }
 
 /* Show hamburger only on mobile */
 @media (max-width: 768px) {
     .hamburger {
         display: flex;
+    }
+    
+    .nav-right {
+        align-items: center;
     }
 }
 
