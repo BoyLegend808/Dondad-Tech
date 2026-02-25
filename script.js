@@ -308,12 +308,47 @@ function updateAuthUI() {
 
 function addToCart(productId, qty = 1) {
   // Require login before adding to cart
-  if (!isLoggedIn()) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
     alert("Please login to add items to cart. Redirecting to login page...");
     window.location.href = "login.html";
     return;
   }
 
+  const product = getProductById(productId);
+  if (!product) return;
+
+  // Try API first
+  const userId = currentUser._id || currentUser.id;
+  if (userId) {
+    fetch(`/api/cart/${userId}/${productId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ qty: qty }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          alert(product.name + " added to cart!");
+          updateCartCount();
+        } else {
+          // Fallback to localStorage
+          addToCartLocal(productId, qty);
+        }
+      })
+      .catch((err) => {
+        console.error("Add to cart API error:", err);
+        // Fallback to localStorage
+        addToCartLocal(productId, qty);
+      });
+  } else {
+    // No user ID, use localStorage
+    addToCartLocal(productId, qty);
+  }
+}
+
+function addToCartLocal(productId, qty = 1) {
   const product = getProductById(productId);
   if (!product) return;
 
@@ -326,7 +361,7 @@ function addToCart(productId, qty = 1) {
     cart.push({ _id: productId, qty: qty });
   }
   saveCart();
-  alert(product.name + " added to cart!");
+  alert(product.name + " added to cart! (offline mode)");
 }
 
 function saveCart() {
