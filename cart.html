@@ -83,7 +83,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger()">
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -394,7 +394,11 @@
             window.location.href = 'index.html';
         }
 
-        function toggleHamburger() {
+        function toggleHamburger(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             document.querySelector('.nav-links')?.classList.toggle('active');
             document.querySelector('.hamburger')?.classList.toggle('active');
         }

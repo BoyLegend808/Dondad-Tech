@@ -24,7 +24,7 @@
             </ul>
             <div class="nav-right">
                 <a href="register.html" class="auth-btn register">Register</a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -117,7 +117,11 @@
             }
         }
 
-        function toggleMenu() {
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const navLinks = document.getElementById('navLinks');
             const hamburger = document.querySelector('.hamburger');
             if (navLinks) navLinks.classList.toggle('active');

@@ -233,6 +233,7 @@ function loginUser(email, password) {
   const user = users.find((u) => u.email === email && u.password === password);
   if (user) {
     setCurrentUser({
+      _id: user._id || user.id,  // Store the user ID if available
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -569,31 +570,53 @@ document.addEventListener("DOMContentLoaded", () => {
   // Login page
   const loginForm = document.getElementById("login-form");
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       console.log("Login attempt for:", email);
 
-      if (loginUser(email, password)) {
-        const user = getCurrentUser();
-        console.log("Login successful for:", user.email);
-        if (user.role === "admin") {
-          alert("Admin login successful! Redirecting to admin panel...");
-          window.location.href = "admin.html";
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store user data including the MongoDB _id
+          setCurrentUser(data.user);
+          console.log("Login successful for:", data.user.email);
+          if (data.user.role === "admin") {
+            alert("Admin login successful! Redirecting to admin panel...");
+            window.location.href = "admin.html";
+          } else {
+            alert("Login successful! Welcome back, " + data.user.name);
+            window.location.href = "index.html";
+          }
         } else {
-          alert("Login successful! Welcome back, " + user.name);
-          window.location.href = "index.html";
+          console.log("Login failed for:", email);
+          alert(data.error || "Invalid email or password!");
         }
-      } else {
-        console.log("Login failed for:", email);
-        // Debug: Show current users in console
-        const users = getUsers();
-        console.log("Current users in database:", users);
-        alert(
-          "Invalid email or password! If you're using the default account, try registering a new account or type 'resetUsers()' in the browser console to reset.",
-        );
+      } catch (error) {
+        console.error("Login error:", error);
+        // Fallback to local login if server is not available
+        if (loginUser(email, password)) {
+          const user = getCurrentUser();
+          console.log("Login successful (local fallback) for:", user.email);
+          if (user.role === "admin") {
+            alert("Admin login successful! Redirecting to admin panel...");
+            window.location.href = "admin.html";
+          } else {
+            alert("Login successful! Welcome back, " + user.name);
+            window.location.href = "index.html";
+          }
+        } else {
+          console.log("Login failed for:", email);
+          alert("Invalid email or password!");
+        }
       }
       return false;
     });

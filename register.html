@@ -19,7 +19,7 @@
             <a href="index.html" class="logo">Pajay Gadgets</a>
             <div class="nav-right">
                 <a href="login.html" class="auth-btn">Login</a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -114,8 +114,18 @@
     </footer>
 
     <script>
-        function toggleMenu() {
-            document.querySelector('.nav-links')?.classList.toggle('active');
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navLinks && hamburger) {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            }
         }
 
         function togglePassword(fieldId) {

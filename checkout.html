@@ -45,7 +45,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger()">
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -211,7 +211,11 @@
         });
 
         // Toggle hamburger menu
-        function toggleHamburger() {
+        function toggleHamburger(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             const hamburger = document.getElementById('hamburger');
             const navLinks = document.querySelector('.nav-links');
             if (hamburger && navLinks) {

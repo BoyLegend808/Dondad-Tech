@@ -49,7 +49,7 @@
                     </div>
                     <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
                 </div>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -173,8 +173,18 @@
             }
         });
 
-        function toggleMenu() {
-            document.querySelector('.nav-links').classList.toggle('active');
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navLinks && hamburger) {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            }
         }
 
         function updateCartCount() {

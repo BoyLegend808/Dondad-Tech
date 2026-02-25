@@ -50,7 +50,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -143,9 +143,21 @@
             location.reload();
         }
 
-        function toggleMenu() {
-            document.querySelector('.nav-links').classList.toggle('active');
-            document.querySelector('.hamburger').classList.toggle('active');
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navLinks && hamburger) {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+                console.log('Menu toggled - navLinks:', navLinks.classList.contains('active'));
+            } else {
+                console.error('Nav elements not found');
+            }
         }
 
         function toggleUserMenu(e) {

@@ -316,15 +316,22 @@ header {
     color: var(--bg);
 }
 
-/* Hamburger - Visible on all devices */
+/* Hamburger - Hidden on desktop, visible on mobile */
 .hamburger {
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 5px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
+}
+
+/* Show hamburger only on mobile */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
 }
 
 .hamburger span {
