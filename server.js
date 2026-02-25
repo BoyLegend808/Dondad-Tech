@@ -373,8 +373,21 @@ const wishlistSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+const passwordResetTokenSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, index: true },
+    tokenHash: { type: String, required: true, unique: true, index: true },
+    expiresAt: { type: Date, required: true, index: true },
+  },
+  { timestamps: true },
+);
+
+// Automatically remove expired reset tokens.
+passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 const Review = mongoose.model("Review", reviewSchema);
 const Wishlist = mongoose.model("Wishlist", wishlistSchema);
+const PasswordResetToken = mongoose.model("PasswordResetToken", passwordResetTokenSchema);
 
 const DEFAULT_USERS = [
   {
@@ -721,8 +734,58 @@ async function migrateLegacyPasswords() {
   }
 }
 
-// Password reset tokens (in production, use Redis or database)
-const passwordResetTokens = new Map();
+function sha256(input) {
+  return crypto.createHash("sha256").update(String(input)).digest("hex");
+}
+
+function getPublicBaseUrl(req) {
+  const explicit = String(process.env.PUBLIC_APP_URL || process.env.APP_URL || "").trim();
+  if (explicit) {
+    return explicit.replace(/\/+$/, "");
+  }
+  const proto = req.get("x-forwarded-proto") || req.protocol || "http";
+  const host = req.get("x-forwarded-host") || req.get("host");
+  return `${proto}://${host}`.replace(/\/+$/, "");
+}
+
+function getResetLink(req, token) {
+  const base = getPublicBaseUrl(req);
+  return `${base}/reset-password.html?token=${encodeURIComponent(token)}`;
+}
+
+async function sendPasswordResetEmail(email, resetUrl) {
+  const sendGridApiKey = String(process.env.SENDGRID_API_KEY || "").trim();
+  const sender = String(process.env.PASSWORD_RESET_FROM_EMAIL || "").trim();
+  if (!sendGridApiKey || !sender) {
+    return { sent: false, reason: "missing_email_config" };
+  }
+
+  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${sendGridApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email }] }],
+      from: { email: sender, name: "Dondad Tech" },
+      subject: "Reset your Dondad Tech password",
+      content: [
+        {
+          type: "text/plain",
+          value: `Use this link to reset your password (valid for 1 hour): ${resetUrl}`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`SendGrid error ${response.status}${text ? `: ${text.slice(0, 180)}` : ""}`);
+  }
+
+  return { sent: true };
+}
 
 // Forgot Password - send reset email
 app.post("/api/forgot-password", sensitiveRateLimit, async (req, res) => {
@@ -737,22 +800,30 @@ app.post("/api/forgot-password", sensitiveRateLimit, async (req, res) => {
       // Don't reveal if user exists
       return res.json({ success: true, message: "If email exists, reset link sent" });
     }
-    
-    // Generate reset token (valid for 1 hour)
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    passwordResetTokens.set(resetToken, {
-      email,
-      expiresAt: Date.now() + 60 * 60 * 1000
-    });
-    
-    const resetUrl = `/reset-password.html?token=${resetToken}`;
-    // In production, send email with reset link.
-    // In non-production, expose the link in response for easier testing.
-    console.log(`Password reset for ${email}: ${resetUrl}`);
+
+    // One active reset token per email.
+    await PasswordResetToken.deleteMany({ email });
+
+    // Generate token (valid for 1 hour) and store only hash in DB.
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = sha256(resetToken);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await PasswordResetToken.create({ email, tokenHash, expiresAt });
+
+    const resetUrl = getResetLink(req, resetToken);
+    let emailSent = false;
+    try {
+      const result = await sendPasswordResetEmail(email, resetUrl);
+      emailSent = result.sent;
+    } catch (mailErr) {
+      console.error("Password reset email delivery failed:", mailErr?.message || mailErr);
+    }
 
     const payload = { success: true, message: "If email exists, reset link sent" };
-    if (process.env.NODE_ENV !== "production") {
+    // Fallback for environments without email setup, so flow remains usable immediately.
+    if (!emailSent) {
       payload.resetUrl = resetUrl;
+      console.warn("[PASSWORD_RESET] Email provider not configured or failed; returning resetUrl in API response.");
     }
     res.json(payload);
   } catch (error) {
@@ -774,13 +845,14 @@ app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
       return res.status(400).json({ success: false, error: "Password must be 6-128 characters" });
     }
     
-    const tokenData = passwordResetTokens.get(token);
+    const tokenHash = sha256(token);
+    const tokenData = await PasswordResetToken.findOne({ tokenHash });
     if (!tokenData) {
       return res.status(400).json({ success: false, error: "Invalid or expired token" });
     }
     
-    if (Date.now() > tokenData.expiresAt) {
-      passwordResetTokens.delete(token);
+    if (Date.now() > new Date(tokenData.expiresAt).getTime()) {
+      await PasswordResetToken.deleteOne({ _id: tokenData._id });
       return res.status(400).json({ success: false, error: "Token expired" });
     }
     
@@ -793,8 +865,8 @@ app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
     user.password = hashPassword(newPassword);
     await user.save();
     
-    // Clear token
-    passwordResetTokens.delete(token);
+    // Token is single-use; clear any outstanding tokens for this email.
+    await PasswordResetToken.deleteMany({ email: tokenData.email });
     
     res.json({ success: true, message: "Password reset successful" });
   } catch (error) {
