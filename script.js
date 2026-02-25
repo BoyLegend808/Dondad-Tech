@@ -637,21 +637,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (error) {
         console.error("Login error:", error);
-        // Fallback to local login if server is not available
-        if (loginUser(email, password)) {
-          const user = getCurrentUser();
-          console.log("Login successful (local fallback) for:", user.email);
-          if (user.role === "admin") {
-            alert("Admin login successful! Redirecting to admin panel...");
-            window.location.href = "admin.html";
-          } else {
-            alert("Login successful! Welcome back, " + user.name);
-            window.location.href = "index.html";
-          }
-        } else {
-          console.log("Login failed for:", email);
-          alert("Invalid email or password!");
-        }
+        console.log("Login failed for:", email);
+        alert("Unable to login right now. Please check your connection and try again.");
       }
       return false;
     });
@@ -660,7 +647,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Register page
   const registerForm = document.getElementById("register-form");
   if (registerForm) {
-    registerForm.addEventListener("submit", (e) => {
+    registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("name").value;
       const email = document.getElementById("email").value;
@@ -673,12 +660,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const result = registerUser(name, email, phone, password);
-      if (result.success) {
-        alert("Registration successful! Welcome, " + name);
-        window.location.href = "index.html";
-      } else {
-        alert(result.message);
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, phone, password }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setCurrentUser(data.user);
+          alert("Registration successful! Welcome, " + name);
+          window.location.href = "index.html";
+        } else {
+          alert(data.error || "Registration failed");
+        }
+      } catch (error) {
+        console.error("Registration error:", error);
+        alert("Unable to register right now. Please check your connection and try again.");
       }
     });
   }

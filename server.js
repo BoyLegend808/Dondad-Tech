@@ -380,21 +380,21 @@ const DEFAULT_USERS = [
   {
     name: "Admin",
     email: "admin@dondad.com",
-    password: crypto.randomBytes(16).toString('hex'), // Secure random password - change after first login!
+    password: "admin123", // Fixed password for admin
     phone: "08000000000",
     role: "admin",
   },
   {
     name: "Admin",
     email: "admin@dondadtech.com",
-    password: crypto.randomBytes(16).toString('hex'), // Secure random password - change after first login!
+    password: "admin123", // Fixed password for admin
     phone: "08000000000",
     role: "admin",
   },
 ];
 
-// Log generated default passwords at startup (they will change on each restart!)
-console.log("[WARNING] Default admin passwords will be generated on first run. Set custom admin user in production!");
+// Default users are seeded with fixed starter passwords only when missing.
+console.log("[INFO] Default users are seeded only if absent. Existing user passwords are preserved.");
 
 function normalizeEmail(email = "") {
   return email.trim().toLowerCase();
@@ -745,11 +745,16 @@ app.post("/api/forgot-password", sensitiveRateLimit, async (req, res) => {
       expiresAt: Date.now() + 60 * 60 * 1000
     });
     
-    // In production, send email with reset link
-    // For now, log the token (in production, integrate with email service)
-    console.log(`Password reset for ${email}: /reset-password.html?token=${resetToken}`);
-    
-    res.json({ success: true, message: "If email exists, reset link sent" });
+    const resetUrl = `/reset-password.html?token=${resetToken}`;
+    // In production, send email with reset link.
+    // In non-production, expose the link in response for easier testing.
+    console.log(`Password reset for ${email}: ${resetUrl}`);
+
+    const payload = { success: true, message: "If email exists, reset link sent" };
+    if (process.env.NODE_ENV !== "production") {
+      payload.resetUrl = resetUrl;
+    }
+    res.json(payload);
   } catch (error) {
     res.status(500).json({ error: "Failed to process request" });
   }
