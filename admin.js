@@ -98,8 +98,8 @@ function renderAdminProducts() {
             <td>${p.category}</td>
             <td>₦${p.price.toLocaleString()}</td>
             <td>
-                <button class="action-btn" onclick="editProduct(${p.id})">Edit</button>
-                <button class="action-btn" onclick="deleteProduct(${p.id})">Delete</button>
+                <button class="action-btn" onclick="editProduct('${p._id}')">Edit</button>
+                <button class="action-btn" onclick="deleteProduct('${p._id}')">Delete</button>
             </td>
         </tr>
     `).join('');
@@ -149,9 +149,9 @@ function showSection(section) {
 
 function editProduct(id) {
     editImageUploaded = false;
-    const product = adminProducts.find(p => p.id === id);
+    const product = adminProducts.find(p => p._id === id);
     if (product) {
-        document.getElementById('edit-prod-id').value = product.id;
+        document.getElementById('edit-prod-id').value = product._id;
         document.getElementById('edit-prod-name').value = product.name;
         document.getElementById('edit-prod-category').value = product.category;
         document.getElementById('edit-prod-price').value = product.price;
