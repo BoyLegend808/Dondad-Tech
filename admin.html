@@ -162,7 +162,7 @@
                         </div>
                         <div class="form-group">
                             <label>Category *</label>
-                            <select id="product-category" required>
+                            <select id="product-category" title="Select product category" required>
                                 <option value="phones">Phones</option>
                                 <option value="laptops">Laptops</option>
                                 <option value="tablets">Tablets</option>
@@ -183,14 +183,17 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Product Image</label>
+                        <label for="product-image-file">Product Image</label>
                         <div class="image-upload-container">
                             <input type="file" id="product-image-file" accept="image/*" onchange="previewImage(event)">
                             <img id="image-preview" class="image-preview" style="display: none;">
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
-                            Upload an image from your device (JPG, PNG, GIF)
-                        </p>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearProductImage()">🗑️ Remove Image</button>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                                Upload an image from your device (JPG, PNG, GIF)
+                            </p>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -663,6 +666,9 @@
                 return;
             }
             
+            console.log('Editing product:', product.name);
+            console.log('Product image:', product.image);
+            
             isEditing = true;
             selectedImageBase64 = '';
             ensureCategorySelectOptions(product.category);
@@ -680,8 +686,10 @@
                 selectedImageBase64 = product.image;
                 preview.src = product.image;
                 preview.style.display = 'block';
+                console.log('Image preview set, length:', product.image.length);
             } else {
                 preview.style.display = 'none';
+                console.log('No image to display');
             }
             
             // Load variant data
@@ -784,7 +792,12 @@
         async function previewImage(event) {
             const file = event.target.files[0];
             const preview = document.getElementById('image-preview');
-            if (!file) return;
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+
+            console.log('Processing image:', file.name, file.type, file.size);
 
             try {
                 if (!file.type.startsWith('image/')) {
@@ -792,13 +805,25 @@
                     return;
                 }
 
-                selectedImageBase64 = await compressImageToDataUrl(file);
+                const compressedImage = await compressImageToDataUrl(file);
+                console.log('Image compressed, length:', compressedImage.length);
+                
+                selectedImageBase64 = compressedImage;
                 preview.src = selectedImageBase64;
                 preview.style.display = 'block';
+                
+                console.log('Image set, selectedImageBase64 length:', selectedImageBase64.length);
             } catch (error) {
                 console.error('Image processing error:', error);
-                alert('❌ Failed to process image');
+                alert('❌ Failed to process image: ' + error.message);
             }
+        }
+        
+        function clearProductImage() {
+            selectedImageBase64 = '';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('product-image-file').value = '';
+            console.log('Image cleared');
         }
 
         // Handle admin login form
@@ -896,7 +921,17 @@
         document.getElementById('product-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            console.log('Form submitted, isEditing:', isEditing);
+            console.log('selectedImageBase64 length:', selectedImageBase64 ? selectedImageBase64.length : 0);
+            console.log('Image preview src length:', document.getElementById('image-preview').src.length);
+            
             const variantData = collectVariants();
+            
+            // For editing: keep original image if nothing selected
+            // For new products: use default image if nothing selected
+            const productImage = isEditing 
+                ? (selectedImageBase64 || undefined)  
+                : (selectedImageBase64 || 'logo.png');
             
             const product = {
                 name: document.getElementById('product-name').value,
@@ -905,9 +940,11 @@
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
                 fullDesc: document.getElementById('product-full-desc').value,
-                image: selectedImageBase64 || 'logo.png',
+                ...(productImage !== undefined && { image: productImage }),
                 ...variantData
             };
+            
+            console.log('Product image being sent:', product.image ? product.image.substring(0, 50) + '...' : 'empty/unchanged');
             
             try {
                 let response;
