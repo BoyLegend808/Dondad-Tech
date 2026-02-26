@@ -420,6 +420,10 @@ function sanitizeText(input = "", maxLen = 500) {
     .slice(0, maxLen);
 }
 
+function sanitizeImageInput(input = "", maxLen = 5_000_000) {
+  return String(input || "").trim().slice(0, maxLen);
+}
+
 function escapeRegex(input = "") {
   return String(input).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -1089,7 +1093,7 @@ app.use(
     credentials: false,
   }),
 );
-const jsonParser = bodyParser.json();
+const jsonParser = bodyParser.json({ limit: "15mb" });
 app.use((req, res, next) => {
   if (req.path === "/api/payment/stripe/webhook") {
     return next();
@@ -1136,7 +1140,7 @@ app.post("/api/products", requireAdmin, async (req, res) => {
     const name = sanitizeText(req.body?.name || "", 120);
     const category = sanitizeText(req.body?.category || "", 40).toLowerCase();
     const price = parseMoney(req.body?.price, null);
-    const image = sanitizeText(req.body?.image || "", 400);
+    const image = sanitizeImageInput(req.body?.image || "");
     const desc = sanitizeText(req.body?.desc || "", 600);
     const fullDesc = sanitizeText(req.body?.fullDesc || "", 4000);
     const stock = parsePositiveInt(req.body?.stock, 0);
@@ -1222,7 +1226,7 @@ app.put("/api/products/:id", requireAdmin, async (req, res) => {
     const update = {};
     if (req.body?.name !== undefined) update.name = sanitizeText(req.body.name, 120);
     if (req.body?.category !== undefined) update.category = sanitizeText(req.body.category, 40).toLowerCase();
-    if (req.body?.image !== undefined) update.image = sanitizeText(req.body.image, 400);
+    if (req.body?.image !== undefined) update.image = sanitizeImageInput(req.body.image);
     if (req.body?.desc !== undefined) update.desc = sanitizeText(req.body.desc, 600);
     if (req.body?.fullDesc !== undefined) update.fullDesc = sanitizeText(req.body.fullDesc, 4000);
     if (req.body?.price !== undefined) {
