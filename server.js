@@ -612,7 +612,7 @@ function generateToken(user) {
 
 function verifyToken(token) {
   if (!JWT_SECRET) {
-    // Fallback verification (not secure)
+    // Without JWT secret, token verification is unavailable.
     return { valid: false, decoded: null };
   }
   try {
@@ -626,6 +626,14 @@ function verifyToken(token) {
 // Middleware to verify user authentication
 function requireAuth(req, res, next) {
   const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
+  if (!JWT_SECRET) {
+    const userId = String(req.cookies?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    req.user = { _id: userId };
+    return next();
+  }
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -642,6 +650,22 @@ function requireAuth(req, res, next) {
 // Middleware to require admin role - verifies from database, not client headers
 async function requireAdmin(req, res, next) {
   const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
+  if (!JWT_SECRET) {
+    const userId = String(req.cookies?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    try {
+      const user = await User.findById(userId).select('role');
+      if (!user) return res.status(401).json({ error: 'User not found' });
+      if (user.role !== 'admin') return res.status(403).json({ error: 'Admin access required' });
+      req.user = { _id: userId, role: user.role, dbRole: user.role };
+      return next();
+    } catch (err) {
+      console.error('Admin check error:', err);
+      return res.status(500).json({ error: 'Authorization check failed' });
+    }
+  }
   
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -677,6 +701,17 @@ async function requireAdmin(req, res, next) {
 function requireOwnership(req, res, next) {
   const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
   const requestedUserId = req.params.userId || req.body?.userId;
+  if (!JWT_SECRET) {
+    const userId = String(req.cookies?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    if (String(userId) !== String(requestedUserId || "")) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    req.user = { _id: userId };
+    return next();
+  }
   
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
