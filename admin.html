@@ -783,6 +783,9 @@
             const ctx = canvas.getContext('2d');
             if (!ctx) return originalDataUrl;
             
+            // Clear canvas to transparent (not white)
+            ctx.clearRect(0, 0, width, height);
+            
             // Use PNG to preserve transparency for images with transparent backgrounds
             ctx.drawImage(img, 0, 0, width, height);
             return canvas.toDataURL('image/png');
