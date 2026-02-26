@@ -769,6 +769,8 @@
 
             let width = img.width;
             let height = img.height;
+            
+            // Scale down if needed
             if (width > maxDimension || height > maxDimension) {
                 const scale = Math.min(maxDimension / width, maxDimension / height);
                 width = Math.max(1, Math.floor(width * scale));
@@ -782,16 +784,8 @@
             if (!ctx) return originalDataUrl;
             
             // Use PNG to preserve transparency for images with transparent backgrounds
-            let compressed = canvas.toDataURL('image/png', quality);
-            if (compressed.length > 2000000) {
-                // If still too large, resize further
-                const scale2 = Math.sqrt(900000 / compressed.length);
-                canvas.width = Math.floor(width * scale2);
-                canvas.height = Math.floor(height * scale2);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                compressed = canvas.toDataURL('image/png', 0.8);
-            }
-            return compressed;
+            ctx.drawImage(img, 0, 0, width, height);
+            return canvas.toDataURL('image/png');
         }
 
         async function previewImage(event) {
