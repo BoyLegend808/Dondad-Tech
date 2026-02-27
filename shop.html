@@ -338,7 +338,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
             updateCartCount();
+            
+            // Check if there's a category parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            
+            // Load products first, then apply filter if category is specified
             loadProducts();
+            
+            if (categoryParam) {
+                // Wait a moment for products to load, then filter
+                setTimeout(() => {
+                    const filterBtn = document.querySelector(`.filter-btn[data-category="${categoryParam}"]`);
+                    if (filterBtn) {
+                        filterProducts(categoryParam, filterBtn);
+                    }
+                }, 100);
+            }
         });
     </script>
 </body>
