@@ -223,12 +223,14 @@
                 });
         }
 
-        function loadProducts() {
+        function loadProducts(callback) {
             fetch(`${API_URL}/api/products`)
                 .then(r => r.json())
                 .then(products => {
                     allProducts = products;
                     renderProducts(products);
+                    // If there's a callback (like filtering), call it now
+                    if (callback) callback();
                 })
                 .catch(() => {
                     document.getElementById('product-grid').innerHTML =
@@ -343,17 +345,16 @@
             const urlParams = new URLSearchParams(window.location.search);
             const categoryParam = urlParams.get('category');
             
-            // Load products first, then apply filter if category is specified
-            loadProducts();
-            
             if (categoryParam) {
-                // Wait a moment for products to load, then filter
-                setTimeout(() => {
+                // Load products and then apply filter
+                loadProducts(() => {
                     const filterBtn = document.querySelector(`.filter-btn[data-category="${categoryParam}"]`);
                     if (filterBtn) {
                         filterProducts(categoryParam, filterBtn);
                     }
-                }, 100);
+                });
+            } else {
+                loadProducts();
             }
         });
     </script>
