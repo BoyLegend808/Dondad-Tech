@@ -62,11 +62,11 @@
                 <input type="text" id="search" placeholder="Search products..." oninput="searchProducts(this.value)">
             </div>
             <div class="filters">
-                <button class="filter-btn active" onclick="filterProducts('all', this)">All</button>
-                <button class="filter-btn" onclick="filterProducts('phones', this)">Phones</button>
-                <button class="filter-btn" onclick="filterProducts('laptops', this)">Laptops</button>
-                <button class="filter-btn" onclick="filterProducts('tablets', this)">Tablets</button>
-                <button class="filter-btn" onclick="filterProducts('accessories', this)">Accessories</button>
+                <button class="filter-btn active" data-category="all" onclick="filterProducts('all', this)">All</button>
+                <button class="filter-btn" data-category="phones" onclick="filterProducts('phones', this)">Phones</button>
+                <button class="filter-btn" data-category="laptops" onclick="filterProducts('laptops', this)">Laptops</button>
+                <button class="filter-btn" data-category="tablets" onclick="filterProducts('tablets', this)">Tablets</button>
+                <button class="filter-btn" data-category="accessories" onclick="filterProducts('accessories', this)">Accessories</button>
             </div>
         </section>
 

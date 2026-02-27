@@ -163,7 +163,26 @@ function updateCartCount() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    loadProducts();
+    // Check if there's a category parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    
+    if (categoryParam) {
+        // Find the filter button for this category
+        const filterBtn = document.querySelector(`.filter-btn[data-category="${categoryParam}"]`);
+        if (filterBtn) {
+            // Remove active from all buttons and add to this one
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            filterBtn.classList.add('active');
+            filterByCategory(categoryParam, filterBtn);
+        } else {
+            // No matching button found, just load all products
+            console.log('Category not found in filter buttons:', categoryParam);
+            loadProducts();
+        }
+    } else {
+        loadProducts();
+    }
     
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
