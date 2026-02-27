@@ -469,7 +469,9 @@
         // Load Orders
         async function loadOrders() {
             try {
-                const response = await fetch(API_URL + '/api/orders');
+                const response = await fetch(API_URL + '/api/orders', {
+                    credentials: "include"
+                });
                 orders = await response.json();
                 
                 document.getElementById('orders-loading').style.display = 'none';
@@ -533,6 +535,7 @@
                 const response = await fetch(API_URL + '/api/orders/' + orderId, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: "include",
                     body: JSON.stringify({ status })
                 });
                 const result = await response.json();
@@ -549,9 +552,9 @@
         async function loadDashboardStats() {
             try {
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(API_URL + '/api/products'),
-                    fetch(API_URL + '/api/orders'),
-                    fetch(API_URL + '/api/users')
+                    fetch(API_URL + '/api/products', { credentials: "include" }),
+                    fetch(API_URL + '/api/orders', { credentials: "include" }),
+                    fetch(API_URL + '/api/users', { credentials: "include" })
                 ]);
 
                 products = await productsRes.json();
@@ -710,7 +713,9 @@
         async function loadProducts() {
             try {
                 console.log('Loading products...');
-                const response = await fetch(API_URL + '/api/products');
+                const response = await fetch(API_URL + '/api/products', {
+                    credentials: "include"
+                });
                 
                 if (!response.ok) {
                     console.error('Failed to load products, status:', response.status);
@@ -986,12 +991,14 @@
                     response = await fetch(API_URL + '/api/products/' + id, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: "include",
                         body: JSON.stringify(product)
                     });
                 } else {
                     response = await fetch(API_URL + '/api/products', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: "include",
                         body: JSON.stringify(product)
                     });
                 }
@@ -1023,7 +1030,8 @@
             
             try {
                 const response = await fetch(API_URL + '/api/products/' + id, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    credentials: "include"
                 });
                 
                 if (response.ok) {

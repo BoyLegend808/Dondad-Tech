@@ -116,7 +116,9 @@
             }
 
             try {
-                const response = await fetch(`/api/orders/${orderId}`);
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    credentials: "include"
+                });
                 const order = await response.json();
 
                 if (order) {
