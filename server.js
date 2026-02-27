@@ -96,7 +96,7 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
   price: { type: Number, required: true },
-  image: { type: String, required: true },
+  image: { type: String, default: "logo.png" },
   desc: { type: String, default: "" }, // Short description for product cards
   fullDesc: { type: String, default: "" }, // Full description for product detail page
   // Variant fields
@@ -421,7 +421,23 @@ function sanitizeText(input = "", maxLen = 500) {
 }
 
 function sanitizeImageInput(input = "", maxLen = 5_000_000) {
-  return String(input || "").trim().slice(0, maxLen);
+  const trimmed = String(input || "").trim();
+  // Don't return empty strings - return the original value or empty
+  if (!trimmed) return "";
+  // Check if it looks like a valid base64 image (starts with data:image)
+  if (trimmed.startsWith('data:image/')) {
+    return trimmed.slice(0, maxLen);
+  }
+  // Check if it's a valid URL
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed.slice(0, maxLen);
+  }
+  // If it's a base64 string but doesn't have proper prefix, it might be corrupted
+  if (trimmed.length > 100 && !trimmed.startsWith('data:')) {
+    console.error("Potential corrupted image data detected");
+    return "";
+  }
+  return trimmed.slice(0, maxLen);
 }
 
 function escapeRegex(input = "") {
@@ -1175,13 +1191,27 @@ app.post("/api/products", requireAdmin, async (req, res) => {
     const name = sanitizeText(req.body?.name || "", 120);
     const category = sanitizeText(req.body?.category || "", 40).toLowerCase();
     const price = parseMoney(req.body?.price, null);
-    const image = sanitizeImageInput(req.body?.image || "");
+    let image = sanitizeImageInput(req.body?.image || "");
     const desc = sanitizeText(req.body?.desc || "", 600);
     const fullDesc = sanitizeText(req.body?.fullDesc || "", 4000);
     const stock = parsePositiveInt(req.body?.stock, 0);
     
     if (!name || !category || price === null) {
       return res.status(400).json({ error: "Invalid product data" });
+    }
+    
+    // Validate image - must be a valid data URL or URL
+    if (image && !image.startsWith('data:') && !image.startsWith('http')) {
+      // If it's a base64 string that's invalid, use default
+      if (image.length > 1000) {
+        console.error("Invalid image format received");
+        image = "";
+      }
+    }
+    
+    // If no image provided, use default
+    if (!image) {
+      image = "logo.png";
     }
     
     const allowedCategories = new Set(["phones", "laptops", "tablets", "accessories"]);
@@ -1261,7 +1291,16 @@ app.put("/api/products/:id", requireAdmin, async (req, res) => {
     const update = {};
     if (req.body?.name !== undefined) update.name = sanitizeText(req.body.name, 120);
     if (req.body?.category !== undefined) update.category = sanitizeText(req.body.category, 40).toLowerCase();
-    if (req.body?.image !== undefined) update.image = sanitizeImageInput(req.body.image);
+    if (req.body?.image !== undefined) {
+      let image = sanitizeImageInput(req.body.image);
+      // Validate image format - must be valid data URL, http URL, or empty
+      if (image && !image.startsWith('data:') && !image.startsWith('http')) {
+        // Invalid base64 format - don't update the image
+        console.error("Invalid image format in update, preserving original");
+      } else {
+        update.image = image;
+      }
+    }
     if (req.body?.desc !== undefined) update.desc = sanitizeText(req.body.desc, 600);
     if (req.body?.fullDesc !== undefined) update.fullDesc = sanitizeText(req.body.fullDesc, 4000);
     if (req.body?.price !== undefined) {

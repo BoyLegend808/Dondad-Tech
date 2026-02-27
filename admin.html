@@ -709,12 +709,23 @@
 
         async function loadProducts() {
             try {
+                console.log('Loading products...');
                 const response = await fetch(API_URL + '/api/products');
-                products = await response.json();
+                
+                if (!response.ok) {
+                    console.error('Failed to load products, status:', response.status);
+                    products = [];
+                } else {
+                    products = await response.json();
+                    console.log('Products loaded:', products.length);
+                }
+                
                 renderProducts();
                 loadDashboardStats();
             } catch (error) {
                 console.error('Error loading products:', error);
+                products = [];
+                renderProducts();
             }
         }
 
@@ -786,9 +797,13 @@
             // Clear canvas to transparent (not white)
             ctx.clearRect(0, 0, width, height);
             
-            // Use PNG to preserve transparency for images with transparent backgrounds
-            ctx.drawImage(img, 0, 0, width, height);
-            return canvas.toDataURL('image/png');
+            // Use JPEG with quality setting for better compression on photos
+            // Only use PNG if the original was PNG (for transparency)
+            const originalType = file.type;
+            const usePng = originalType === 'image/png' || originalType === 'image/gif';
+            const mimeType = usePng ? 'image/png' : 'image/jpeg';
+            const exportQuality = usePng ? undefined : quality;
+            return canvas.toDataURL(mimeType, exportQuality);
         }
 
         async function previewImage(event) {
@@ -929,11 +944,27 @@
             
             const variantData = collectVariants();
             
+            // Validate image before saving
+            let productImage = '';
+            if (selectedImageBase64) {
+                // Check if the base64 string is valid and not corrupted
+                if (!selectedImageBase64.startsWith('data:image/')) {
+                    alert('❌ Invalid image format. Please select a new image.');
+                    return;
+                }
+                // Check if image is too large (base64 should be under 4MB after compression)
+                if (selectedImageBase64.length > 4000000) {
+                    alert('❌ Image is too large. Please select a smaller image.');
+                    return;
+                }
+                productImage = selectedImageBase64;
+            }
+            
             // For editing: keep original image if nothing selected
             // For new products: use default image if nothing selected
-            const productImage = isEditing 
-                ? (selectedImageBase64 || undefined)  
-                : (selectedImageBase64 || 'logo.png');
+            const finalImage = isEditing 
+                ? (productImage || undefined)  
+                : (productImage || 'logo.png');
             
             const product = {
                 name: document.getElementById('product-name').value,
@@ -942,7 +973,7 @@
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
                 fullDesc: document.getElementById('product-full-desc').value,
-                ...(productImage !== undefined && { image: productImage }),
+                ...(finalImage !== undefined && { image: finalImage }),
                 ...variantData
             };
             

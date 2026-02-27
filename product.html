@@ -171,7 +171,8 @@
             const userDropdown = document.querySelector('.user-dropdown');
 
             console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu && userMenu.classList ? userMenu.classList.contains('active') : 'no class');
+            console.log('Has active class:', userMenu && userMenu.classList ? userMenu.classList.contains('active') :
+                'no class');
 
             // Don't toggle if clicking inside the dropdown
             if (userDropdown && userDropdown.contains(e.target)) {
