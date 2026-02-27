@@ -99,6 +99,7 @@ const productSchema = new mongoose.Schema({
   image: { type: String, default: "logo.png" },
   desc: { type: String, default: "" }, // Short description for product cards
   fullDesc: { type: String, default: "" }, // Full description for product detail page
+  id: { type: Number, default: null }, // Client-side numeric ID for backward compatibility
   // Variant fields
   hasVariants: { type: Boolean, default: false },
   variants: {
@@ -1267,10 +1268,18 @@ app.get("/api/products", async (req, res) => {
 app.get("/api/products/:id", async (req, res) => {
   try {
     const productId = String(req.params?.id || "");
-    if (!isValidObjectId(productId)) {
-      return res.status(400).json({ error: "Invalid product id" });
+    let product = null;
+    
+    // Try MongoDB ObjectId first
+    if (isValidObjectId(productId)) {
+      product = await Product.findById(productId);
     }
-    const product = await Product.findById(productId);
+    
+    // Try numeric id if not found
+    if (!product && !isNaN(parseInt(productId))) {
+      product = await Product.findOne({ id: parseInt(productId) });
+    }
+    
     if (product) {
       res.json(product);
     } else {
@@ -1417,23 +1426,34 @@ app.get("/api/cart/:userId", requireOwnership, async (req, res) => {
 // Add to Cart - requires authentication and ownership
 app.post("/api/cart/:userId/:productId", requireOwnership, async (req, res) => {
   try {
-    const { userId, productId } = req.params;
+    const { userId } = req.params;
+    let { productId } = req.params;
     const qty = parsePositiveInt(req.body?.qty, 1);
     const selectedVariant = safeVariant(req.body?.selectedVariant);
     
-    if (!isValidObjectId(userId) || !isValidObjectId(productId)) {
-      return res.status(400).json({ error: "User ID and Product ID are required" });
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Valid User ID is required" });
     }
     
-    // Get product from database - NEVER trust client-provided price
-    const product = await Product.findById(productId);
+    // Try to find product by MongoDB ObjectId or numeric id
+    let product = null;
+    if (isValidObjectId(productId)) {
+      product = await Product.findById(productId);
+    }
+    if (!product && !isNaN(parseInt(productId))) {
+      product = await Product.findOne({ id: parseInt(productId) });
+    }
+    
     if (!product) {
       return res.status(404).json({ error: "Product not found" });
     }
+    
+    // Use the MongoDB _id for storage
+    const mongoProductId = product._id;
     const price = product.price;
     
     // Use atomic operation to prevent race conditions
-    const existingQuery = { userId, productId };
+    const existingQuery = { userId, productId: mongoProductId };
     existingQuery["selectedVariant.storage"] = selectedVariant.storage || "";
     existingQuery["selectedVariant.ram"] = selectedVariant.ram || "";
     existingQuery["selectedVariant.color"] = selectedVariant.color || "";
@@ -1447,7 +1467,7 @@ app.post("/api/cart/:userId/:productId", requireOwnership, async (req, res) => {
     if (!existing) {
       await Cart.create({
         userId,
-        productId,
+        productId: mongoProductId,
         qty: qty || 1,
         selectedVariant,
         unitPrice: price
@@ -1559,9 +1579,20 @@ app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) =
     let calculatedSubtotal = 0;
     
     for (const item of items) {
-      if (!isValidObjectId(item.productId)) continue;
+      // Accept both MongoDB ObjectId and numeric string IDs
+      let productId = item.productId;
+      let product;
       
-      const product = await Product.findById(item.productId).select('name image price');
+      // Try as MongoDB ObjectId first
+      if (isValidObjectId(productId)) {
+        product = await Product.findById(productId).select('name image price');
+      }
+      
+      // If not valid ObjectId or product not found, try numeric id
+      if (!product && productId && !isNaN(parseInt(productId))) {
+        product = await Product.findOne({ id: parseInt(productId) }).select('name image price id');
+      }
+      
       if (!product) continue;
       
       const qty = parsePositiveInt(item.qty, 1);
