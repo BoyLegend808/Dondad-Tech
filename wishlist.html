@@ -191,7 +191,9 @@
             const cartCount = document.getElementById('cart-count');
             if (cartCount) {
                 try {
-                    const response = await fetch(`/api/cart/${userId}`);
+                    const response = await fetch(`/api/cart/${userId}`, {
+                    credentials: "include"
+                });
                     const cart = await response.json();
                     const total = Array.isArray(cart) ? cart.reduce((sum, item) => sum + item.qty, 0) : 0;
                     cartCount.textContent = total;

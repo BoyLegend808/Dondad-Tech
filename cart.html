@@ -232,7 +232,9 @@
 
         async function loadCart() {
             try {
-                const response = await fetch(`/api/cart/${currentUser._id || currentUser.id}`);
+                const response = await fetch(`/api/cart/${currentUser._id || currentUser.id}`, {
+                    credentials: "include"
+                });
                 const cartItems = await response.json();
 
                 const container = document.getElementById('cart-items');
@@ -380,7 +382,9 @@
         }
 
         function updateCartCount() {
-            fetch(`/api/cart/${currentUser?._id || currentUser?.id}`)
+            fetch(`/api/cart/${currentUser?._id || currentUser?.id}`, {
+                credentials: "include"
+            })
                 .then(r => r.json())
                 .then(cart => {
                     const count = cart.reduce((sum, item) => sum + item.qty, 0);

@@ -149,7 +149,9 @@ function updateCartCount() {
             cartCount.textContent = '0';
             return;
         }
-        fetch(`/api/cart/${userId}`)
+        fetch(`/api/cart/${userId}`, {
+            credentials: "include"
+        })
             .then(r => r.json())
             .then(cart => {
                 const total = Array.isArray(cart) ? cart.reduce((sum, item) => sum + item.qty, 0) : 0;

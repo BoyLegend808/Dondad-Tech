@@ -278,7 +278,9 @@
             const userId = currentUser._id || currentUser.id;
             
             // Fetch cart from API
-            fetch(`/api/cart/${userId}`)
+            fetch(`/api/cart/${userId}`, {
+                credentials: "include"
+            })
                 .then(r => r.json())
                 .then(cartItems => {
                     const itemsContainer = document.getElementById('checkout-items');
@@ -316,7 +318,9 @@
                 }
                 
                 // Get cart items
-                const cartResponse = await fetch(`/api/cart/${currentUser._id || currentUser.id}`);
+                const cartResponse = await fetch(`/api/cart/${currentUser._id || currentUser.id}`, {
+                    credentials: "include"
+                });
                 const cartItems = await cartResponse.json();
                 
                 if (cartItems.length === 0) {

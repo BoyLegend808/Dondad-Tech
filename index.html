@@ -268,7 +268,9 @@
             const userId = user._id || user.id;
             if (!userId) return;
 
-            fetch(`/api/cart/${userId}`)
+            fetch(`/api/cart/${userId}`, {
+                credentials: "include"
+            })
                 .then(r => (r.ok ? r.json() : []))
                 .then(cart => {
                     if (Array.isArray(cart)) {

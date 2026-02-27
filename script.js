@@ -308,7 +308,9 @@ function updateCartCount() {
       return;
     }
     // Fetch cart from server only - cart is server-side now
-    fetch(`/api/cart/${userId}`)
+    fetch(`/api/cart/${userId}`, {
+      credentials: "include"
+    })
       .then(r => {
         if (!r.ok) throw new Error('Cart fetch failed');
         return r.json();

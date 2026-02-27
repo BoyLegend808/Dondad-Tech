@@ -204,7 +204,9 @@
             }
             
             // First try API, then fallback to localStorage
-            fetch(`/api/cart/${userId}`)
+            fetch(`/api/cart/${userId}`, {
+                credentials: "include"
+            })
                 .then(r => r.json())
                 .then(cart => {
                     let count = 0;
