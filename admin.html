@@ -603,6 +603,14 @@
                 const userEmail = order?.userEmail || 'No email';
                 const userPhone = order?.userPhone || 'No phone';
                 const deliveryMethod = order?.deliveryInfo?.method || 'N/A';
+                const paymentMethodRaw = String(order?.paymentMethod || '').toLowerCase();
+                const paymentMethod = paymentMethodRaw === 'cash'
+                    ? 'Cash on Delivery'
+                    : paymentMethodRaw === 'transfer'
+                        ? 'Bank Transfer'
+                        : paymentMethodRaw === 'stripe'
+                            ? 'Stripe Card'
+                            : (order?.paymentMethod || 'N/A');
 
                 return `
                 <div class="admin-order-card">
@@ -634,6 +642,7 @@
                     </div>
                     <div class="order-footer">
                         <span>💰 Total: ₦${subtotal.toLocaleString()}</span>
+                        <span>💳 ${paymentMethod}</span>
                         <span>🚚 ${deliveryMethod}</span>
                     </div>
                 </div>
