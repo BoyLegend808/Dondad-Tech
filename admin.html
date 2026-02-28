@@ -114,6 +114,7 @@
                 <div class="admin-page-header">
                     <h2>📋 Order Management</h2>
                 </div>
+                <p id="orders-count" class="no-products" style="display: none; margin-bottom: 1rem;"></p>
                 <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
                 <div id="orders-list" style="display: none;"></div>
                 <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
@@ -491,6 +492,7 @@
             const loadingEl = document.getElementById('orders-loading');
             const listEl = document.getElementById('orders-list');
             const emptyEl = document.getElementById('no-orders');
+            const countEl = document.getElementById('orders-count');
 
             if (loadingEl) {
                 loadingEl.style.display = 'block';
@@ -498,6 +500,12 @@
             }
             if (listEl) listEl.style.display = 'none';
             if (emptyEl) emptyEl.style.display = 'none';
+            if (countEl) countEl.style.display = 'none';
+
+            // Render immediately from cached dashboard data when available.
+            if (Array.isArray(orders) && orders.length > 0) {
+                renderOrdersSection(orders);
+            }
 
             try {
                 const response = await fetch(API_URL + '/api/orders', {
@@ -523,22 +531,53 @@
                 }
 
                 if (orders.length === 0) {
-                    if (loadingEl) loadingEl.style.display = 'none';
-                    if (emptyEl) emptyEl.style.display = 'block';
+                    renderOrdersSection([]);
                     return;
                 }
 
-                if (loadingEl) loadingEl.style.display = 'none';
-                if (listEl) listEl.style.display = 'block';
-                renderOrders(orders);
+                renderOrdersSection(orders);
                 loadDashboardStats();
             } catch (error) {
                 console.error('Error loading orders:', error);
+                if (!Array.isArray(orders) || orders.length === 0) {
+                    if (loadingEl) {
+                        loadingEl.style.display = 'block';
+                        loadingEl.textContent = 'Error loading orders: ' + error.message;
+                    }
+                    return;
+                }
+                // Keep showing cached orders if refresh fails.
+                renderOrdersSection(orders);
                 if (loadingEl) {
                     loadingEl.style.display = 'block';
-                    loadingEl.textContent = 'Error loading orders: ' + error.message;
+                    loadingEl.textContent = 'Showing cached orders. Refresh failed: ' + error.message;
                 }
             }
+        }
+
+        function renderOrdersSection(ordersList) {
+            const loadingEl = document.getElementById('orders-loading');
+            const listEl = document.getElementById('orders-list');
+            const emptyEl = document.getElementById('no-orders');
+            const countEl = document.getElementById('orders-count');
+            const safeOrders = Array.isArray(ordersList) ? ordersList : [];
+
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (!safeOrders.length) {
+                if (listEl) listEl.style.display = 'none';
+                if (emptyEl) emptyEl.style.display = 'block';
+                if (countEl) countEl.style.display = 'none';
+                return;
+            }
+
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (listEl) listEl.style.display = 'block';
+            if (countEl) {
+                countEl.textContent = `Showing ${safeOrders.length} order${safeOrders.length === 1 ? '' : 's'}`;
+                countEl.style.display = 'block';
+            }
+            renderOrders(safeOrders);
         }
 
         // Render Orders
@@ -660,6 +699,11 @@
                 if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
                 if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
                 if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+
+                const ordersTab = document.getElementById('orders-tab');
+                if (ordersTab && ordersTab.style.display === 'block') {
+                    renderOrdersSection(orders);
+                }
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
             }
