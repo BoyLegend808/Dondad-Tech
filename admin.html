@@ -393,13 +393,33 @@
             }
         });
 
-        function checkAuth() {
+        async function checkAuth() {
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
             if (user && user.role === 'admin') {
-                updateAdminNav(user);
-                showDashboard();
-                loadProducts();
-                loadDashboardStats();
+                try {
+                    const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
+                    if (!verify.ok) {
+                        sessionStorage.removeItem('dondad_currentUser');
+                        const message = document.getElementById('login-message');
+                        if (message) {
+                            message.textContent = 'Admin session expired. Please login again.';
+                            message.style.color = 'var(--accent)';
+                        }
+                        showLogin();
+                        return;
+                    }
+                    updateAdminNav(user);
+                    showDashboard();
+                    loadProducts();
+                    loadDashboardStats();
+                } catch (error) {
+                    const message = document.getElementById('login-message');
+                    if (message) {
+                        message.textContent = 'Unable to verify admin session. Please login again.';
+                        message.style.color = 'var(--accent)';
+                    }
+                    showLogin();
+                }
             } else {
                 showLogin();
             }
@@ -602,19 +622,27 @@
                     fetch(API_URL + '/api/users', { credentials: "include" })
                 ]);
 
-                // Check responses
-                if (!productsRes.ok) console.error('Products error:', productsRes.status);
-                if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, await ordersRes.text());
-                if (!usersRes.ok) console.error('Users error:', usersRes.status);
+                const parseJsonSafe = async (res) => {
+                    try {
+                        return await res.json();
+                    } catch (_) {
+                        return null;
+                    }
+                };
 
-                products = await productsRes.json();
-                orders = await ordersRes.json();
-                users = await usersRes.json();
+                const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
+                    parseJsonSafe(productsRes),
+                    parseJsonSafe(ordersRes),
+                    parseJsonSafe(usersRes)
+                ]);
 
-                if (!Array.isArray(orders)) {
-                    console.error('Orders is not an array:', orders);
-                    orders = [];
-                }
+                if (!productsRes.ok) console.error('Products error:', productsRes.status, productsPayload);
+                if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
+                if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
+
+                products = Array.isArray(productsPayload) ? productsPayload : [];
+                orders = Array.isArray(ordersPayload) ? ordersPayload : [];
+                users = Array.isArray(usersPayload) ? usersPayload : [];
 
                 const totalSales = orders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
                 const pendingOrders = orders.filter(order => order.status === 'pending').length;

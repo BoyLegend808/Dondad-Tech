@@ -151,12 +151,18 @@ function updateAuthNav() {
     const userGreeting = document.getElementById('user-greeting');
     const cartLink = document.getElementById('cart-link');
     const adminLink = document.getElementById('admin-link');
+    const hasAuthNav = authLinks || logoutBtn || userGreeting || cartLink || adminLink;
+
+    // Some pages (like admin) don't have the shared auth nav markup.
+    if (!hasAuthNav) return;
 
     if (currentUser && currentUser.role === 'admin') {
-        authLinks.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-        userGreeting.style.display = 'inline';
-        userGreeting.textContent = 'Hi, ' + currentUser.name;
+        if (authLinks) authLinks.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (userGreeting) {
+            userGreeting.style.display = 'inline';
+            userGreeting.textContent = 'Hi, ' + currentUser.name;
+        }
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'block';
         
@@ -164,10 +170,12 @@ function updateAuthNav() {
         markSessionValid();
         resetSessionTimer();
     } else if (currentUser) {
-        authLinks.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-        userGreeting.style.display = 'inline';
-        userGreeting.textContent = 'Hi, ' + currentUser.name;
+        if (authLinks) authLinks.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        if (userGreeting) {
+            userGreeting.style.display = 'inline';
+            userGreeting.textContent = 'Hi, ' + currentUser.name;
+        }
         if (cartLink) cartLink.style.display = 'flex';
         if (adminLink) adminLink.style.display = 'none';
         
@@ -175,9 +183,9 @@ function updateAuthNav() {
         markSessionValid();
         resetSessionTimer();
     } else {
-        authLinks.style.display = 'flex';
-        logoutBtn.style.display = 'none';
-        userGreeting.style.display = 'none';
+        if (authLinks) authLinks.style.display = 'flex';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userGreeting) userGreeting.style.display = 'none';
         if (cartLink) cartLink.style.display = 'none';
         if (adminLink) adminLink.style.display = 'none';
         
