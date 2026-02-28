@@ -1549,14 +1549,29 @@ app.delete("/api/cart/:userId/:productId", requireOwnership, async (req, res) =>
   }
 });
 
+// Clear entire cart - requires authentication and ownership
+app.delete("/api/cart/:userId", requireOwnership, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Invalid user ID" });
+    }
+    await Cart.deleteMany({ userId });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Clear Cart Error:", error);
+    res.status(500).json({ error: "Failed to clear cart" });
+  }
+});
+
 // ============= ORDER ENDPOINTS =============
 
 // Create Order - requires authentication and validates prices server-side
-app.post("/api/orders", async (req, res) => {
+app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) => {
   try {
     console.log("Creating order, user:", req.user);
     console.log("Order data:", req.body);
-    const userId = String(req.body?.userId || "");
+    const userId = String(req.user?._id || req.body?.userId || "");
     const userName = sanitizeText(req.body?.userName || "", 120);
     const userEmail = normalizeEmail(req.body?.userEmail || "");
     const userPhone = sanitizeText(req.body?.userPhone || "", 40);
@@ -1569,7 +1584,7 @@ app.post("/api/orders", async (req, res) => {
       method: sanitizeText(deliveryInfoRaw.method || "", 40),
       notes: sanitizeText(deliveryInfoRaw.notes || "", 800),
     };
-    if (!userName || !userEmail || subtotal === null) {
+    if (!isValidObjectId(userId) || !userName || !isValidEmail(userEmail) || subtotal === null) {
       return res.status(400).json({ error: "Invalid order payload" });
     }
     if (!items.length || items.length > 100) {
@@ -1579,20 +1594,48 @@ app.post("/api/orders", async (req, res) => {
     if (!allowedPaymentMethods.has(paymentMethod)) {
       return res.status(400).json({ error: "Invalid payment method" });
     }
-    
-    // Use items directly from client (simplified for now)
-    const validatedItems = items.map(item => ({
-      productId: item.productId,
-      productName: item.productName || item.productId || 'Product',
-      productImage: item.productImage || '',
-      qty: parsePositiveInt(item.qty, 1),
-      unitPrice: parseMoney(item.unitPrice, 0) || 0
-    }));
-    
-    const finalSubtotal = validatedItems.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0);
+
+    // Validate and price items from database; never trust client pricing.
+    const validatedItems = [];
+    let calculatedSubtotal = 0;
+
+    for (const item of items) {
+      let productId = item.productId;
+      if (productId && typeof productId === "object" && productId._id) {
+        productId = String(productId._id);
+      } else {
+        productId = String(productId || "");
+      }
+
+      let product = null;
+      if (isValidObjectId(productId)) {
+        product = await Product.findById(productId).select("name image price");
+      }
+      if (!product && productId && !Number.isNaN(parseInt(productId, 10))) {
+        product = await Product.findOne({ id: parseInt(productId, 10) }).select("name image price id");
+      }
+      if (!product) continue;
+
+      const qty = parsePositiveInt(item.qty, 1);
+      const unitPrice = parseMoney(product.price, 0) || 0;
+      validatedItems.push({
+        productId: product._id,
+        productName: product.name,
+        productImage: product.image,
+        qty,
+        unitPrice,
+        selectedVariant: safeVariant(item.selectedVariant || {}),
+      });
+      calculatedSubtotal += unitPrice * qty;
+    }
+
+    if (!validatedItems.length) {
+      return res.status(400).json({ error: "No valid items in order" });
+    }
+    const finalSubtotal = calculatedSubtotal;
     
     const order = await Order.create({
-      userId: isValidObjectId(userId) ? userId : null,
+      userId,
       userName,
       userEmail,
       userPhone,
@@ -1605,12 +1648,10 @@ app.post("/api/orders", async (req, res) => {
     
     console.log("Order created successfully:", order._id);
     
-    // Clear cart after order
-    if (userId && isValidObjectId(userId)) {
+    // For non-Stripe methods, clear cart immediately.
+    if (paymentMethod !== "stripe") {
       await Cart.deleteMany({ userId });
     }
-    
-    res.json({ success: true, order });
     
     res.json({ success: true, order });
   } catch (error) {
@@ -1653,10 +1694,10 @@ app.get("/api/orders/:orderId", requireOwnership, async (req, res) => {
   }
 });
 
-// Get all orders (TEMPORARILY PUBLIC FOR DEBUGGING)
-app.get("/api/orders", async (req, res) => {
+// Get all orders (admin only)
+app.get("/api/orders", requireAdmin, async (req, res) => {
   try {
-    console.log("Admin requesting all orders (public endpoint)", req.user);
+    console.log("Admin requesting all orders:", req.user);
     const orders = await Order.find({}).sort({ createdAt: -1 });
     console.log("Found orders count:", orders.length);
     res.json(orders);
@@ -1666,8 +1707,8 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
-// Get all users (TEMPORARILY PUBLIC FOR DEBUGGING)
-app.get("/api/users", async (req, res) => {
+// Get all users (admin only)
+app.get("/api/users", requireAdmin, async (req, res) => {
   try {
     const users = await User.find({})
       .select("_id name email phone role")

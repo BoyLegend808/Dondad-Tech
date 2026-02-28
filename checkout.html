@@ -274,6 +274,12 @@
                 window.location.href = 'login.html';
                 return;
             }
+            if (!currentUser._id) {
+                alert('Session expired. Please login again.');
+                sessionStorage.removeItem('dondad_currentUser');
+                window.location.href = 'login.html';
+                return;
+            }
             
             const userId = currentUser._id || currentUser.id;
             
@@ -316,6 +322,12 @@
                     window.location.href = 'login.html';
                     return;
                 }
+                if (!currentUser._id) {
+                    alert('Session expired. Please login again.');
+                    sessionStorage.removeItem('dondad_currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
                 
                 // Get cart items
                 const cartResponse = await fetch(`/api/cart/${currentUser._id || currentUser.id}`, {
@@ -330,13 +342,17 @@
                 
                 // Prepare order data
                 const paymentMethod = document.getElementById('payment').value;
+                const calculatedSubtotal = cartItems.reduce((sum, item) => {
+                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    return sum + (unitPrice * item.qty);
+                }, 0);
                 const orderData = {
                     userId: currentUser._id || currentUser.id,
                     userName: document.getElementById('name').value,
                     userEmail: document.getElementById('email').value,
                     userPhone: document.getElementById('phone').value,
                     items: cartItems.map(item => ({
-                        productId: item.productId,
+                        productId: item.productId?._id || item.productId,
                         productName: item.productName || item.productId?.name || 'Product',
                         productImage: item.productId?.image || '',
                         qty: item.qty,
@@ -349,7 +365,7 @@
                         notes: document.getElementById('notes').value
                     },
                     paymentMethod,
-                    subtotal: getCartTotal()
+                    subtotal: calculatedSubtotal
                 };
                 
                 try {
@@ -382,10 +398,21 @@
                             return;
                         }
 
+                        try {
+                            await fetch(`/api/cart/${currentUser._id || currentUser.id}`, {
+                                method: 'DELETE',
+                                credentials: "include"
+                            });
+                        } catch (clearErr) {
+                            console.warn('Cart clear fallback failed:', clearErr);
+                        }
+                        localStorage.removeItem('cart');
+                        if (typeof updateCartCount === 'function') updateCartCount();
+
                         alert('Thank you for your order! Order ID: ' + result.order._id + '\nWe will contact you shortly to confirm.');
                         window.location.href = 'index.html';
                     } else {
-                        alert('Failed to place order. Please try again.');
+                        alert(result.error || 'Failed to place order. Please try again.');
                     }
                 } catch (error) {
                     console.error('Order error:', error);
