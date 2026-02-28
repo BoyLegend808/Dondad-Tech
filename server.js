@@ -1677,7 +1677,9 @@ app.get("/api/orders/:orderId", requireOwnership, async (req, res) => {
 // Get all orders (admin only)
 app.get("/api/orders", requireAdmin, async (req, res) => {
   try {
+    console.log("Admin requesting all orders, user:", req.user);
     const orders = await Order.find({}).sort({ createdAt: -1 });
+    console.log("Found orders count:", orders.length);
     res.json(orders);
   } catch (error) {
     console.error("Get All Orders Error:", error);

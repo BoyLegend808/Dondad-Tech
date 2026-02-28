@@ -472,9 +472,16 @@
                 const response = await fetch(API_URL + '/api/orders', {
                     credentials: "include"
                 });
+                console.log('Orders response status:', response.status);
                 orders = await response.json();
+                console.log('Orders loaded:', orders);
                 
                 document.getElementById('orders-loading').style.display = 'none';
+                
+                if (!response.ok) {
+                    document.getElementById('orders-loading').textContent = 'Error: ' + (orders.error || 'Failed to load orders');
+                    return;
+                }
                 
                 if (orders.length === 0) {
                     document.getElementById('no-orders').style.display = 'block';
@@ -486,7 +493,7 @@
                 loadDashboardStats();
             } catch (error) {
                 console.error('Error loading orders:', error);
-                document.getElementById('orders-loading').textContent = 'Error loading orders';
+                document.getElementById('orders-loading').textContent = 'Error loading orders: ' + error.message;
             }
         }
 
