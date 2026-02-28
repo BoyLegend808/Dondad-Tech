@@ -351,6 +351,8 @@ const orderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+orderSchema.index({ createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: -1 });
 
 const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);

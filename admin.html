@@ -341,6 +341,9 @@
         let orders = [];
         let users = [];
         let isEditing = false;
+        let dashboardLoadPromise = null;
+        let lastDashboardLoadAt = 0;
+        const DASHBOARD_CACHE_MS = 20000;
         const CATEGORY_OPTIONS = [
             { value: 'phones', label: 'Phones' },
             { value: 'laptops', label: 'Laptops' },
@@ -427,8 +430,7 @@
                     }
                     updateAdminNav(user);
                     showDashboard();
-                    loadProducts();
-                    loadDashboardStats();
+                    loadDashboardStats(true);
                 } catch (error) {
                     const message = document.getElementById('login-message');
                     if (message) {
@@ -552,7 +554,6 @@
                 }
 
                 renderOrdersSection(orders);
-                loadDashboardStats();
             } catch (error) {
                 console.error('Error loading orders:', error);
                 if (!Array.isArray(orders) || orders.length === 0) {
@@ -652,6 +653,27 @@
             `).join('');
         }
 
+        function renderDashboardCards() {
+            const todayKey = getDateKeyLocal(new Date());
+            const todaySales = orders
+                .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
+                .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
+                .reduce((sum, order) => sum + (order.subtotal || 0), 0);
+            const pendingOrders = orders.filter(order => String(order?.status || '').toLowerCase() === 'pending').length;
+            const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
+            const customersCount = users.filter(u => u.role !== 'admin').length;
+
+            const totalSalesEl = document.getElementById('stat-total-sales');
+            const pendingOrdersEl = document.getElementById('stat-pending-orders');
+            const lowStockEl = document.getElementById('stat-low-stock');
+            const totalCustomersEl = document.getElementById('stat-total-customers');
+
+            if (totalSalesEl) totalSalesEl.textContent = `₦${todaySales.toLocaleString()}`;
+            if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
+            if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
+            if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+        }
+
         // Render Orders
         function renderOrders(orders) {
             const container = document.getElementById('orders-list');
@@ -728,7 +750,7 @@
                 const result = await response.json();
                 if (result.success) {
                     alert('✅ Order status updated to ' + status);
-                    loadDashboardStats();
+                    loadDashboardStats(true);
                     loadOrders();
                 }
             } catch (error) {
@@ -737,7 +759,24 @@
             }
         }
 
-        async function loadDashboardStats() {
+        async function loadDashboardStats(forceRefresh = false) {
+            const hasCachedData = Array.isArray(products) && Array.isArray(orders) && Array.isArray(users)
+                && (products.length > 0 || orders.length > 0 || users.length > 0);
+            if (!forceRefresh && hasCachedData && (Date.now() - lastDashboardLoadAt) < DASHBOARD_CACHE_MS) {
+                renderDashboardCards();
+                renderDailySalesHistory(orders);
+                const ordersTab = document.getElementById('orders-tab');
+                if (ordersTab && ordersTab.style.display === 'block') {
+                    renderOrdersSection(orders);
+                }
+                return;
+            }
+            if (dashboardLoadPromise && !forceRefresh) {
+                await dashboardLoadPromise;
+                return;
+            }
+
+            dashboardLoadPromise = (async () => {
             try {
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
                     fetch(API_URL + '/api/products', { credentials: "include" }),
@@ -767,25 +806,9 @@
                 orders = Array.isArray(ordersPayload) ? ordersPayload : [];
                 users = Array.isArray(usersPayload) ? usersPayload : [];
 
-                const todayKey = getDateKeyLocal(new Date());
-                const todaySales = orders
-                    .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
-                    .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
-                    .reduce((sum, order) => sum + (order.subtotal || 0), 0);
-                const pendingOrders = orders.filter(order => order.status === 'pending').length;
-                const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
-                const customersCount = users.filter(u => u.role !== 'admin').length;
-
-                const totalSalesEl = document.getElementById('stat-total-sales');
-                const pendingOrdersEl = document.getElementById('stat-pending-orders');
-                const lowStockEl = document.getElementById('stat-low-stock');
-                const totalCustomersEl = document.getElementById('stat-total-customers');
-
-                if (totalSalesEl) totalSalesEl.textContent = `₦${todaySales.toLocaleString()}`;
-                if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
-                if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
-                if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+                renderDashboardCards();
                 renderDailySalesHistory(orders);
+                lastDashboardLoadAt = Date.now();
 
                 const ordersTab = document.getElementById('orders-tab');
                 if (ordersTab && ordersTab.style.display === 'block') {
@@ -793,7 +816,11 @@
                 }
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
+            } finally {
+                dashboardLoadPromise = null;
             }
+            })();
+            await dashboardLoadPromise;
         }
 
         function getJoinedDateFromObjectId(objectId) {
