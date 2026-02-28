@@ -517,17 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Cart page
   renderCart();
 
-  // Checkout page
-  const checkoutForm = document.getElementById("checkout-form");
-  if (checkoutForm) {
-    checkoutForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      alert("Order placed successfully! We will contact you shortly.");
-      cart = [];
-      saveCart();
-      window.location.href = "index.html";
-    });
-  }
+  // Checkout submission is handled in checkout.html to keep API order flow consistent.
 
   // Login page
   const loginForm = document.getElementById("login-form");
