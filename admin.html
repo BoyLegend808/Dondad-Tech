@@ -781,7 +781,7 @@
                 }
                 
                 renderProducts();
-                loadDashboardStats();
+                // Don't call loadDashboardStats here - it's already called in checkAuth
             } catch (error) {
                 console.error('Error loading products:', error);
                 products = [];
