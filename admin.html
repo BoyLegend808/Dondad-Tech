@@ -602,9 +602,19 @@
                     fetch(API_URL + '/api/users', { credentials: "include" })
                 ]);
 
+                // Check responses
+                if (!productsRes.ok) console.error('Products error:', productsRes.status);
+                if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, await ordersRes.text());
+                if (!usersRes.ok) console.error('Users error:', usersRes.status);
+
                 products = await productsRes.json();
                 orders = await ordersRes.json();
                 users = await usersRes.json();
+
+                if (!Array.isArray(orders)) {
+                    console.error('Orders is not an array:', orders);
+                    orders = [];
+                }
 
                 const totalSales = orders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
                 const pendingOrders = orders.filter(order => order.status === 'pending').length;

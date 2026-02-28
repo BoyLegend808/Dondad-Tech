@@ -666,9 +666,13 @@ function requireAuth(req, res, next) {
 
 // Middleware to require admin role - verifies from database, not client headers
 async function requireAdmin(req, res, next) {
+  console.log("requireAdmin - cookies:", req.cookies);
+  console.log("requireAdmin - auth header:", req.headers['authorization']);
+  
   const token = req.cookies?.session || req.headers['authorization']?.split(' ')[1];
   if (!JWT_SECRET) {
     const userId = String(req.cookies?.userId || "");
+    console.log("requireAdmin - fallback mode, userId:", userId);
     if (!isValidObjectId(userId)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
