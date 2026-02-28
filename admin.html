@@ -505,8 +505,10 @@
                 });
                 console.log('Orders response status:', response.status);
                 const payload = await response.json();
+                console.log('Orders API response:', payload);
                 orders = Array.isArray(payload) ? payload : [];
-                console.log('Orders loaded:', orders);
+                console.log('Orders array:', orders);
+                console.log('Orders length:', orders.length);
 
                 if (!response.ok) {
                     const serverError = payload && typeof payload === 'object' ? payload.error : '';
