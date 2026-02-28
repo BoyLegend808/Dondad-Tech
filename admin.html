@@ -468,72 +468,110 @@
 
         // Load Orders
         async function loadOrders() {
+            const loadingEl = document.getElementById('orders-loading');
+            const listEl = document.getElementById('orders-list');
+            const emptyEl = document.getElementById('no-orders');
+
+            if (loadingEl) {
+                loadingEl.style.display = 'block';
+                loadingEl.textContent = 'Loading orders...';
+            }
+            if (listEl) listEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+
             try {
                 const response = await fetch(API_URL + '/api/orders', {
                     credentials: "include"
                 });
                 console.log('Orders response status:', response.status);
-                orders = await response.json();
+                const payload = await response.json();
+                orders = Array.isArray(payload) ? payload : [];
                 console.log('Orders loaded:', orders);
-                
-                document.getElementById('orders-loading').style.display = 'none';
-                
+
                 if (!response.ok) {
-                    document.getElementById('orders-loading').textContent = 'Error: ' + (orders.error || 'Failed to load orders');
+                    const serverError = payload && typeof payload === 'object' ? payload.error : '';
+                    const authHint = response.status === 401 || response.status === 403
+                        ? ' Please login again with an admin account.'
+                        : '';
+                    if (loadingEl) {
+                        loadingEl.style.display = 'block';
+                        loadingEl.textContent = 'Error: ' + (serverError || 'Failed to load orders.') + authHint;
+                    }
                     return;
                 }
-                
+
                 if (orders.length === 0) {
-                    document.getElementById('no-orders').style.display = 'block';
+                    if (loadingEl) loadingEl.style.display = 'none';
+                    if (emptyEl) emptyEl.style.display = 'block';
                     return;
                 }
-                
-                document.getElementById('orders-list').style.display = 'block';
+
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (listEl) listEl.style.display = 'block';
                 renderOrders(orders);
                 loadDashboardStats();
             } catch (error) {
                 console.error('Error loading orders:', error);
-                document.getElementById('orders-loading').textContent = 'Error loading orders: ' + error.message;
+                if (loadingEl) {
+                    loadingEl.style.display = 'block';
+                    loadingEl.textContent = 'Error loading orders: ' + error.message;
+                }
             }
         }
 
         // Render Orders
         function renderOrders(orders) {
             const container = document.getElementById('orders-list');
-            container.innerHTML = orders.map(order => `
+            container.innerHTML = orders.map(order => {
+                const orderId = order && order._id ? String(order._id) : 'Unknown';
+                const shortId = orderId.length >= 8 ? orderId.substring(0, 8) : orderId;
+                const createdAt = order && order.createdAt ? new Date(order.createdAt) : null;
+                const orderDate = createdAt && !Number.isNaN(createdAt.getTime())
+                    ? createdAt.toLocaleDateString()
+                    : 'N/A';
+                const orderItems = Array.isArray(order?.items) ? order.items : [];
+                const subtotal = Number.isFinite(order?.subtotal) ? order.subtotal : 0;
+                const status = String(order?.status || 'pending');
+                const userName = order?.userName || 'Unknown customer';
+                const userEmail = order?.userEmail || 'No email';
+                const userPhone = order?.userPhone || 'No phone';
+                const deliveryMethod = order?.deliveryInfo?.method || 'N/A';
+
+                return `
                 <div class="admin-order-card">
                     <div class="order-card-header">
                         <div>
-                            <span class="order-id">#${order._id.substring(0, 8)}</span>
-                            <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
+                            <span class="order-id">#${shortId}</span>
+                            <span class="order-date">${orderDate}</span>
                         </div>
-                        <select class="order-status-select" onchange="updateOrderStatus('${order._id}', this.value)" data-current="${order.status}">
-                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        <select class="order-status-select" onchange="updateOrderStatus('${orderId}', this.value)" data-current="${status}">
+                            <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="confirmed" ${status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="shipped" ${status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
                     </div>
                     <div class="order-customer">
-                        <strong>👤 ${order.userName}</strong>
-                        <span>📧 ${order.userEmail}</span>
-                        <span>📞 ${order.userPhone}</span>
+                        <strong>👤 ${userName}</strong>
+                        <span>📧 ${userEmail}</span>
+                        <span>📞 ${userPhone}</span>
                     </div>
                     <div class="order-items">
-                        ${order.items.map(item => `
+                        ${orderItems.map(item => `
                             <div class="order-item-row">
-                                <span>${item.qty}× ${item.productName || 'Product'}</span>
-                                <span>₦${(item.unitPrice * item.qty).toLocaleString()}</span>
+                                <span>${Number(item?.qty || 0)}× ${item?.productName || 'Product'}</span>
+                                <span>₦${(Number(item?.unitPrice || 0) * Number(item?.qty || 0)).toLocaleString()}</span>
                             </div>
                         `).join('')}
                     </div>
                     <div class="order-footer">
-                        <span>💰 Total: ₦${order.subtotal.toLocaleString()}</span>
-                        <span>🚚 ${order.deliveryInfo?.method || 'N/A'}</span>
+                        <span>💰 Total: ₦${subtotal.toLocaleString()}</span>
+                        <span>🚚 ${deliveryMethod}</span>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // Update Order Status
