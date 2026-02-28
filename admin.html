@@ -63,7 +63,7 @@
 
             <div id="admin-stats-grid" class="admin-stats-grid">
                 <div class="admin-stat-card">
-                    <h4>Total Sales</h4>
+                    <h4>Today's Sales</h4>
                     <p id="stat-total-sales">₦0</p>
                 </div>
                 <div class="admin-stat-card">
@@ -114,6 +114,21 @@
             <div id="orders-tab" class="admin-tab-content" style="display: none;">
                 <div class="admin-page-header">
                     <h2>📋 Order Management</h2>
+                </div>
+                <div class="admin-table-container" style="margin-bottom: 1rem;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                                <th>Pending</th>
+                                <th>Delivered</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-history-body"></tbody>
+                    </table>
+                    <p id="no-sales-history" class="no-products" style="display: none;">No sales history yet.</p>
                 </div>
                 <p id="orders-count" class="no-products" style="display: none; margin-bottom: 1rem;"></p>
                 <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
@@ -586,6 +601,57 @@
             renderOrders(pendingOrders);
         }
 
+        function getDateKeyLocal(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function renderDailySalesHistory(ordersList) {
+            const body = document.getElementById('sales-history-body');
+            const empty = document.getElementById('no-sales-history');
+            if (!body || !empty) return;
+
+            const safeOrders = Array.isArray(ordersList) ? ordersList : [];
+            const byDay = new Map();
+
+            safeOrders.forEach(order => {
+                if (String(order?.status || '').toLowerCase() === 'cancelled') return;
+                const key = getDateKeyLocal(order?.createdAt);
+                if (!key) return;
+
+                if (!byDay.has(key)) {
+                    byDay.set(key, { key, orders: 0, revenue: 0, pending: 0, delivered: 0 });
+                }
+                const day = byDay.get(key);
+                day.orders += 1;
+                day.revenue += Number(order?.subtotal || 0);
+                if (String(order?.status || '').toLowerCase() === 'pending') day.pending += 1;
+                if (String(order?.status || '').toLowerCase() === 'delivered') day.delivered += 1;
+            });
+
+            const rows = Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
+            if (!rows.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            body.innerHTML = rows.map(row => `
+                <tr>
+                    <td>${new Date(row.key + 'T00:00:00').toLocaleDateString()}</td>
+                    <td>${row.orders}</td>
+                    <td class="price">₦${row.revenue.toLocaleString()}</td>
+                    <td>${row.pending}</td>
+                    <td>${row.delivered}</td>
+                </tr>
+            `).join('');
+        }
+
         // Render Orders
         function renderOrders(orders) {
             const container = document.getElementById('orders-list');
@@ -701,7 +767,11 @@
                 orders = Array.isArray(ordersPayload) ? ordersPayload : [];
                 users = Array.isArray(usersPayload) ? usersPayload : [];
 
-                const totalSales = orders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+                const todayKey = getDateKeyLocal(new Date());
+                const todaySales = orders
+                    .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
+                    .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
+                    .reduce((sum, order) => sum + (order.subtotal || 0), 0);
                 const pendingOrders = orders.filter(order => order.status === 'pending').length;
                 const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
                 const customersCount = users.filter(u => u.role !== 'admin').length;
@@ -711,10 +781,11 @@
                 const lowStockEl = document.getElementById('stat-low-stock');
                 const totalCustomersEl = document.getElementById('stat-total-customers');
 
-                if (totalSalesEl) totalSalesEl.textContent = `₦${totalSales.toLocaleString()}`;
+                if (totalSalesEl) totalSalesEl.textContent = `₦${todaySales.toLocaleString()}`;
                 if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
                 if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
                 if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+                renderDailySalesHistory(orders);
 
                 const ordersTab = document.getElementById('orders-tab');
                 if (ordersTab && ordersTab.style.display === 'block') {
