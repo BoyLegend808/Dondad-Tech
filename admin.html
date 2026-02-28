@@ -108,6 +108,7 @@
                 </table>
                 <p id="no-products" class="no-products">No products found. Click "Add Product" to create your first product!</p>
             </div>
+            </div>
 
             <!-- Orders Tab -->
             <div id="orders-tab" class="admin-tab-content" style="display: none;">
@@ -561,23 +562,28 @@
             const emptyEl = document.getElementById('no-orders');
             const countEl = document.getElementById('orders-count');
             const safeOrders = Array.isArray(ordersList) ? ordersList : [];
+            const pendingOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
 
             if (loadingEl) loadingEl.style.display = 'none';
 
-            if (!safeOrders.length) {
+            if (!pendingOrders.length) {
                 if (listEl) listEl.style.display = 'none';
                 if (emptyEl) emptyEl.style.display = 'block';
-                if (countEl) countEl.style.display = 'none';
+                if (emptyEl) emptyEl.textContent = safeOrders.length ? 'No pending orders right now.' : 'No orders yet!';
+                if (countEl) {
+                    countEl.style.display = 'block';
+                    countEl.textContent = `Total orders: ${safeOrders.length}`;
+                }
                 return;
             }
 
             if (emptyEl) emptyEl.style.display = 'none';
             if (listEl) listEl.style.display = 'block';
             if (countEl) {
-                countEl.textContent = `Showing ${safeOrders.length} order${safeOrders.length === 1 ? '' : 's'}`;
+                countEl.textContent = `Showing ${pendingOrders.length} pending order${pendingOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
                 countEl.style.display = 'block';
             }
-            renderOrders(safeOrders);
+            renderOrders(pendingOrders);
         }
 
         // Render Orders
@@ -648,6 +654,7 @@
                 if (result.success) {
                     alert('✅ Order status updated to ' + status);
                     loadDashboardStats();
+                    loadOrders();
                 }
             } catch (error) {
                 console.error('Error updating order:', error);
