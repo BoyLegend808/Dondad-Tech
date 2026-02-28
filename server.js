@@ -1550,6 +1550,8 @@ app.delete("/api/cart/:userId/:productId", requireOwnership, async (req, res) =>
 // Create Order - requires authentication and validates prices server-side
 app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) => {
   try {
+    console.log("Creating order, user:", req.user);
+    console.log("Order data:", req.body);
     const userId = String(req.body?.userId || "");
     const userName = sanitizeText(req.body?.userName || "", 120);
     const userEmail = normalizeEmail(req.body?.userEmail || "");

@@ -359,8 +359,9 @@
                         credentials: "include",
                         body: JSON.stringify(orderData)
                     });
-                    
+                    console.log('Order response status:', response.status);
                     const result = await response.json();
+                    console.log('Order result:', result);
                     if (result.success) {
                         if (paymentMethod === 'stripe') {
                             const stripeResp = await fetch('/api/payment/stripe/checkout', {
