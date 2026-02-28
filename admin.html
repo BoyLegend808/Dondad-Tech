@@ -115,6 +115,10 @@
                 <div class="admin-page-header">
                     <h2>📋 Order Management</h2>
                 </div>
+                <div id="orders-filter-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0 0 1rem 0; flex-wrap:wrap;">
+                    <span id="orders-filter-label" style="color:var(--text-muted); font-size:0.95rem;">Showing pending orders (default)</span>
+                    <button id="clear-date-filter-btn" class="btn btn-secondary" style="display:none;" onclick="clearSalesHistoryDateFilter()">Clear Date Filter</button>
+                </div>
                 <div class="admin-table-container" style="margin-bottom: 1rem;">
                     <table class="admin-table">
                         <thead>
@@ -130,7 +134,7 @@
                     </table>
                     <p id="no-sales-history" class="no-products" style="display: none;">No sales history yet.</p>
                 </div>
-                <p id="orders-count" class="no-products" style="display: none; margin-bottom: 1rem;"></p>
+                <p id="orders-count" style="display:none; margin:0 0 1rem 0; color:var(--text-muted); font-size:0.95rem;"></p>
                 <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
                 <div id="orders-list" style="display: none;"></div>
                 <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
@@ -344,6 +348,8 @@
         let dashboardLoadPromise = null;
         let lastDashboardLoadAt = 0;
         const DASHBOARD_CACHE_MS = 20000;
+        let selectedSalesDateKey = '';
+        const orderStatusDrafts = {};
         const CATEGORY_OPTIONS = [
             { value: 'phones', label: 'Phones' },
             { value: 'laptops', label: 'Laptops' },
@@ -578,14 +584,37 @@
             const emptyEl = document.getElementById('no-orders');
             const countEl = document.getElementById('orders-count');
             const safeOrders = Array.isArray(ordersList) ? ordersList : [];
-            const pendingOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
+            const filterLabelEl = document.getElementById('orders-filter-label');
+            const clearFilterBtn = document.getElementById('clear-date-filter-btn');
+            let displayOrders = [];
+            let title = '';
+
+            if (selectedSalesDateKey) {
+                displayOrders = safeOrders.filter(order =>
+                    getDateKeyLocal(order?.createdAt) === selectedSalesDateKey &&
+                    String(order?.status || '').toLowerCase() !== 'cancelled'
+                );
+                const selectedDate = new Date(selectedSalesDateKey + 'T00:00:00').toLocaleDateString();
+                title = `Showing all sales for ${selectedDate}`;
+                if (filterLabelEl) filterLabelEl.textContent = title;
+                if (clearFilterBtn) clearFilterBtn.style.display = 'inline-block';
+            } else {
+                displayOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
+                title = 'Showing pending orders (default)';
+                if (filterLabelEl) filterLabelEl.textContent = title;
+                if (clearFilterBtn) clearFilterBtn.style.display = 'none';
+            }
 
             if (loadingEl) loadingEl.style.display = 'none';
 
-            if (!pendingOrders.length) {
+            if (!displayOrders.length) {
                 if (listEl) listEl.style.display = 'none';
                 if (emptyEl) emptyEl.style.display = 'block';
-                if (emptyEl) emptyEl.textContent = safeOrders.length ? 'No pending orders right now.' : 'No orders yet!';
+                if (emptyEl) {
+                    emptyEl.textContent = safeOrders.length
+                        ? (selectedSalesDateKey ? 'No sales found for the selected date.' : 'No pending orders right now.')
+                        : 'No orders yet!';
+                }
                 if (countEl) {
                     countEl.style.display = 'block';
                     countEl.textContent = `Total orders: ${safeOrders.length}`;
@@ -596,10 +625,10 @@
             if (emptyEl) emptyEl.style.display = 'none';
             if (listEl) listEl.style.display = 'block';
             if (countEl) {
-                countEl.textContent = `Showing ${pendingOrders.length} pending order${pendingOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
+                countEl.textContent = `${title} | ${displayOrders.length} order${displayOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
                 countEl.style.display = 'block';
             }
-            renderOrders(pendingOrders);
+            renderOrders(displayOrders);
         }
 
         function getDateKeyLocal(value) {
@@ -643,7 +672,7 @@
 
             empty.style.display = 'none';
             body.innerHTML = rows.map(row => `
-                <tr>
+                <tr class="sales-history-row ${selectedSalesDateKey === row.key ? 'active' : ''}" style="cursor:pointer;" onclick="setSalesHistoryDateFilter('${row.key}')">
                     <td>${new Date(row.key + 'T00:00:00').toLocaleDateString()}</td>
                     <td>${row.orders}</td>
                     <td class="price">₦${row.revenue.toLocaleString()}</td>
@@ -651,6 +680,18 @@
                     <td>${row.delivered}</td>
                 </tr>
             `).join('');
+        }
+
+        function setSalesHistoryDateFilter(dateKey) {
+            selectedSalesDateKey = dateKey || '';
+            renderDailySalesHistory(orders);
+            renderOrdersSection(orders);
+        }
+
+        function clearSalesHistoryDateFilter() {
+            selectedSalesDateKey = '';
+            renderDailySalesHistory(orders);
+            renderOrdersSection(orders);
         }
 
         function renderDashboardCards() {
@@ -699,6 +740,8 @@
                         : paymentMethodRaw === 'stripe'
                             ? 'Stripe Card'
                             : (order?.paymentMethod || 'N/A');
+                const draftStatus = orderStatusDrafts[orderId] || status;
+                const hasDraft = draftStatus !== status;
 
                 return `
                 <div class="admin-order-card">
@@ -707,13 +750,16 @@
                             <span class="order-id">#${shortId}</span>
                             <span class="order-date">${orderDate}</span>
                         </div>
-                        <select class="order-status-select" onchange="updateOrderStatus('${orderId}', this.value)" data-current="${status}">
-                            <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="confirmed" ${status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
-                            <option value="shipped" ${status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                            <option value="delivered" ${status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
+                        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+                            <select id="order-status-${orderId}" class="order-status-select" onchange="handleOrderStatusDraft('${orderId}', this)" data-current="${status}">
+                                <option value="pending" ${draftStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="confirmed" ${draftStatus === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="shipped" ${draftStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${draftStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${draftStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button id="order-submit-${orderId}" class="btn btn-secondary" ${hasDraft ? '' : 'disabled'} onclick="submitOrderStatus('${orderId}')">Submit</button>
+                        </div>
                     </div>
                     <div class="order-customer">
                         <strong>👤 ${userName}</strong>
@@ -739,7 +785,31 @@
         }
 
         // Update Order Status
-        async function updateOrderStatus(orderId, status) {
+        function handleOrderStatusDraft(orderId, selectEl) {
+            const current = String(selectEl.getAttribute('data-current') || 'pending');
+            const next = String(selectEl.value || current);
+            const submitBtn = document.getElementById('order-submit-' + orderId);
+            if (next === current) {
+                delete orderStatusDrafts[orderId];
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+            orderStatusDrafts[orderId] = next;
+            if (submitBtn) submitBtn.disabled = false;
+        }
+
+        async function submitOrderStatus(orderId) {
+            const status = orderStatusDrafts[orderId];
+            if (!status) return;
+
+            const submitBtn = document.getElementById('order-submit-' + orderId);
+            const selectEl = document.getElementById('order-status-' + orderId);
+            const oldBtnText = submitBtn ? submitBtn.textContent : 'Submit';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            }
+
             try {
                 const response = await fetch(API_URL + '/api/orders/' + orderId, {
                     method: 'PUT',
@@ -749,13 +819,26 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    alert('✅ Order status updated to ' + status);
+                    alert('Order status updated to ' + status);
+                    if (selectEl) selectEl.setAttribute('data-current', status);
+                    const targetOrder = orders.find(o => String(o?._id) === String(orderId));
+                    if (targetOrder) targetOrder.status = status;
+                    delete orderStatusDrafts[orderId];
+                    renderDashboardCards();
+                    renderDailySalesHistory(orders);
+                    renderOrdersSection(orders);
                     loadDashboardStats(true);
-                    loadOrders();
+                } else {
+                    alert(result.error || 'Failed to update order status');
                 }
             } catch (error) {
                 console.error('Error updating order:', error);
                 alert('Error updating order status');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.textContent = oldBtnText;
+                    submitBtn.disabled = !orderStatusDrafts[orderId];
+                }
             }
         }
 

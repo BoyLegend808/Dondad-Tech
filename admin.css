@@ -271,6 +271,14 @@
     background: rgba(56, 189, 248, 0.05);
 }
 
+.sales-history-row:hover {
+    background: rgba(56, 189, 248, 0.08) !important;
+}
+
+.sales-history-row.active {
+    background: rgba(56, 189, 248, 0.16) !important;
+}
+
 .admin-table tr:last-child td {
     border-bottom: none;
 }
