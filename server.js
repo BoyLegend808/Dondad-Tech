@@ -1589,6 +1589,8 @@ app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) =
       let productId = item.productId;
       let product;
       
+      console.log("Processing order item, productId:", productId);
+      
       // Try as MongoDB ObjectId first
       if (isValidObjectId(productId)) {
         product = await Product.findById(productId).select('name image price');
@@ -1596,8 +1598,11 @@ app.post("/api/orders", requireOwnership, sensitiveRateLimit, async (req, res) =
       
       // If not valid ObjectId or product not found, try numeric id
       if (!product && productId && !isNaN(parseInt(productId))) {
+        console.log("Trying numeric id:", parseInt(productId));
         product = await Product.findOne({ id: parseInt(productId) }).select('name image price id');
       }
+      
+      console.log("Found product:", product);
       
       if (!product) continue;
       
