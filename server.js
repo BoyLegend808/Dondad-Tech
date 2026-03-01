@@ -16,6 +16,29 @@ const https = require('https');
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
 
+// Redis client for caching (optional - will work without Redis)
+let redisClient = null;
+let isRedisConnected = false;
+try {
+  const Redis = require('ioredis');
+  const redisUrl = process.env.REDIS_URL || process.env.REDISCLOUD_URL || process.env.UPSTASH_REDIS_URL;
+  if (redisUrl) {
+    redisClient = new Redis(redisUrl);
+    redisClient.on('connect', () => {
+      isRedisConnected = true;
+      console.log('[Redis] Connected successfully');
+    });
+    redisClient.on('error', (err) => {
+      isRedisConnected = false;
+      console.log('[Redis] Not available, using fallback:', err.message);
+    });
+  } else {
+    console.log('[Redis] REDIS_URL not set, caching disabled');
+  }
+} catch (e) {
+  console.log('[Redis] ioredis not installed, caching disabled');
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 let dbReady = false;
@@ -66,13 +89,15 @@ if (!MONGODB_URI) {
 } else {
   mongoose
     .connect(MONGODB_URI, {
-      maxPoolSize: 10,
+      maxPoolSize: 50, // Increased from 10 for better concurrent handling
+      minPoolSize: 5,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      maxIdleTimeMS: 30000,
     })
     .then(async () => {
       dbReady = true;
-      console.log("Connected to MongoDB");
+      console.log("Connected to MongoDB with increased pool size (50)");
       await seedDatabase();
       await ensureDefaultUsers();
       await migrateLegacyPasswords();
@@ -90,7 +115,16 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   phone: { type: String, default: "" },
   role: { type: String, default: "user" },
+  isEmailVerified: { type: Boolean, default: false },
+  verificationToken: { type: String, default: "" },
+  googleId: { type: String, default: "" },
+  facebookId: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now },
 });
+// Indexes for user schema
+userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1 });
+userSchema.index({ facebookId: 1 });
 
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -100,6 +134,7 @@ const productSchema = new mongoose.Schema({
   desc: { type: String, default: "" }, // Short description for product cards
   fullDesc: { type: String, default: "" }, // Full description for product detail page
   id: { type: Number, default: null }, // Client-side numeric ID for backward compatibility
+  stock: { type: Number, default: 0 }, // Stock quantity
   // Variant fields
   hasVariants: { type: Boolean, default: false },
   variants: {
@@ -119,8 +154,13 @@ const productSchema = new mongoose.Schema({
       stock: { type: Number, default: 0 },
       image: { type: String, default: "" }
     }]
-  }
+  },
+  createdAt: { type: Date, default: Date.now },
 });
+// Product indexes for faster queries
+productSchema.index({ category: 1, price: 1 });
+productSchema.index({ name: 'text', desc: 'text' }); // Full-text search
+productSchema.index({ id: 1 });
 
 const cartSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -137,8 +177,12 @@ const cartSchema = new mongoose.Schema({
     color: { type: String, default: "" }
   },
   // Store price at time of addition
-  unitPrice: { type: Number, required: true }
+  unitPrice: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
+// Cart indexes
+cartSchema.index({ userId: 1, productId: 1 });
+cartSchema.index({ userId: 1 });
 
 // Flutterwave/Paystack Configuration (use environment variables in production)
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -368,6 +412,9 @@ const reviewSchema = new mongoose.Schema({
   comment: { type: String, default: "" },
   createdAt: { type: Date, default: Date.now }
 });
+// Review indexes
+reviewSchema.index({ productId: 1, createdAt: -1 });
+reviewSchema.index({ userId: 1 });
 
 // Wishlist Schema
 const wishlistSchema = new mongoose.Schema({
@@ -375,6 +422,8 @@ const wishlistSchema = new mongoose.Schema({
   products: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
   updatedAt: { type: Date, default: Date.now }
 });
+// Wishlist index
+wishlistSchema.index({ userId: 1 });
 
 const passwordResetTokenSchema = new mongoose.Schema(
   {
@@ -465,6 +514,38 @@ function parseMoney(value, fallback = null) {
 
 function isValidEmail(email = "") {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email));
+}
+
+// ============ CACHE HELPERS ============
+async function getFromCache(key) {
+  if (!isRedisConnected || !redisClient) return null;
+  try {
+    const data = await redisClient.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function setToCache(key, value, ttlSeconds = 300) {
+  if (!isRedisConnected || !redisClient) return;
+  try {
+    await redisClient.setEx(key, ttlSeconds, JSON.stringify(value));
+  } catch (e) {
+    // Silently fail
+  }
+}
+
+async function invalidateCache(pattern) {
+  if (!isRedisConnected || !redisClient) return;
+  try {
+    const keys = await redisClient.keys(pattern);
+    if (keys.length > 0) {
+      await redisClient.del(...keys);
+    }
+  } catch (e) {
+    // Silently fail
+  }
 }
 
 function hasUnsafeKeys(value) {
@@ -1238,6 +1319,9 @@ app.post("/api/products", requireAdmin, async (req, res) => {
       variants: { storage: [], ram: [], color: [] }
     });
     
+    // Invalidate products cache
+    await invalidateCache('products:*');
+    
     res.status(201).json(product);
   } catch (error) {
     console.error("Add Product Error:", error);
@@ -1245,11 +1329,16 @@ app.post("/api/products", requireAdmin, async (req, res) => {
   }
 });
 
-// Get all products
+// Get all products with pagination
 app.get("/api/products", async (req, res) => {
   try {
     const category = sanitizeText(req.query?.category || "", 40).toLowerCase();
     const search = sanitizeText(req.query?.search || "", 120);
+    const page = parsePositiveInt(req.query?.page, 1);
+    const limit = Math.min(parsePositiveInt(req.query?.limit, 20), 100); // Max 100 per page
+    const sort = req.query?.sort || "_id";
+    const order = req.query?.order || "asc";
+    
     let query = {};
     const allowedCategories = new Set(["phones", "laptops", "tablets", "accessories", "all", ""]);
     if (!allowedCategories.has(category)) {
@@ -1263,9 +1352,40 @@ app.get("/api/products", async (req, res) => {
         { desc: { $regex: escapedSearch, $options: "i" } },
       ];
     }
-    const products = await Product.find(query).sort({ _id: 1 });
-    res.json(products);
+    
+    // Try cache first
+    const cacheKey = `products:${category}:${search}:${page}:${limit}:${sort}:${order}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
+    const skip = (page - 1) * limit;
+    const sortObj = { [sort]: order === 'desc' ? -1 : 1 };
+    
+    const [products, total] = await Promise.all([
+      Product.find(query).sort(sortObj).skip(skip).limit(limit).lean(),
+      Product.countDocuments(query)
+    ]);
+    
+    const result = {
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+      }
+    };
+    
+    // Cache for 5 minutes
+    await setToCache(cacheKey, result, 300);
+    
+    res.json(result);
   } catch (error) {
+    console.error("Products error:", error);
     res.status(500).json({ error: "Failed to fetch products" });
   }
 });
@@ -1333,6 +1453,9 @@ app.put("/api/products/:id", requireAdmin, async (req, res) => {
       { new: true }
     );
     if (product) {
+      // Invalidate cache
+      await invalidateCache('products:*');
+      await invalidateCache('search:*');
       res.json(product);
     } else {
       res.status(404).json({ error: "Product not found" });
@@ -1351,6 +1474,9 @@ app.delete("/api/products/:id", requireAdmin, async (req, res) => {
     }
     const product = await Product.findByIdAndDelete(productId);
     if (product) {
+      // Invalidate cache
+      await invalidateCache('products:*');
+      await invalidateCache('search:*');
       res.json({ success: true });
     } else {
       res.status(404).json({ error: "Product not found" });
@@ -1382,6 +1508,52 @@ app.get("/api/products/migrate-variants", requireInternalAccess, async (req, res
     });
   } catch (error) {
     res.status(500).json({ error: "Migration failed" });
+  }
+});
+
+// Search autocomplete endpoint
+app.get("/api/search/autocomplete", async (req, res) => {
+  try {
+    const query = sanitizeText(req.query?.q || "", 100);
+    if (!query || query.length < 2) {
+      return res.json({ suggestions: [] });
+    }
+    
+    // Try cache first
+    const cacheKey = `search:autocomplete:${query}`;
+    const cached = await getFromCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
+    const escapedSearch = escapeRegex(query);
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: escapedSearch, $options: "i" } },
+        { desc: { $regex: escapedSearch, $options: "i" } },
+        { category: { $regex: escapedSearch, $options: "i" } }
+      ]
+    })
+    .select('name category price image')
+    .limit(10)
+    .lean();
+    
+    const suggestions = products.map(p => ({
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      image: p.image
+    }));
+    
+    const result = { suggestions };
+    
+    // Cache for 2 minutes
+    await setToCache(cacheKey, result, 120);
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Autocomplete error:", error);
+    res.status(500).json({ error: "Search failed" });
   }
 });
 
@@ -1755,6 +1927,48 @@ app.put("/api/orders/:orderId", requireAdmin, sensitiveRateLimit, async (req, re
   }
 });
 
+// Cancel order (user can cancel if status is pending or confirmed)
+app.post("/api/orders/:orderId/cancel", requireOwnership, sensitiveRateLimit, async (req, res) => {
+  try {
+    const orderId = String(req.params?.orderId || "");
+    const { userId } = req.params;
+    
+    if (!isValidObjectId(orderId)) {
+      return res.status(400).json({ error: "Invalid order ID" });
+    }
+    
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    
+    // Verify ownership
+    if (order.userId.toString() !== userId) {
+      return res.status(403).json({ error: "Not authorized to cancel this order" });
+    }
+    
+    // Only allow cancellation if order is pending or confirmed
+    const cancellableStatuses = ["pending", "confirmed"];
+    if (!cancellableStatuses.includes(order.status)) {
+      return res.status(400).json({ 
+        error: "Order cannot be cancelled. It has already been processed or shipped." 
+      });
+    }
+    
+    order.status = "cancelled";
+    order.updatedAt = Date.now();
+    await order.save();
+    
+    // Invalidate cache
+    await invalidateCache('orders:*');
+    
+    res.json({ success: true, message: "Order cancelled successfully", order });
+  } catch (error) {
+    console.error("Cancel order error:", error);
+    res.status(500).json({ error: "Failed to cancel order" });
+  }
+});
+
 // ============= REVIEW ENDPOINTS =============
 
 // Get reviews for a product
@@ -1946,6 +2160,202 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
   }
 });
 
+// ============= SOCIAL LOGIN =============
+
+// Google OAuth - initiate
+app.get("/api/auth/google", (req, res) => {
+  const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+  
+  if (!GOOGLE_CLIENT_ID) {
+    return res.status(503).json({ error: "Google login not configured" });
+  }
+  
+  const scope = "profile email";
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline`;
+  
+  res.json({ authUrl });
+});
+
+// Google OAuth - callback
+app.get("/api/auth/google/callback", async (req, res) => {
+  try {
+    const { code } = req.query;
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+    const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+    const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    
+    if (!code || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      return res.redirect('/login.html?error=google_auth_failed');
+    }
+    
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: querystring.stringify({
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT_URI,
+        grant_type: 'authorization_code'
+      })
+    });
+    
+    const tokens = await tokenResponse.json();
+    if (!tokens.access_token) {
+      return res.redirect('/login.html?error=google_token_failed');
+    }
+    
+    // Get user profile
+    const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+    
+    const googleUser = await userResponse.json();
+    if (!googleUser.email) {
+      return res.redirect('/login.html?error=google_profile_failed');
+    }
+    
+    // Find or create user
+    let user = await User.findOne({ googleId: googleUser.id });
+    if (!user) {
+      user = await User.findOne({ email: googleUser.email });
+      if (user) {
+        // Link Google account to existing user
+        user.googleId = googleUser.id;
+        await user.save();
+      } else {
+        // Create new user
+        user = await User.create({
+          name: googleUser.name || googleUser.email.split('@')[0],
+          email: googleUser.email,
+          googleId: googleUser.id,
+          isEmailVerified: true,
+          password: hashPassword(crypto.randomBytes(16).toString('hex')) // Random password for OAuth users
+        });
+      }
+    }
+    
+    // Create session
+    const sessionToken = generateToken(user);
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    res.cookie('session', sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
+    res.cookie('userId', user._id.toString(), {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
+    res.redirect('/index.html');
+  } catch (error) {
+    console.error('Google callback error:', error);
+    res.redirect('/login.html?error=google_auth_error');
+  }
+});
+
+// Facebook OAuth - initiate
+app.get("/api/auth/facebook", (req, res) => {
+  const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+  const FACEBOOK_REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/auth/facebook/callback`;
+  
+  if (!FACEBOOK_APP_ID) {
+    return res.status(503).json({ error: "Facebook login not configured" });
+  }
+  
+  const scope = "email,public_profile";
+  const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(FACEBOOK_REDIRECT_URI)}&scope=${scope}`;
+  
+  res.json({ authUrl });
+});
+
+// Facebook OAuth - callback
+app.get("/api/auth/facebook/callback", async (req, res) => {
+  try {
+    const { code } = req.query;
+    const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+    const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+    const FACEBOOK_REDIRECT_URI = process.env.FACEBOOK_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/auth/facebook/callback`;
+    
+    if (!code || !FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET) {
+      return res.redirect('/login.html?error=facebook_auth_failed');
+    }
+    
+    // Exchange code for access token
+    const tokenUrl = `https://graph.facebook.com/v18.0/oauth/access_token?client_id=${FACEBOOK_APP_ID}&redirect_uri=${encodeURIComponent(FACEBOOK_REDIRECT_URI)}&client_secret=${FACEBOOK_APP_SECRET}&code=${code}`;
+    const tokenResponse = await fetch(tokenUrl);
+    const tokens = await tokenResponse.json();
+    
+    if (!tokens.access_token) {
+      return res.redirect('/login.html?error=facebook_token_failed');
+    }
+    
+    // Get user profile
+    const userUrl = `https://graph.facebook.com/me?fields=id,name,email&access_token=${tokens.access_token}`;
+    const userResponse = await fetch(userUrl);
+    const fbUser = await userResponse.json();
+    
+    if (!fbUser.id) {
+      return res.redirect('/login.html?error=facebook_profile_failed');
+    }
+    
+    // Find or create user
+    let user = await User.findOne({ facebookId: fbUser.id });
+    if (!user && fbUser.email) {
+      user = await User.findOne({ email: fbUser.email });
+      if (user) {
+        user.facebookId = fbUser.id;
+        await user.save();
+      }
+    }
+    
+    if (!user) {
+      user = await User.create({
+        name: fbUser.name || 'Facebook User',
+        email: fbUser.email || `${fbUser.id}@facebook.local`,
+        facebookId: fbUser.id,
+        isEmailVerified: fbUser.email ? true : false,
+        password: hashPassword(crypto.randomBytes(16).toString('hex'))
+      });
+    }
+    
+    // Create session
+    const sessionToken = generateToken(user);
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    res.cookie('session', sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
+    res.cookie('userId', user._id.toString(), {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
+    res.redirect('/index.html');
+  } catch (error) {
+    console.error('Facebook callback error:', error);
+    res.redirect('/login.html?error=facebook_auth_error');
+  }
+});
+
 // Logout
 app.post("/api/logout", (req, res) => {
   res.clearCookie('session', { path: '/' });
@@ -1991,20 +2401,110 @@ app.post("/api/register", sensitiveRateLimit, async (req, res) => {
     if (existing)
       return res.status(400).json({ success: false, error: "Email exists" });
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    
     const user = await User.create({
       name,
       email,
       password: hashPassword(password),
       phone,
+      isEmailVerified: false,
+      verificationToken
     });
+    
+    // Send verification email (if SendGrid is configured)
+    await sendVerificationEmail(user, verificationToken);
+    
     res.json({
       success: true,
+      message: "Registration successful. Please check your email to verify your account.",
       user: { id: user._id, name, email, role: "user" },
     });
   } catch (error) {
     res.status(500).json({ success: false, error: "Registration failed" });
   }
 });
+
+// Verify email
+app.get("/api/verify-email/:token", async (req, res) => {
+  try {
+    const token = sanitizeText(req.params?.token || "", 100);
+    if (!token) {
+      return res.status(400).json({ success: false, error: "Invalid token" });
+    }
+    
+    const user = await User.findOne({ verificationToken: token });
+    if (!user) {
+      return res.status(400).json({ success: false, error: "Invalid or expired token" });
+    }
+    
+    user.isEmailVerified = true;
+    user.verificationToken = "";
+    await user.save();
+    
+    res.json({ success: true, message: "Email verified successfully!" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Verification failed" });
+  }
+});
+
+// Resend verification email
+app.post("/api/resend-verification", sensitiveRateLimit, async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email || "");
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ success: false, error: "Invalid email" });
+    }
+    
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ success: true, message: "If the email exists, a verification link has been sent" });
+    }
+    
+    if (user.isEmailVerified) {
+      return res.status(400).json({ success: false, error: "Email already verified" });
+    }
+    
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = verificationToken;
+    await user.save();
+    
+    await sendVerificationEmail(user, verificationToken);
+    
+    res.json({ success: true, message: "Verification email sent" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to send verification email" });
+  }
+});
+
+// Email sending helper (using SendGrid or fallback to console)
+async function sendVerificationEmail(user, token) {
+  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  const verifyUrl = `${baseUrl}/api/verify-email/${token}`;
+  
+  const sgMail = require('@sendgrid/mail');
+  const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+  
+  if (SENDGRID_API_KEY) {
+    sgMail.setApiKey(SENDGRID_API_KEY);
+    const msg = {
+      to: user.email,
+      from: process.env.EMAIL_FROM || 'noreply@dondadtech.com',
+      subject: 'Verify your Dondad Tech account',
+      text: `Welcome ${user.name}! Click here to verify your email: ${verifyUrl}`,
+      html: `<h2>Welcome ${user.name}!</h2><p>Click <a href="${verifyUrl}">here</a> to verify your email address.</p>`
+    };
+    try {
+      await sgMail.send(msg);
+      console.log(`Verification email sent to ${user.email}`);
+    } catch (e) {
+      console.log(`Failed to send email: ${e.message}`);
+    }
+  } else {
+    console.log(`[DEV] Verification URL for ${user.email}: ${verifyUrl}`);
+  }
+}
 
 // Security readiness healthcheck (no secret values exposed)
 app.get("/api/health/security", sensitiveRateLimit, requireInternalAccess, (req, res) => {

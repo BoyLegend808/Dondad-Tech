@@ -20,15 +20,37 @@ function filterProducts(category, btn) {
     filterByCategory(category, btn);
 }
 
-// Load products from API
-async function loadProducts() {
+// Current pagination state
+let currentPage = 1;
+let currentCategory = '';
+let currentSearch = '';
+
+// Load products from API with pagination
+async function loadProducts(page = 1) {
     const grid = document.getElementById('product-grid');
     if (!grid) return;
 
+    currentPage = page;
+    
     try {
-        const response = await fetch(`${API_BASE}/api/products`);
-        const products = await response.json();
-        renderProducts(products);
+        let url = `${API_BASE}/api/products?page=${page}&limit=20`;
+        if (currentCategory && currentCategory !== 'all') {
+            url += `&category=${currentCategory}`;
+        }
+        if (currentSearch) {
+            url += `&search=${encodeURIComponent(currentSearch)}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.products) {
+            renderProducts(data.products);
+            renderPagination(data.pagination);
+        } else {
+            // Handle legacy format (array directly)
+            renderProducts(data);
+        }
     } catch (error) {
         // Fallback to local products
         const stored = localStorage.getItem('dondad_products');
@@ -38,6 +60,51 @@ async function loadProducts() {
             renderProducts(products);
         }
     }
+}
+
+// Render pagination controls
+function renderPagination(pagination) {
+    let paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) {
+        // Create pagination container if it doesn't exist
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination';
+        paginationContainer.className = 'pagination';
+        const grid = document.getElementById('product-grid');
+        if (grid && grid.parentNode) {
+            grid.parentNode.appendChild(paginationContainer);
+        }
+    }
+    
+    if (!pagination || pagination.pages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    
+    // Previous button
+    if (pagination.hasPrev) {
+        html += `<button onclick="loadProducts(${pagination.page - 1})" class="btn pagination-btn">Previous</button>`;
+    }
+    
+    // Page numbers
+    for (let i = 1; i <= pagination.pages; i++) {
+        if (i === pagination.page) {
+            html += `<span class="pagination-current">${i}</span>`;
+        } else if (i === 1 || i === pagination.pages || (i >= pagination.page - 2 && i <= pagination.page + 2)) {
+            html += `<button onclick="loadProducts(${i})" class="btn pagination-btn">${i}</button>`;
+        } else if (i === pagination.page - 3 || i === pagination.page + 3) {
+            html += `<span class="pagination-ellipsis">...</span>`;
+        }
+    }
+    
+    // Next button
+    if (pagination.hasNext) {
+        html += `<button onclick="loadProducts(${pagination.page + 1})" class="btn pagination-btn">Next</button>`;
+    }
+    
+    paginationContainer.innerHTML = html;
 }
 
 // Render products
@@ -71,35 +138,111 @@ async function filterByCategory(category, btn) {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
+    currentCategory = category;
+    currentPage = 1;
+    
     try {
-        const url = category === 'all' 
-            ? `${API_BASE}/api/products` 
-            : `${API_BASE}/api/products?category=${category}`;
+        let url = `${API_BASE}/api/products?page=1&limit=20`;
+        if (category && category !== 'all') {
+            url += `&category=${category}`;
+        }
         const response = await fetch(url);
-        const products = await response.json();
-        renderProducts(products);
+        const data = await response.json();
+        
+        if (data.products) {
+            renderProducts(data.products);
+            renderPagination(data.pagination);
+        } else {
+            renderProducts(data);
+        }
     } catch (error) {
-        const filtered = category === 'all' 
-            ? (typeof products !== 'undefined' ? products : [])
-            : (typeof products !== 'undefined' ? products.filter(p => p.category === category) : []);
-        renderProducts(filtered);
+        console.error('Filter error:', error);
     }
 }
 
 // Search products
 async function searchProducts(term) {
+    currentSearch = term;
+    currentPage = 1;
+    
     try {
-        const response = await fetch(`${API_BASE}/api/products?search=${encodeURIComponent(term)}`);
-        const products = await response.json();
-        renderProducts(products);
+        const url = `${API_BASE}/api/products?page=1&limit=20&search=${encodeURIComponent(term)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.products) {
+            renderProducts(data.products);
+            renderPagination(data.pagination);
+        } else {
+            renderProducts(data);
+        }
     } catch (error) {
-        const filtered = (typeof products !== 'undefined' ? products : []).filter(p =>
-            p.name.toLowerCase().includes(term) || 
-            p.desc.toLowerCase().includes(term)
-        );
-        renderProducts(filtered);
+        console.error('Search error:', error);
     }
 }
+
+// Advanced search with autocomplete
+let searchTimeout = null;
+async function handleSearchInput(term) {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (!term || term.length < 2) {
+        document.getElementById('search-results')?.remove();
+        return;
+    }
+    
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`${API_BASE}/api/search/autocomplete?q=${encodeURIComponent(term)}`);
+            const data = await response.json();
+            showSearchSuggestions(data.suggestions || []);
+        } catch (error) {
+            console.error('Autocomplete error:', error);
+        }
+    }, 300);
+}
+
+function showSearchSuggestions(suggestions) {
+    let container = document.getElementById('search-results');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'search-results';
+        container.className = 'search-results';
+        
+        const searchInput = document.querySelector('.search-input') || document.querySelector('#search');
+        if (searchInput) {
+            searchInput.parentElement.appendChild(container);
+        }
+    }
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<div class="search-no-results">No products found</div>';
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(p => `
+        <div class="search-suggestion" onclick="selectSearchSuggestion('${p.name}', '${p._id || p.id}')">
+            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+            <div class="search-suggestion-info">
+                <div class="search-suggestion-name">${p.name}</div>
+                <div class="search-suggestion-category">${p.category}</div>
+            </div>
+            <div class="search-suggestion-price">₦${p.price.toLocaleString()}</div>
+        </div>
+    `).join('');
+}
+
+function selectSearchSuggestion(name, productId) {
+    document.getElementById('search-results')?.remove();
+    window.location.href = `product.html?id=${productId}`;
+}
+
+// Hide search results when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+        document.getElementById('search-results')?.remove();
+    }
+});
 
 // Add to cart
 async function addToCart(productId, qty = 1) {
