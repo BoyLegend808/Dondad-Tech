@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product - Pajay Gadgets</title>
+    <meta name="description" content="View product details, pricing, variants, and add to cart at Pajay Gadgets.">
+    <meta property="og:title" content="Product - Pajay Gadgets">
+    <meta property="og:description" content="Discover product features and order with confidence.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="logo.png">
+    <link rel="canonical" href="product.html">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html" class="active">Shop</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div class="auth-links" id="auth-links">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logoutUser(); return false;" class="logout-btn"><span
+                                    class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="product-page">
+            <div class="product-nav-actions">
+                <a href="shop.html" class="btn back-to-shop-btn" onclick="return handleBackToShop(event)">← Back to
+                    Shop</a>
+            </div>
+
+            <!-- Product Detail Section -->
+            <div class="product-container" id="product-container">
+                <!-- Loading State -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading product...</p>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            <section class="related-products">
+                <h2>Related Products</h2>
+                <div class="related-grid" id="related-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script src="products.js"></script>
+    <script src="product.js"></script>
+    <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        // Check if user is logged in and update UI
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentUser = getCurrentUser();
+            const adminLink = document.getElementById('admin-nav-link');
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (currentUser) {
+                authLinks.style.display = 'none';
+                userMenu.style.display = 'flex';
+
+                // Get initials for avatar
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || currentUser.name.charAt(0);
+                userName.textContent = currentUser.name;
+
+                document.getElementById('cart-link').style.display = 'flex';
+
+                // Show admin link only for admin users
+                if (currentUser.role === 'admin' && adminLink) {
+                    adminLink.style.display = 'block';
+                }
+            } else {
+                if (adminLink) adminLink.style.display = 'none';
+            }
+            updateCartCount();
+        });
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
+            location.reload();
+        }
+
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+
+            if (navLinks && hamburger) {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+                console.log('Menu toggled - navLinks:', navLinks.classList.contains('active'));
+            } else {
+                console.error('Nav elements not found');
+            }
+        }
+
+        function toggleUserMenu(e) {
+            // Prevent the click from propagating to parent elements
+            e.stopPropagation();
+
+            // Find the user-menu element
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+
+            console.log('toggleUserMenu clicked, userMenu:', userMenu);
+            console.log('Has active class:', userMenu && userMenu.classList ? userMenu.classList.contains('active') :
+                'no class');
+
+            // Don't toggle if clicking inside the dropdown
+            if (userDropdown && userDropdown.contains(e.target)) {
+                return;
+            }
+
+            if (userMenu) {
+                userMenu.classList.toggle('active');
+                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
+            }
+        }
+
+        // Close dropdown and hamburger when clicking on the page
+        document.addEventListener('click', function (e) {
+            // Close user dropdown
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown) {
+                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userMenu.classList.remove('active');
+                }
+            }
+
+            // Close hamburger menu
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks) {
+                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                    hamburger.classList.remove('active');
+                    navLinks.classList.remove('active');
+                }
+            }
+        });
+
+        // Product detail page logic - Fetch from API
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        let currentProduct = null;
+
+        async function loadProduct() {
+            const container = document.getElementById('product-container');
+
+            try {
+                const response = await fetch('/api/products/' + productId);
+                if (response.ok) {
+                    const product = await response.json();
+                    currentProduct = product;
+                    renderProduct(product);
+                    loadRelatedProducts(product);
+                } else {
+                    container.innerHTML = `
+                        <div class="error-state">
+                            <div class="error-icon">🔍</div>
+                            <h2>Product Not Found</h2>
+                            <p>Sorry, the product you're looking for doesn't exist or has been removed.</p>
+                            <a href="shop.html" class="btn">Back to Shop</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading product:', error);
+                container.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">⚠️</div>
+                        <h2>Error Loading Product</h2>
+                        <p>Unable to connect to server. Please make sure the server is running.</p>
+                        <button onclick="loadProduct()" class="btn">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProduct(product) {
+            const container = document.getElementById('product-container');
+            const categoryDisplay = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+            const basePrice = product.price;
+
+            // Generate variant selectors if product has variants
+            let variantSelectorsHTML = '';
+            let variantScript = '';
+
+            if (product.hasVariants && product.variants) {
+                const variants = product.variants;
+
+                // Storage selector
+                if (variants.storage && variants.storage.length > 0) {
+                    variantSelectorsHTML += `
+                        <div class="variant-selector">
+                            <label>Storage:</label>
+                            <div class="variant-options" id="storage-options">
+                                ${variants.storage.map((opt, i) => `
+                                    <button type="button" class="variant-btn" 
+                                            data-type="storage" 
+                                            data-option="${opt.option}"
+                                            data-modifier="${opt.priceModifier}"
+                                            onclick="selectVariant(this)">
+                                        ${opt.option}${opt.priceModifier > 0 ? ' (+₦' + opt.priceModifier.toLocaleString() + ')' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // RAM selector
+                if (variants.ram && variants.ram.length > 0) {
+                    variantSelectorsHTML += `
+                        <div class="variant-selector">
+                            <label>RAM:</label>
+                            <div class="variant-options" id="ram-options">
+                                ${variants.ram.map((opt, i) => `
+                                    <button type="button" class="variant-btn" 
+                                            data-type="ram" 
+                                            data-option="${opt.option}"
+                                            data-modifier="${opt.priceModifier}"
+                                            onclick="selectVariant(this)">
+                                        ${opt.option}${opt.priceModifier > 0 ? ' (+₦' + opt.priceModifier.toLocaleString() + ')' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Color selector
+                if (variants.color && variants.color.length > 0) {
+                    variantSelectorsHTML += `
+                        <div class="variant-selector">
+                            <label>Color:</label>
+                            <div class="variant-options" id="color-options">
+                                ${variants.color.map((opt, i) => `
+                                    <button type="button" class="variant-btn" 
+                                            data-type="color" 
+                                            data-option="${opt.option}"
+                                            data-modifier="${opt.priceModifier}"
+                                            onclick="selectVariant(this)">
+                                        ${opt.option}${opt.priceModifier > 0 ? ' (+₦' + opt.priceModifier.toLocaleString() + ')' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = `
+                <div class="product-gallery">
+                    <div class="main-image">
+                        <img id="product-image" src="${product.image}" alt="${product.name}" onerror="this.src='logo.png'">
+                        <div class="image-badge">${categoryDisplay}</div>
+                    </div>
+                </div>
+                
+                <div class="product-info">
+                    <div class="product-header">
+                        <span class="category-label">${categoryDisplay}</span>
+                        <h1 id="product-name">${product.name}</h1>
+                    </div>
+                    
+                    <div class="product-price-section">
+                        <span class="price-label">Price</span>
+                        <p class="price" id="product-price">₦${basePrice.toLocaleString()}</p>
+                        <p class="price-breakdown" id="price-breakdown" style="display: none; font-size: 0.85rem; color: #9ca3af;"></p>
+                    </div>
+                    
+                    ${variantSelectorsHTML}
+                    
+                    <div class="product-description">
+                        <h3>Description</h3>
+                        <p id="product-desc">${product.fullDesc || product.desc}</p>
+                    </div>
+                    
+                    <div class="product-features">
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Original Brand Product</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Quality Guaranteed</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Secure Payment</span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon">✓</span>
+                            <span>Fast Delivery</span>
+                        </div>
+                    </div>
+                    
+                    <div class="product-actions">
+                        <div class="quantity-selector">
+                            <label>Quantity:</label>
+                            <div class="qty-controls">
+                                <button onclick="changeQty(-1)">−</button>
+                                <input type="number" id="quantity" value="1" min="1" max="99">
+                                <button onclick="changeQty(1)">+</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="add-to-cart-btn">
+                            <span class="btn-icon">🛒</span>
+                            Add to Cart
+                        </button>
+                    </div>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Category:</span>
+                            <span class="meta-value">${categoryDisplay}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Product ID:</span>
+                            <span class="meta-value">${product._id ? product._id.substring(0, 8) + '...' : 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Store product data for addToCart
+            window.currentProductData = {
+                _id: product._id || product.id,
+                price: basePrice,
+                hasVariants: product.hasVariants || false,
+                variants: product.variants || {
+                    storage: [],
+                    ram: [],
+                    color: []
+                }
+            };
+
+            // Update page title
+            document.title = product.name + ' - Pajay Gadgets';
+
+            // Add to cart event listener
+            document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+                const qty = parseInt(document.getElementById('quantity').value);
+                addToCartWithVariants(qty);
+            });
+        }
+
+        // Variant selection tracking
+        let selectedVariants = {
+            storage: '',
+            ram: '',
+            color: ''
+        };
+
+        function selectVariant(btn) {
+            const type = btn.dataset.type;
+            const option = btn.dataset.option;
+            const modifier = parseFloat(btn.dataset.modifier) || 0;
+
+            // Update selection
+            selectedVariants[type] = option;
+
+            // Update UI - remove active class from siblings, add to clicked
+            const container = btn.parentElement;
+            container.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Recalculate price
+            updateDisplayPrice();
+        }
+
+        function updateDisplayPrice() {
+            const product = window.currentProductData;
+            if (!product) return;
+
+            let totalModifier = 0;
+            let breakdown = [];
+
+            // Calculate modifiers from selected variants
+            if (product.hasVariants && product.variants) {
+                ['storage', 'ram', 'color'].forEach(type => {
+                    const selected = selectedVariants[type];
+                    if (selected && product.variants[type]) {
+                        const variant = product.variants[type].find(v => v.option === selected);
+                        if (variant && variant.priceModifier) {
+                            // Replace base price with variant price instead of adding
+                            if (totalModifier === 0) {
+                                totalModifier = variant.priceModifier;
+                                breakdown.push(`${type}: ₦${variant.priceModifier.toLocaleString()}`);
+                            }
+                        }
+                    }
+                });
+            }
+
+            const finalPrice = totalModifier > 0 ? totalModifier : product.price;
+            document.getElementById('product-price').textContent = '₦' + finalPrice.toLocaleString();
+
+            // Show breakdown if there are modifiers
+            const breakdownEl = document.getElementById('price-breakdown');
+            if (breakdown.length > 0) {
+                breakdownEl.textContent = breakdown.join(' + ');
+                breakdownEl.style.display = 'block';
+            } else {
+                breakdownEl.style.display = 'none';
+            }
+        }
+
+        function addToCartWithVariants(qty) {
+            const product = window.currentProductData;
+            if (!product) return;
+
+            // Check if user is logged in - check both sessionStorage and localStorage
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                alert('Please login to add items to cart');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check if variants are required
+            if (product.hasVariants) {
+                const required = [];
+                if (product.variants.storage && product.variants.storage.length > 0 && !selectedVariants.storage) {
+                    required.push('Storage');
+                }
+                if (product.variants.ram && product.variants.ram.length > 0 && !selectedVariants.ram) {
+                    required.push('RAM');
+                }
+                if (product.variants.color && product.variants.color.length > 0 && !selectedVariants.color) {
+                    required.push('Color');
+                }
+
+                if (required.length > 0) {
+                    alert('Please select: ' + required.join(', '));
+                    return;
+                }
+            }
+
+            // Calculate final price - use variant price if selected, otherwise base price
+            let finalPrice = product.price;
+            if (product.hasVariants && product.variants) {
+                ['storage', 'ram', 'color'].forEach(type => {
+                    const selected = selectedVariants[type];
+                    if (selected && product.variants[type]) {
+                        const variant = product.variants[type].find(v => v.option === selected);
+                        if (variant && variant.priceModifier) {
+                            // Replace base price with variant price instead of adding
+                            finalPrice = variant.priceModifier;
+                        }
+                    }
+                });
+            }
+
+            // Call API to add to cart
+            fetch(`/api/cart/${currentUser._id || currentUser.id}/${product._id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include session cookie
+                body: JSON.stringify({
+                    qty: qty,
+                    selectedVariant: selectedVariants,
+                    unitPrice: finalPrice
+                })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    alert('Added to cart!');
+                    updateCartCount();
+                } else {
+                    // Fallback to localStorage if API fails
+                    console.log('API failed, using localStorage fallback');
+                    addToCartLocal(product, qty, selectedVariants, finalPrice);
+                }
+            }).catch(err => {
+                // Fallback to localStorage on network error
+                console.error('Add to cart error, using localStorage fallback:', err);
+                addToCartLocal(product, qty, selectedVariants, finalPrice);
+            });
+        }
+
+        // LocalStorage fallback for cart
+        function addToCartLocal(product, qty, selectedVariants, finalPrice) {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const productId = product._id || product.id;
+            const existing = cart.find(item => item._id === productId);
+
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                cart.push({
+                    _id: productId,
+                    qty: qty,
+                    selectedVariant: selectedVariants,
+                    unitPrice: finalPrice
+                });
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Added to cart! (offline mode)');
+            updateCartCountLocal();
+        }
+
+        function updateCartCountLocal() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+                cartCount.textContent = totalItems;
+            }
+        }
+
+        async function loadRelatedProducts(product) {
+            try {
+                const response = await fetch('/api/products?category=' + product.category);
+                const products = await response.json();
+
+                // Filter out current product and take first 4
+                const related = products.filter(p => (p._id || p.id) !== (product._id || product.id)).slice(0, 4);
+
+                const grid = document.getElementById('related-grid');
+                if (related.length > 0) {
+                    grid.innerHTML = related.map(p => `
+                        <a href="product.html?id=${p._id || p.id}" class="related-card">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                            <h4>${p.name}</h4>
+                            <p class="price">₦${p.price.toLocaleString()}</p>
+                        </a>
+                    `).join('');
+                } else {
+                    document.querySelector('.related-products').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading related products:', error);
+                document.querySelector('.related-products').style.display = 'none';
+            }
+        }
+
+        function changeQty(delta) {
+            const input = document.getElementById('quantity');
+            const newVal = parseInt(input.value) + delta;
+            if (newVal >= 1 && newVal <= 99) input.value = newVal;
+        }
+
+        function handleBackToShop(event) {
+            if (document.referrer && document.referrer.includes('shop.html')) {
+                event.preventDefault();
+                history.back();
+                return false;
+            }
+            return true;
+        }
+
+        loadProduct();
+    </script>
+
+    <style>
+        /* Product Page Styles */
+        .product-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: calc(70px + 1.5rem) 1rem 2rem;
+        }
+
+        .product-nav-actions {
+            margin-bottom: 1rem;
+        }
+
+        .back-to-shop-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-dark);
+        }
+
+        .breadcrumb .current {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .product-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        @media (max-width: 900px) {
+            .product-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        /* Gallery Styles */
+        .product-gallery {
+            position: relative;
+        }
+
+        .main-image {
+            position: relative;
+            background: transparent;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .main-image img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            padding: 2rem;
+        }
+
+        .image-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: var(--primary);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Product Info Styles */
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .product-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .category-label {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .product-price-section {
+            padding: 1.5rem 0;
+        }
+
+        .price-label {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .product-price-section .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .product-description {
+            padding: 1.5rem 0;
+        }
+
+        .product-description h3 {
+            font-size: 1.1rem;
+            margin: 0 0 0.75rem 0;
+            color: #e5e7eb;
+        }
+
+        .product-description p {
+            color: #d1d5db;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .product-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #e5e7eb;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .quantity-selector label {
+            font-size: 0.9rem;
+            color: #e5e7eb;
+        }
+
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1f2937;
+        }
+
+        .qty-controls button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #374151;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .qty-controls button:hover {
+            background: var(--primary);
+        }
+
+        .qty-controls input {
+            width: 50px;
+            height: 40px;
+            border: none;
+            background: #1f2937;
+            color: #fff;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .qty-controls input::-webkit-inner-spin-button,
+        .qty-controls input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .btn-primary {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem 2rem;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .product-meta {
+            display: flex;
+            gap: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #374151;
+        }
+
+        .meta-item {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .meta-label {
+            color: #9ca3af;
+        }
+
+        .meta-value {
+            color: #e5e7eb;
+            font-weight: 500;
+        }
+
+        /* Related Products */
+        .related-products {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid #374151;
+        }
+
+        .related-products h2 {
+            font-size: 1.5rem;
+            margin: 0 0 1.5rem 0;
+            color: #e5e7eb;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .related-card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 1rem;
+            text-decoration: none;
+            border: 1px solid #374151;
+            transition: all 0.3s;
+        }
+
+        .related-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+            border-color: var(--primary);
+        }
+
+        .related-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .related-card h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            color: #e5e7eb;
+        }
+
+        .related-card .price {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        @media (max-width: 1200px) {
+            .related-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .product-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .product-gallery {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .product-info {
+                padding: 0 1rem;
+            }
+
+            .related-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .product-page {
+                padding: calc(60px + 1rem) 1rem 1.5rem;
+            }
+
+            .breadcrumb {
+                font-size: 0.85rem;
+            }
+
+            .main-image img {
+                padding: 1rem;
+                max-height: 350px;
+            }
+
+            .product-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .product-price-section .price {
+                font-size: 1.75rem;
+            }
+
+            .product-features {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .feature {
+                font-size: 0.85rem;
+            }
+
+            .product-actions {
+                gap: 0.75rem;
+            }
+
+            .qty-controls button {
+                width: 36px;
+                height: 36px;
+            }
+
+            .qty-controls input {
+                width: 45px;
+                height: 36px;
+            }
+
+            .btn-primary {
+                min-width: 150px;
+                padding: 0.875rem 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .product-page {
+                padding: calc(60px + 0.75rem) 0.75rem 1rem;
+            }
+
+            .breadcrumb {
+                font-size: 0.8rem;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+
+            .main-image img {
+                padding: 0.75rem;
+                max-height: 280px;
+            }
+
+            .image-badge {
+                padding: 0.35rem 0.75rem;
+                font-size: 0.75rem;
+            }
+
+            .product-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .category-label {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.6rem;
+            }
+
+            .product-price-section .price {
+                font-size: 1.5rem;
+            }
+
+            .product-description {
+                padding: 1rem 0;
+            }
+
+            .product-description h3 {
+                font-size: 1rem;
+            }
+
+            .product-description p {
+                font-size: 0.9rem;
+            }
+
+            .product-features {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                margin: 1rem 0;
+            }
+
+            .feature {
+                font-size: 0.85rem;
+            }
+
+            .product-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .quantity-selector {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .quantity-selector label {
+                font-size: 0.85rem;
+            }
+
+            .qty-controls {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .qty-controls button {
+                width: 44px;
+                height: 44px;
+            }
+
+            .qty-controls input {
+                width: 50px;
+                height: 44px;
+                font-size: 1rem;
+            }
+
+            .btn-primary {
+                width: 100%;
+                padding: 1rem;
+                font-size: 1rem;
+            }
+
+            .product-meta {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding-top: 1rem;
+            }
+
+            .meta-item {
+                font-size: 0.85rem;
+            }
+
+            .related-products {
+                margin-top: 2rem;
+                padding-top: 2rem;
+            }
+
+            .related-products h2 {
+                font-size: 1.25rem;
+                margin-bottom: 1rem;
+            }
+
+            .related-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .related-card {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                padding: 0.75rem;
+            }
+
+            .related-card img {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 0;
+                border-radius: 8px;
+            }
+
+            .related-card h4 {
+                font-size: 0.9rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .related-card .price {
+                font-size: 0.9rem;
+            }
+
+            .loading-state,
+            .error-state {
+                padding: 3rem 1rem;
+            }
+
+            .error-icon {
+                font-size: 3rem;
+            }
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .product-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .product-price-section .price {
+                font-size: 1.35rem;
+            }
+
+            .qty-controls {
+                max-width: 100%;
+            }
+
+            .related-card img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #374151;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-state p {
+            color: #9ca3af;
+        }
+
+        /* Error State */
+        .error-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-state h2 {
+            margin: 0 0 0.5rem 0;
+            color: #e5e7eb;
+        }
+
+        .error-state p {
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Variant Selector Styles */
+        .variant-selector {
+            margin: 1rem 0;
+        }
+
+        .variant-selector label {
+            display: block;
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-bottom: 0.5rem;
+        }
+
+        .variant-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .variant-btn {
+            padding: 0.6rem 1rem;
+            border: 2px solid #374151;
+            background: #1f2937;
+            color: #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .variant-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .variant-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .price-breakdown {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+    </style>
+</body>
+
+</html>

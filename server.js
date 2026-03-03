@@ -1225,24 +1225,6 @@ app.use((req, res, next) => {
 });
 app.use(express.static(__dirname));
 
-// Serve pages from pages/ folder
-app.get('/index.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/index/index.html')));
-app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/login/login.html')));
-app.get('/register.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/register/register.html')));
-app.get('/shop.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/shop/shop.html')));
-app.get('/product.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/product/product.html')));
-app.get('/cart.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/cart/cart.html')));
-app.get('/checkout.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/checkout/checkout.html')));
-app.get('/profile.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/profile/profile.html')));
-app.get('/wishlist.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/wishlist/wishlist.html')));
-app.get('/order-tracking.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/order-tracking/order-tracking.html')));
-app.get('/contact.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/contact/contact.html')));
-app.get('/privacy.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/privacy/privacy.html')));
-app.get('/terms.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/terms/terms.html')));
-app.get('/returns.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/returns/returns.html')));
-app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.html')));
-app.get('/reset-password.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/reset-password/reset-password.html')));
-
 // Root route
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'pages/index/index.html')));
 

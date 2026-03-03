@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Pajay Gadgets</title>
+    <meta name="description" content="Browse phones, laptops, tablets, and accessories at Pajay Gadgets.">
+    <meta name="keywords" content="shop gadgets, buy phones, laptops, accessories">
+    <meta property="og:title" content="Shop - Pajay Gadgets">
+    <meta property="og:description" content="Explore gadgets by category and find your next device.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="logo.png">
+    <link rel="canonical" href="shop.html">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="shop-page">
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="shop.html" class="active">Shop</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                    <a href="register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                                Logout</a>
+                        </div>
+                    </div>
+                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="shop-shell">
+        <section class="shop-controls-panel">
+            <div class="search-wrap">
+                <input type="text" id="search" placeholder="Search products..." oninput="searchProducts(this.value)">
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-category="all" onclick="filterProducts('all', this)">All</button>
+                <button class="filter-btn" data-category="phones" onclick="filterProducts('phones', this)">Phones</button>
+                <button class="filter-btn" data-category="laptops" onclick="filterProducts('laptops', this)">Laptops</button>
+                <button class="filter-btn" data-category="tablets" onclick="filterProducts('tablets', this)">Tablets</button>
+                <button class="filter-btn" data-category="accessories" onclick="filterProducts('accessories', this)">Accessories</button>
+            </div>
+        </section>
+
+        <section class="shop-products-panel">
+            <div class="products-head">
+                <h2>Products</h2>
+                <a href="index.html" class="products-head-link">Back Home</a>
+            </div>
+            <div class="product-grid" id="product-grid">
+                <p style="text-align:center; padding: 2rem;">Loading products...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const API_URL = '';
+        let allProducts = [];
+
+        function checkAuth() {
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
+            const adminLink = document.getElementById('admin-nav-link');
+
+            if (user) {
+                authButtons.style.display = 'none';
+                userMenu.style.display = 'flex';
+
+                // Get initials for avatar
+                const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                userAvatar.textContent = initials || user.name.charAt(0);
+                userName.textContent = user.name;
+
+                // Show admin link only for admin users
+                if (user.role === 'admin') {
+                    adminLink.style.display = 'block';
+                }
+            } else {
+                authButtons.style.display = 'flex';
+                userMenu.style.display = 'none';
+                adminLink.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
+            location.reload();
+        }
+
+        function toggleUserMenu(e) {
+            // Prevent the click from propagating to parent elements
+            e.stopPropagation();
+            
+            // Find the user-menu element
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            
+            console.log('toggleUserMenu clicked, userMenu:', userMenu);
+            console.log('Has active class:', userMenu?.classList?.contains('active'));
+            
+            // Don't toggle if clicking inside the dropdown
+            if (userDropdown && userDropdown.contains(e.target)) {
+                return;
+            }
+            
+            if (userMenu) {
+                userMenu.classList.toggle('active');
+                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
+            }
+        }
+
+        // Close dropdown and hamburger when clicking on the page
+        document.addEventListener('click', function(e) {
+            // Close user dropdown
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown) {
+                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userMenu.classList.remove('active');
+                }
+            }
+            
+            // Close hamburger menu
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks) {
+                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                    hamburger.classList.remove('active');
+                    navLinks.classList.remove('active');
+                }
+            }
+        });
+
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (navLinks && hamburger) {
+                navLinks.classList.toggle('active');
+                hamburger.classList.toggle('active');
+            }
+        }
+
+        function updateCartCount() {
+            const cartCountEl = document.getElementById('cart-count');
+            if (!cartCountEl) return;
+            
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            if (!user) {
+                cartCountEl.textContent = '0';
+                return;
+            }
+            
+            const userId = user._id || user.id;
+            if (!userId) {
+                cartCountEl.textContent = '0';
+                return;
+            }
+            
+            // First try API, then fallback to localStorage
+            fetch(`/api/cart/${userId}`, {
+                credentials: "include"
+            })
+                .then(r => r.json())
+                .then(cart => {
+                    let count = 0;
+                    if (Array.isArray(cart) && cart.length > 0) {
+                        count = cart.reduce((sum, item) => sum + item.qty, 0);
+                    } else {
+                        const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                        count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    }
+                    cartCountEl.textContent = count;
+                })
+                .catch(() => {
+                    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const count = localCart.reduce((sum, item) => sum + item.qty, 0);
+                    cartCountEl.textContent = count;
+                });
+        }
+
+        function loadProducts(callback) {
+            fetch(`${API_URL}/api/products`)
+                .then(r => r.json())
+                .then(products => {
+                    allProducts = products;
+                    renderProducts(products);
+                    // If there's a callback (like filtering), call it now
+                    if (callback) callback();
+                })
+                .catch(() => {
+                    document.getElementById('product-grid').innerHTML =
+                        '<p style="text-align:center;">Error loading products. Make sure server is running.</p>';
+                });
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('product-grid');
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; padding: 2rem;">No products found</p>';
+                return;
+            }
+            grid.innerHTML = products.map(p => `
+                <div class="product-card" onclick="openProductDetails('${p._id || p.id}')">
+                    <a href="product.html?id=${p._id || p.id}">
+                        <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                    </a>
+                    <div class="product-card-content">
+                        <a href="product.html?id=${p._id || p.id}">
+                            <h3>${p.name}</h3>
+                        </a>
+                        <p class="price">₦${p.price.toLocaleString()}</p>
+                        <button onclick="event.stopPropagation(); addToCart('${p._id || p.id}')" class="btn add-cart">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openProductDetails(productId) {
+            window.location.href = `product.html?id=${productId}`;
+        }
+
+        function filterProducts(category, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (category === 'all') {
+                renderProducts(allProducts);
+            } else {
+                const filtered = allProducts.filter(p => p.category === category);
+                renderProducts(filtered);
+            }
+        }
+
+        function searchProducts(term) {
+            const filtered = allProducts.filter(p =>
+                p.name.toLowerCase().includes(term.toLowerCase()) ||
+                p.desc.toLowerCase().includes(term.toLowerCase())
+            );
+            renderProducts(filtered);
+        }
+
+        function addToCart(productId) {
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
+            if (!user) {
+                alert('Please login to add to cart');
+                location.href = 'login.html';
+                return;
+            }
+
+            fetch(`/api/cart/${user._id || user.id}/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include session cookie
+                body: JSON.stringify({
+                    qty: 1
+                })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    alert('Added to cart!');
+                    updateCartCount();
+                } else {
+                    // Fallback to localStorage
+                    addToCartLocal(productId);
+                }
+            }).catch(err => {
+                console.error('Add to cart error:', err);
+                addToCartLocal(productId);
+            });
+        }
+        
+        function addToCartLocal(productId) {
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existing = cart.find(item => item._id === productId);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ _id: productId, qty: 1 });
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('Added to cart! (offline mode)');
+            updateCartCountLocal();
+        }
+        
+        function updateCartCountLocal() {
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const total = cart.reduce((sum, item) => sum + item.qty, 0);
+                cartCount.textContent = total;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            updateCartCount();
+            
+            // Check if there's a category parameter in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryParam = urlParams.get('category');
+            
+            if (categoryParam) {
+                // Load products and then apply filter
+                loadProducts(() => {
+                    const filterBtn = document.querySelector(`.filter-btn[data-category="${categoryParam}"]`);
+                    if (filterBtn) {
+                        filterProducts(categoryParam, filterBtn);
+                    }
+                });
+            } else {
+                loadProducts();
+            }
+        });
+    </script>
+</body>
+
+</html>
+
