@@ -2305,7 +2305,7 @@ app.get("/api/auth/google/callback", async (req, res) => {
     const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
     
     if (!code || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-      return res.redirect('/pages/login/login.html?error=google_auth_failed');
+      return res.redirect('/login.html?error=google_auth_failed');
     }
     
     // Exchange code for tokens
@@ -2323,7 +2323,7 @@ app.get("/api/auth/google/callback", async (req, res) => {
     
     const tokens = await tokenResponse.json();
     if (!tokens.access_token) {
-      return res.redirect('/pages/login/login.html?error=google_token_failed');
+      return res.redirect('/login.html?error=google_token_failed');
     }
     
     // Get user profile
@@ -2333,7 +2333,7 @@ app.get("/api/auth/google/callback", async (req, res) => {
     
     const googleUser = await userResponse.json();
     if (!googleUser.email) {
-      return res.redirect('/pages/login/login.html?error=google_profile_failed');
+      return res.redirect('/login.html?error=google_profile_failed');
     }
     
     // Find or create user
@@ -2376,10 +2376,10 @@ app.get("/api/auth/google/callback", async (req, res) => {
       path: '/'
     });
     
-    res.redirect('/pages/index/index.html');
+    res.redirect('/index.html');
   } catch (error) {
     console.error('Google callback error:', error);
-    res.redirect('/pages/login/login.html?error=google_auth_error');
+    res.redirect('/login.html?error=google_auth_error');
   }
 });
 
@@ -2468,7 +2468,7 @@ app.get("/api/auth/facebook/callback", async (req, res) => {
       path: '/'
     });
     
-    res.redirect('/pages/index/index.html');
+    res.redirect('/index.html');
   } catch (error) {
     console.error('Facebook callback error:', error);
     res.redirect('/pages/login/login.html?error=facebook_auth_error');
