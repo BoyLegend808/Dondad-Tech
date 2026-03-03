@@ -174,11 +174,14 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            const currentUser = getCurrentUser();
-            if (currentUser) {
-                window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
-                return;
-            }
+            // Add a small delay to prevent redirect loops
+            setTimeout(function() {
+                const currentUser = getCurrentUser();
+                if (currentUser && currentUser._id) {
+                    window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
+                    return;
+                }
+            }, 100);
 
             const form = document.getElementById('login-form');
             form.addEventListener('submit', async function(e) {
