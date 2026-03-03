@@ -979,6 +979,9 @@ app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
 async function seedDatabase() {
   try {
     const userCount = await User.countDocuments();
+    const productCount = await Product.countDocuments();
+    
+    // Seed admin user if no users exist
     if (userCount === 0) {
       await User.create({
         name: "Admin",
@@ -987,6 +990,11 @@ async function seedDatabase() {
         phone: "08000000000",
         role: "admin",
       });
+      console.log("Admin user seeded");
+    }
+    
+    // Seed products if no products exist
+    if (productCount === 0) {
 
       const products = [
         {
@@ -2456,6 +2464,49 @@ app.get("/api/seed-admin", requireInternalAccess, sensitiveRateLimit, async (req
     }
   } catch (error) {
     res.status(500).json({ error: "Failed to seed admin" });
+  }
+});
+
+// Seed Products (Run this to add sample products)
+app.get("/api/seed-products", async (req, res) => {
+  try {
+    const productCount = await Product.countDocuments();
+    if (productCount > 0) {
+      return res.json({ success: true, message: "Products already exist", count: productCount });
+    }
+
+    const products = [
+      { name: "iPhone 13 Pro Max", category: "phones", price: 450000, image: "xs.png", desc: "256GB, A15 chip" },
+      { name: "iPhone 13 Pro", category: "phones", price: 400000, image: "xs.png", desc: "256GB, A15 chip" },
+      { name: "iPhone 13", category: "phones", price: 350000, image: "xs.png", desc: "128GB, A15 chip" },
+      { name: "iPhone 12 Pro Max", category: "phones", price: 320000, image: "xs.png", desc: "128GB, A14 chip" },
+      { name: "iPhone 12", category: "phones", price: 280000, image: "xs.png", desc: "128GB, A14 chip" },
+      { name: "iPhone 11", category: "phones", price: 220000, image: "xs.png", desc: "64GB, A13 chip" },
+      { name: "iPhone XS Max", category: "phones", price: 180000, image: "xs.png", desc: "64GB, A12 chip" },
+      { name: "iPhone XR", category: "phones", price: 150000, image: "xs.png", desc: "64GB, A12 chip" },
+      { name: "MacBook Pro 14", category: "laptops", price: 850000, image: "hero img.png", desc: "M1 Pro, 16GB RAM" },
+      { name: "MacBook Air M2", category: "laptops", price: 650000, image: "hero img.png", desc: "M2 chip, 8GB RAM" },
+      { name: "Dell XPS 13", category: "laptops", price: 550000, image: "hero img.png", desc: "Intel i7, 16GB RAM" },
+      { name: "HP Spectre x360", category: "laptops", price: 480000, image: "hero img.png", desc: "Intel i7, 16GB RAM" },
+      { name: "Lenovo ThinkPad", category: "laptops", price: 520000, image: "hero img.png", desc: "Intel i7, 16GB RAM" },
+      { name: "iPad Pro 12.9", category: "tablets", price: 550000, image: "xs.png", desc: "M1 chip, 128GB" },
+      { name: "iPad Air", category: "tablets", price: 350000, image: "xs.png", desc: "M1 chip, 64GB" },
+      { name: "iPad 10th Gen", category: "tablets", price: 250000, image: "xs.png", desc: "A14 chip, 64GB" },
+      { name: "Samsung Tab S8", category: "tablets", price: 380000, image: "xs.png", desc: "Snapdragon 8 Gen 1" },
+      { name: "AirPods Pro", category: "accessories", price: 120000, image: "xs.png", desc: "Active Noise Cancellation" },
+      { name: "AirPods 3", category: "accessories", price: 85000, image: "xs.png", desc: "Spatial audio" },
+      { name: "iPhone Charger", category: "accessories", price: 15000, image: "xs.png", desc: "20W Fast charging" },
+      { name: "USB-C Cable", category: "accessories", price: 5000, image: "xs.png", desc: "1m braided" },
+      { name: "Phone Case", category: "accessories", price: 8000, image: "xs.png", desc: "Silicone case" },
+      { name: "Power Bank", category: "accessories", price: 25000, image: "xs.png", desc: "20000mAh" },
+      { name: "Screen Protector", category: "accessories", price: 3000, image: "xs.png", desc: "Tempered glass" },
+    ];
+
+    await Product.insertMany(products);
+    res.json({ success: true, message: "Products seeded successfully", count: products.length });
+  } catch (error) {
+    console.error("Seed error:", error);
+    res.status(500).json({ error: "Failed to seed products" });
   }
 });
 
