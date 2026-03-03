@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Pajay Gadgets</title>
-    <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../admin.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -52,318 +52,1331 @@
     </section>
 
     <!-- Admin Dashboard -->
-    <section id="dashboard-section" class="admin-section" style="display: none;">
-        <div class="admin-tabs">
-            <button class="tab-btn active" data-tab="products">Products</button>
-            <button class="tab-btn" data-tab="orders">Orders</button>
-            <button class="tab-btn" data-tab="users">Users</button>
-        </div>
-
-        <!-- Products Tab -->
-        <div id="products-tab" class="tab-content">
-            <div class="admin-header">
-                <h2>Products Management</h2>
-                <button class="btn admin-btn" onclick="showAddProductForm()">+ Add Product</button>
+    <section id="admin-dashboard" class="admin-section">
+        <div class="admin-container">
+            <!-- Admin Tabs Navigation -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchAdminTab('products')">📦 Products</button>
+                <button class="admin-tab" onclick="switchAdminTab('orders')">📋 Orders</button>
+                <button class="admin-tab" onclick="switchAdminTab('customers')">Customers</button>
             </div>
-            <div id="products-list"></div>
-        </div>
 
-        <!-- Orders Tab -->
-        <div id="orders-tab" class="tab-content" style="display: none;">
-            <div class="admin-header">
-                <h2>Orders Management</h2>
+            <div id="admin-stats-grid" class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <h4>Today's Sales</h4>
+                    <p id="stat-total-sales">₦0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Pending Orders</h4>
+                    <p id="stat-pending-orders">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Low Stock Items</h4>
+                    <p id="stat-low-stock">0</p>
+                </div>
+                <div class="admin-stat-card">
+                    <h4>Total Customers</h4>
+                    <p id="stat-total-customers">0</p>
+                </div>
             </div>
-            <div id="orders-list"></div>
-        </div>
 
-        <!-- Users Tab -->
-        <div id="users-tab" class="tab-content" style="display: none;">
-            <div class="admin-header">
-                <h2>Users Management</h2>
-            </div>
-            <div id="users-list"></div>
-        </div>
-    </section>
-
-    <!-- Add/Edit Product Modal -->
-    <div id="product-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeProductModal()">&times;</span>
-            <h2 id="modal-title">Add Product</h2>
-            <form id="product-form">
-                <input type="hidden" id="product-id">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="product-name" required>
+            <!-- Products Tab -->
+            <div id="products-tab" class="admin-tab-content">
+                <div class="admin-page-header">
+                    <h2>📦 Product Management</h2>
+                    <div class="header-actions">
+                        <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
+                        <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="product-category">
-                        <option value="phones">Phones</option>
-                        <option value="laptops">Laptops</option>
-                        <option value="tablets">Tablets</option>
-                        <option value="accessories">Accessories</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Price (₦)</label>
-                    <input type="number" id="product-price" required>
-                </div>
-                <div class="form-group">
-                    <label>Image URL</label>
-                    <input type="text" id="product-image" placeholder="e.g., xs.png">
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="product-desc" rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn admin-btn">Save Product</button>
-            </form>
-        </div>
-    </div>
 
-    <script src="../../admin.js"></script>
-    <script>
-        // Check if user is admin
-        function checkAdminAuth() {
-            const userStr = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    if (user.role === 'admin') {
-                        document.getElementById('login-section').style.display = 'none';
-                        document.getElementById('dashboard-section').style.display = 'block';
-                        loadAdminData();
-                    }
-                } catch (e) {}
-            }
-        }
-
-        // Handle login
-        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            const message = document.getElementById('login-message');
-
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
-                    checkAdminAuth();
-                } else {
-                    message.textContent = data.error || 'Login failed';
-                    message.className = 'login-message error';
-                }
-            } catch (err) {
-                message.textContent = 'Connection error';
-                message.className = 'login-message error';
-            }
-        });
-
-        function logout() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            location.reload();
-        }
-
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab + '-tab').style.display = 'block';
-            });
-        });
-
-        async function loadAdminData() {
-            await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
-        }
-
-        async function loadProducts() {
-            try {
-                const response = await fetch('/api/products');
-                const data = await response.json();
-                const products = data.products || data;
-                
-                const container = document.getElementById('products-list');
-                container.innerHTML = `
+                <!-- Products Table -->
+                <div class="admin-table-container">
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Image</th>
+                                <th style="width: 80px;">Image</th>
                                 <th>Name</th>
                                 <th>Category</th>
                                 <th>Price</th>
-                                <th>Actions</th>
+                                <th style="width: 180px;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${products.map(p => `
-                                <tr>
-                                    <td><img src="${p.image}" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='../../logo.png'"></td>
-                                    <td>${p.name}</td>
-                                    <td>${p.category}</td>
-                                    <td>₦${p.price.toLocaleString()}</td>
-                                    <td>
-                                        <button class="btn" onclick="editProduct('${p._id}')">Edit</button>
-                                        <button class="btn" style="background: #dc3545;" onclick="deleteProduct('${p._id}')">Delete</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                        <tbody id="products-table">
+                            <!-- Products loaded here -->
                         </tbody>
-                    </table>
-                `;
-            } catch (err) {
-                console.error('Error loading products:', err);
-            }
-        }
+                </table>
+                <p id="no-products" class="no-products">No products found. Click "Add Product" to create your first product!</p>
+            </div>
+            </div>
 
-        async function loadOrders() {
-            try {
-                const response = await fetch('/api/orders');
-                const orders = await response.json();
-                
-                const container = document.getElementById('orders-list');
-                container.innerHTML = `
+            <!-- Orders Tab -->
+            <div id="orders-tab" class="admin-tab-content" style="display: none;">
+                <div class="admin-page-header">
+                    <h2>📋 Order Management</h2>
+                </div>
+                <div id="orders-filter-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0 0 1rem 0; flex-wrap:wrap;">
+                    <span id="orders-filter-label" style="color:var(--text-muted); font-size:0.95rem;">Showing pending orders (default)</span>
+                    <button id="clear-date-filter-btn" class="btn btn-secondary" style="display:none;" onclick="clearSalesHistoryDateFilter()">Clear Date Filter</button>
+                </div>
+                <div class="admin-table-container" style="margin-bottom: 1rem;">
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Total</th>
-                                <th>Status</th>
                                 <th>Date</th>
+                                <th>Orders</th>
+                                <th>Revenue</th>
+                                <th>Pending</th>
+                                <th>Delivered</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${orders.map(o => `
-                                <tr>
-                                    <td>${o._id ? o._id.substring(0, 8) : 'N/A'}</td>
-                                    <td>${o.name || 'N/A'}</td>
-                                    <td>₦${(o.total || 0).toLocaleString()}</td>
-                                    <td>${o.status || 'Processing'}</td>
-                                    <td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
+                        <tbody id="sales-history-body"></tbody>
                     </table>
-                `;
-            } catch (err) {
-                console.error('Error loading orders:', err);
-            }
-        }
+                    <p id="no-sales-history" class="no-products" style="display: none;">No sales history yet.</p>
+                </div>
+                <p id="orders-count" style="display:none; margin:0 0 1rem 0; color:var(--text-muted); font-size:0.95rem;"></p>
+                <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
+                <div id="orders-list" style="display: none;"></div>
+                <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
+            </div>
 
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users');
-                const users = await response.json();
-                
-                const container = document.getElementById('users-list');
-                container.innerHTML = `
+            <div id="customers-tab" class="admin-tab-content" style="display: none;">
+                <div class="admin-page-header">
+                    <h2>Customer Management</h2>
+                </div>
+                <div class="admin-table-container">
                     <table class="admin-table">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Phone</th>
                                 <th>Role</th>
+                                <th>Joined</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${users.map(u => `
-                                <tr>
-                                    <td>${u.name || 'N/A'}</td>
-                                    <td>${u.email || 'N/A'}</td>
-                                    <td>${u.phone || 'N/A'}</td>
-                                    <td>${u.role || 'user'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
+                        <tbody id="customers-table"></tbody>
                     </table>
-                `;
-            } catch (err) {
-                console.error('Error loading users:', err);
-            }
+                    <p id="no-customers" class="no-products" style="display: none;">No customers found.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Product Form -->
+    <section id="product-form-section" class="admin-section">
+        <div class="admin-container">
+            <div class="admin-page-header">
+                <button class="btn btn-secondary" onclick="showDashboard()">← Back to Products</button>
+                <h2 id="form-title">Add New Product</h2>
+            </div>
+
+            <div class="admin-form-container">
+                <form id="product-form">
+                    <input type="hidden" id="product-id">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Product Name *</label>
+                            <input type="text" id="product-name" placeholder="e.g., iPhone 15 Pro" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="product-category" title="Select product category" required>
+                                <option value="phones">Phones</option>
+                                <option value="laptops">Laptops</option>
+                                <option value="tablets">Tablets</option>
+                                <option value="accessories">Accessories</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price (NGN) *</label>
+                            <input type="number" id="product-price" placeholder="150000" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Stock Quantity</label>
+                            <input type="number" id="product-stock" placeholder="10" value="10">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="product-image-file">Product Image</label>
+                        <div class="image-upload-container">
+                            <input type="file" id="product-image-file" accept="image/*" onchange="previewImage(event)">
+                            <img id="image-preview" class="image-preview" style="display: none;">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearProductImage()">🗑️ Remove Image</button>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+                                Upload an image from your device (JPG, PNG, GIF)
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Short Description (shown on product cards) *</label>
+                        <textarea id="product-desc" rows="2" placeholder="Brief description shown in shop grid..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Full Description (shown on product page)</label>
+                        <textarea id="product-full-desc" rows="6" placeholder="Detailed description shown when opening the product..."></textarea>
+                    </div>
+
+                    <!-- Product Variants Section -->
+                    <div class="form-group">
+                        <div class="variant-toggle">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="has-variants" onchange="toggleVariants()">
+                                <span>Enable Product Variants</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="variants-section" style="display: none;">
+                        <!-- Storage Options -->
+                        <div class="variant-group">
+                            <h4>📦 Storage Options</h4>
+                            <div id="storage-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('storage')">+ Add Storage Option</button>
+                        </div>
+
+                        <!-- RAM Options -->
+                        <div class="variant-group">
+                            <h4>🧠 RAM Options</h4>
+                            <div id="ram-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('ram')">+ Add RAM Option</button>
+                        </div>
+
+                        <!-- Color Options -->
+                        <div class="variant-group">
+                            <h4>🎨 Color Options</h4>
+                            <div id="color-options"></div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('color')">+ Add Color Option</button>
+                        </div>
+                    </div>
+
+                    <style>
+                        .variant-toggle {
+                            padding: 1rem;
+                            background: rgba(59, 130, 246, 0.1);
+                            border-radius: 8px;
+                            border: 1px solid rgba(59, 130, 246, 0.3);
+                        }
+                        .checkbox-label {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.75rem;
+                            cursor: pointer;
+                            font-weight: 500;
+                        }
+                        .checkbox-label input[type="checkbox"] {
+                            width: 18px;
+                            height: 18px;
+                            cursor: pointer;
+                        }
+                        .variant-group {
+                            margin: 1.5rem 0;
+                            padding: 1rem;
+                            background: #1f2937;
+                            border-radius: 8px;
+                        }
+                        .variant-group h4 {
+                            margin: 0 0 1rem 0;
+                            color: #e5e7eb;
+                        }
+                        .variant-row {
+                            display: grid;
+                            grid-template-columns: 1fr 100px 80px 40px;
+                            gap: 0.5rem;
+                            margin-bottom: 0.5rem;
+                            align-items: center;
+                        }
+                        .variant-row input {
+                            padding: 0.5rem;
+                            border: 1px solid #374151;
+                            border-radius: 4px;
+                            background: #1f2937;
+                            color: #fff;
+                            font-size: 0.9rem;
+                        }
+                        .variant-row .remove-btn {
+                            background: #dc2626;
+                            color: #fff;
+                            border: none;
+                            border-radius: 4px;
+                            padding: 0.5rem;
+                            cursor: pointer;
+                            font-size: 1rem;
+                        }
+                        .variant-row .remove-btn:hover {
+                            background: #b91c1c;
+                        }
+                        .btn-sm {
+                            font-size: 0.85rem;
+                            padding: 0.5rem 1rem;
+                            margin-top: 0.5rem;
+                        }
+                        @media (max-width: 600px) {
+                            .variant-row {
+                                grid-template-columns: 1fr;
+                            }
+                        }
+                    </style>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn admin-btn">💾 Save Product</button>
+                        <button type="button" class="btn btn-secondary" onclick="showDashboard()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="../auth.js"></script>
+    <script>
+        // Admin Panel Logic
+        const API_URL = '';
+        let products = [];
+        let orders = [];
+        let users = [];
+        let isEditing = false;
+        let dashboardLoadPromise = null;
+        let lastDashboardLoadAt = 0;
+        const DASHBOARD_CACHE_MS = 20000;
+        let selectedSalesDateKey = '';
+        const orderStatusDrafts = {};
+        const CATEGORY_OPTIONS = [
+            { value: 'phones', label: 'Phones' },
+            { value: 'laptops', label: 'Laptops' },
+            { value: 'tablets', label: 'Tablets' },
+            { value: 'accessories', label: 'Accessories' }
+        ];
+
+        function normalizeCategory(category) {
+            const value = String(category || '').toLowerCase().trim();
+            const map = {
+                phone: 'phones',
+                phones: 'phones',
+                laptop: 'laptops',
+                laptops: 'laptops',
+                tablet: 'tablets',
+                tablets: 'tablets',
+                accessory: 'accessories',
+                accessories: 'accessories'
+            };
+            return map[value] || 'phones';
         }
 
-        function showAddProductForm() {
-            document.getElementById('modal-title').textContent = 'Add Product';
-            document.getElementById('product-id').value = '';
-            document.getElementById('product-form').reset();
-            document.getElementById('product-modal').style.display = 'block';
+        function ensureCategorySelectOptions(selectedCategory) {
+            const select = document.getElementById('product-category');
+            if (!select) return;
+
+            const normalized = normalizeCategory(selectedCategory);
+            select.innerHTML = CATEGORY_OPTIONS.map(opt =>
+                `<option value="${opt.value}" ${opt.value === normalized ? 'selected' : ''}>${opt.label}</option>`
+            ).join('');
+            select.value = normalized;
         }
 
-        function closeProductModal() {
-            document.getElementById('product-modal').style.display = 'none';
-        }
-
-        async function editProduct(id) {
-            try {
-                const response = await fetch('/api/products/' + id);
-                const product = await response.json();
+        // Check login status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            
+            // Dropdown toggle for hamburger
+            const hamburger = document.getElementById('hamburger');
+            const dropdown = document.getElementById('dropdown-menu');
+            
+            if (hamburger && dropdown) {
+                hamburger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    hamburger.classList.toggle('active');
+                    dropdown.classList.toggle('active');
+                });
                 
-                document.getElementById('modal-title').textContent = 'Edit Product';
-                document.getElementById('product-id').value = product._id;
-                document.getElementById('product-name').value = product.name;
-                document.getElementById('product-category').value = product.category;
-                document.getElementById('product-price').value = product.price;
-                document.getElementById('product-image').value = product.image;
-                document.getElementById('product-desc').value = product.desc;
-                document.getElementById('product-modal').style.display = 'block';
-            } catch (err) {
-                alert('Error loading product');
+                // Close dropdown when clicking on a link
+                dropdown.querySelectorAll('a, button').forEach(link => {
+                    link.addEventListener('click', () => {
+                        hamburger.classList.remove('active');
+                        dropdown.classList.remove('active');
+                    });
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (dropdown.classList.contains('active') && 
+                        !dropdown.contains(e.target) && 
+                        !hamburger.contains(e.target)) {
+                        hamburger.classList.remove('active');
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        async function checkAuth() {
+            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+            if (user && user.role === 'admin') {
+                try {
+                    const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
+                    if (!verify.ok) {
+                        sessionStorage.removeItem('dondad_currentUser');
+                        const message = document.getElementById('login-message');
+                        if (message) {
+                            message.textContent = 'Admin session expired. Please login again.';
+                            message.style.color = 'var(--accent)';
+                        }
+                        showLogin();
+                        return;
+                    }
+                    updateAdminNav(user);
+                    showDashboard();
+                    loadDashboardStats(true);
+                } catch (error) {
+                    const message = document.getElementById('login-message');
+                    if (message) {
+                        message.textContent = 'Unable to verify admin session. Please login again.';
+                        message.style.color = 'var(--accent)';
+                    }
+                    showLogin();
+                }
+            } else {
+                showLogin();
             }
         }
+
+        function updateAdminNav(user) {
+            const userEl = document.getElementById('admin-user');
+            const logoutBtn = document.getElementById('admin-logout');
+            const dropdownUser = document.getElementById('dropdown-user');
+            const dropdownLogout = document.getElementById('dropdown-logout');
+            const dropdownDivider = document.getElementById('dropdown-divider');
+            
+            if (userEl) {
+                userEl.textContent = '👤 ' + user.name;
+                userEl.style.display = 'inline-block';
+            }
+            if (logoutBtn) {
+                logoutBtn.style.display = 'inline-block';
+            }
+            if (dropdownUser) {
+                dropdownUser.textContent = '👤 ' + user.name;
+                dropdownUser.style.display = 'block';
+            }
+            if (dropdownLogout) {
+                dropdownLogout.style.display = 'block';
+            }
+            if (dropdownDivider) {
+                dropdownDivider.style.display = 'block';
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('product-form-section').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'block';
+            document.getElementById('product-form-section').style.display = 'none';
+            switchAdminTab('products');
+        }
+
+        // Admin Tabs
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.style.display = 'none');
+
+            const activeBtn = Array.from(document.querySelectorAll('.admin-tab'))
+                .find(btn => btn.getAttribute('onclick') === `switchAdminTab('${tab}')`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            if (tab === 'products') {
+                document.getElementById('products-tab').style.display = 'block';
+                loadProducts();
+            } else if (tab === 'orders') {
+                document.getElementById('orders-tab').style.display = 'block';
+                loadOrders();
+            } else if (tab === 'customers') {
+                const customersTab = document.getElementById('customers-tab');
+                if (customersTab) customersTab.style.display = 'block';
+                loadCustomers();
+            }
+        }
+
+        // Load Orders
+        async function loadOrders() {
+            const loadingEl = document.getElementById('orders-loading');
+            const listEl = document.getElementById('orders-list');
+            const emptyEl = document.getElementById('no-orders');
+            const countEl = document.getElementById('orders-count');
+
+            if (loadingEl) {
+                loadingEl.style.display = 'block';
+                loadingEl.textContent = 'Loading orders...';
+            }
+            if (listEl) listEl.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (countEl) countEl.style.display = 'none';
+
+            // Render immediately from cached dashboard data when available.
+            if (Array.isArray(orders) && orders.length > 0) {
+                renderOrdersSection(orders);
+            }
+
+            try {
+                const response = await fetch(API_URL + '/api/orders', {
+                    credentials: "include"
+                });
+                console.log('Orders response status:', response.status);
+                const payload = await response.json();
+                console.log('Orders API response:', payload);
+                orders = Array.isArray(payload) ? payload : [];
+                console.log('Orders array:', orders);
+                console.log('Orders length:', orders.length);
+
+                if (!response.ok) {
+                    const serverError = payload && typeof payload === 'object' ? payload.error : '';
+                    const authHint = response.status === 401 || response.status === 403
+                        ? ' Please login again with an admin account.'
+                        : '';
+                    if (loadingEl) {
+                        loadingEl.style.display = 'block';
+                        loadingEl.textContent = 'Error: ' + (serverError || 'Failed to load orders.') + authHint;
+                    }
+                    return;
+                }
+
+                if (orders.length === 0) {
+                    renderOrdersSection([]);
+                    return;
+                }
+
+                renderOrdersSection(orders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                if (!Array.isArray(orders) || orders.length === 0) {
+                    if (loadingEl) {
+                        loadingEl.style.display = 'block';
+                        loadingEl.textContent = 'Error loading orders: ' + error.message;
+                    }
+                    return;
+                }
+                // Keep showing cached orders if refresh fails.
+                renderOrdersSection(orders);
+                if (loadingEl) {
+                    loadingEl.style.display = 'block';
+                    loadingEl.textContent = 'Showing cached orders. Refresh failed: ' + error.message;
+                }
+            }
+        }
+
+        function renderOrdersSection(ordersList) {
+            const loadingEl = document.getElementById('orders-loading');
+            const listEl = document.getElementById('orders-list');
+            const emptyEl = document.getElementById('no-orders');
+            const countEl = document.getElementById('orders-count');
+            const safeOrders = Array.isArray(ordersList) ? ordersList : [];
+            const filterLabelEl = document.getElementById('orders-filter-label');
+            const clearFilterBtn = document.getElementById('clear-date-filter-btn');
+            let displayOrders = [];
+            let title = '';
+
+            if (selectedSalesDateKey) {
+                displayOrders = safeOrders.filter(order =>
+                    getDateKeyLocal(order?.createdAt) === selectedSalesDateKey &&
+                    String(order?.status || '').toLowerCase() !== 'cancelled'
+                );
+                const selectedDate = new Date(selectedSalesDateKey + 'T00:00:00').toLocaleDateString();
+                title = `Showing all sales for ${selectedDate}`;
+                if (filterLabelEl) filterLabelEl.textContent = title;
+                if (clearFilterBtn) clearFilterBtn.style.display = 'inline-block';
+            } else {
+                displayOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
+                title = 'Showing pending orders (default)';
+                if (filterLabelEl) filterLabelEl.textContent = title;
+                if (clearFilterBtn) clearFilterBtn.style.display = 'none';
+            }
+
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (!displayOrders.length) {
+                if (listEl) listEl.style.display = 'none';
+                if (emptyEl) emptyEl.style.display = 'block';
+                if (emptyEl) {
+                    emptyEl.textContent = safeOrders.length
+                        ? (selectedSalesDateKey ? 'No sales found for the selected date.' : 'No pending orders right now.')
+                        : 'No orders yet!';
+                }
+                if (countEl) {
+                    countEl.style.display = 'block';
+                    countEl.textContent = `Total orders: ${safeOrders.length}`;
+                }
+                return;
+            }
+
+            if (emptyEl) emptyEl.style.display = 'none';
+            if (listEl) listEl.style.display = 'block';
+            if (countEl) {
+                countEl.textContent = `${title} | ${displayOrders.length} order${displayOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
+                countEl.style.display = 'block';
+            }
+            renderOrders(displayOrders);
+        }
+
+        function getDateKeyLocal(value) {
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function renderDailySalesHistory(ordersList) {
+            const body = document.getElementById('sales-history-body');
+            const empty = document.getElementById('no-sales-history');
+            if (!body || !empty) return;
+
+            const safeOrders = Array.isArray(ordersList) ? ordersList : [];
+            const byDay = new Map();
+
+            safeOrders.forEach(order => {
+                if (String(order?.status || '').toLowerCase() === 'cancelled') return;
+                const key = getDateKeyLocal(order?.createdAt);
+                if (!key) return;
+
+                if (!byDay.has(key)) {
+                    byDay.set(key, { key, orders: 0, revenue: 0, pending: 0, delivered: 0 });
+                }
+                const day = byDay.get(key);
+                day.orders += 1;
+                day.revenue += Number(order?.subtotal || 0);
+                if (String(order?.status || '').toLowerCase() === 'pending') day.pending += 1;
+                if (String(order?.status || '').toLowerCase() === 'delivered') day.delivered += 1;
+            });
+
+            const rows = Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
+            if (!rows.length) {
+                body.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            body.innerHTML = rows.map(row => `
+                <tr class="sales-history-row ${selectedSalesDateKey === row.key ? 'active' : ''}" style="cursor:pointer;" onclick="setSalesHistoryDateFilter('${row.key}')">
+                    <td>${new Date(row.key + 'T00:00:00').toLocaleDateString()}</td>
+                    <td>${row.orders}</td>
+                    <td class="price">₦${row.revenue.toLocaleString()}</td>
+                    <td>${row.pending}</td>
+                    <td>${row.delivered}</td>
+                </tr>
+            `).join('');
+        }
+
+        function setSalesHistoryDateFilter(dateKey) {
+            selectedSalesDateKey = dateKey || '';
+            renderDailySalesHistory(orders);
+            renderOrdersSection(orders);
+        }
+
+        function clearSalesHistoryDateFilter() {
+            selectedSalesDateKey = '';
+            renderDailySalesHistory(orders);
+            renderOrdersSection(orders);
+        }
+
+        function renderDashboardCards() {
+            const todayKey = getDateKeyLocal(new Date());
+            const todaySales = orders
+                .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
+                .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
+                .reduce((sum, order) => sum + (order.subtotal || 0), 0);
+            const pendingOrders = orders.filter(order => String(order?.status || '').toLowerCase() === 'pending').length;
+            const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
+            const customersCount = users.filter(u => u.role !== 'admin').length;
+
+            const totalSalesEl = document.getElementById('stat-total-sales');
+            const pendingOrdersEl = document.getElementById('stat-pending-orders');
+            const lowStockEl = document.getElementById('stat-low-stock');
+            const totalCustomersEl = document.getElementById('stat-total-customers');
+
+            if (totalSalesEl) totalSalesEl.textContent = `₦${todaySales.toLocaleString()}`;
+            if (pendingOrdersEl) pendingOrdersEl.textContent = pendingOrders.toLocaleString();
+            if (lowStockEl) lowStockEl.textContent = lowStock.toLocaleString();
+            if (totalCustomersEl) totalCustomersEl.textContent = customersCount.toLocaleString();
+        }
+
+        // Render Orders
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-list');
+            container.innerHTML = orders.map(order => {
+                const orderId = order && order._id ? String(order._id) : 'Unknown';
+                const shortId = orderId.length >= 8 ? orderId.substring(0, 8) : orderId;
+                const createdAt = order && order.createdAt ? new Date(order.createdAt) : null;
+                const orderDate = createdAt && !Number.isNaN(createdAt.getTime())
+                    ? createdAt.toLocaleDateString()
+                    : 'N/A';
+                const orderItems = Array.isArray(order?.items) ? order.items : [];
+                const subtotal = Number.isFinite(order?.subtotal) ? order.subtotal : 0;
+                const status = String(order?.status || 'pending');
+                const userName = order?.userName || 'Unknown customer';
+                const userEmail = order?.userEmail || 'No email';
+                const userPhone = order?.userPhone || 'No phone';
+                const deliveryMethod = order?.deliveryInfo?.method || 'N/A';
+                const paymentMethodRaw = String(order?.paymentMethod || '').toLowerCase();
+                const paymentMethod = paymentMethodRaw === 'cash'
+                    ? 'Cash on Delivery'
+                    : paymentMethodRaw === 'transfer'
+                        ? 'Bank Transfer'
+                        : paymentMethodRaw === 'stripe'
+                            ? 'Stripe Card'
+                            : (order?.paymentMethod || 'N/A');
+                const draftStatus = orderStatusDrafts[orderId] || status;
+                const hasDraft = draftStatus !== status;
+
+                return `
+                <div class="admin-order-card">
+                    <div class="order-card-header">
+                        <div>
+                            <span class="order-id">#${shortId}</span>
+                            <span class="order-date">${orderDate}</span>
+                        </div>
+                        <div style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+                            <select id="order-status-${orderId}" class="order-status-select" onchange="handleOrderStatusDraft('${orderId}', this)" data-current="${status}">
+                                <option value="pending" ${draftStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="confirmed" ${draftStatus === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="shipped" ${draftStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${draftStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${draftStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button id="order-submit-${orderId}" class="btn btn-secondary" ${hasDraft ? '' : 'disabled'} onclick="submitOrderStatus('${orderId}')">Submit</button>
+                        </div>
+                    </div>
+                    <div class="order-customer">
+                        <strong>👤 ${userName}</strong>
+                        <span>📧 ${userEmail}</span>
+                        <span>📞 ${userPhone}</span>
+                    </div>
+                    <div class="order-items">
+                        ${orderItems.map(item => `
+                            <div class="order-item-row">
+                                <span>${Number(item?.qty || 0)}× ${item?.productName || 'Product'}</span>
+                                <span>₦${(Number(item?.unitPrice || 0) * Number(item?.qty || 0)).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="order-footer">
+                        <span>💰 Total: ₦${subtotal.toLocaleString()}</span>
+                        <span>💳 ${paymentMethod}</span>
+                        <span>🚚 ${deliveryMethod}</span>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // Update Order Status
+        function handleOrderStatusDraft(orderId, selectEl) {
+            const current = String(selectEl.getAttribute('data-current') || 'pending');
+            const next = String(selectEl.value || current);
+            const submitBtn = document.getElementById('order-submit-' + orderId);
+            if (next === current) {
+                delete orderStatusDrafts[orderId];
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+            orderStatusDrafts[orderId] = next;
+            if (submitBtn) submitBtn.disabled = false;
+        }
+
+        async function submitOrderStatus(orderId) {
+            const status = orderStatusDrafts[orderId];
+            if (!status) return;
+
+            const submitBtn = document.getElementById('order-submit-' + orderId);
+            const selectEl = document.getElementById('order-status-' + orderId);
+            const oldBtnText = submitBtn ? submitBtn.textContent : 'Submit';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            }
+
+            try {
+                const response = await fetch(API_URL + '/api/orders/' + orderId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: "include",
+                    body: JSON.stringify({ status })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Order status updated to ' + status);
+                    if (selectEl) selectEl.setAttribute('data-current', status);
+                    const targetOrder = orders.find(o => String(o?._id) === String(orderId));
+                    if (targetOrder) targetOrder.status = status;
+                    delete orderStatusDrafts[orderId];
+                    renderDashboardCards();
+                    renderDailySalesHistory(orders);
+                    renderOrdersSection(orders);
+                    loadDashboardStats(true);
+                } else {
+                    alert(result.error || 'Failed to update order status');
+                }
+            } catch (error) {
+                console.error('Error updating order:', error);
+                alert('Error updating order status');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.textContent = oldBtnText;
+                    submitBtn.disabled = !orderStatusDrafts[orderId];
+                }
+            }
+        }
+
+        async function loadDashboardStats(forceRefresh = false) {
+            const hasCachedData = Array.isArray(products) && Array.isArray(orders) && Array.isArray(users)
+                && (products.length > 0 || orders.length > 0 || users.length > 0);
+            if (!forceRefresh && hasCachedData && (Date.now() - lastDashboardLoadAt) < DASHBOARD_CACHE_MS) {
+                renderDashboardCards();
+                renderDailySalesHistory(orders);
+                const ordersTab = document.getElementById('orders-tab');
+                if (ordersTab && ordersTab.style.display === 'block') {
+                    renderOrdersSection(orders);
+                }
+                return;
+            }
+            if (dashboardLoadPromise && !forceRefresh) {
+                await dashboardLoadPromise;
+                return;
+            }
+
+            dashboardLoadPromise = (async () => {
+            try {
+                const [productsRes, ordersRes, usersRes] = await Promise.all([
+                    fetch(API_URL + '/api/products', { credentials: "include" }),
+                    fetch(API_URL + '/api/orders', { credentials: "include" }),
+                    fetch(API_URL + '/api/users', { credentials: "include" })
+                ]);
+
+                const parseJsonSafe = async (res) => {
+                    try {
+                        return await res.json();
+                    } catch (_) {
+                        return null;
+                    }
+                };
+
+                const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
+                    parseJsonSafe(productsRes),
+                    parseJsonSafe(ordersRes),
+                    parseJsonSafe(usersRes)
+                ]);
+
+                if (!productsRes.ok) console.error('Products error:', productsRes.status, productsPayload);
+                if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
+                if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
+
+                products = Array.isArray(productsPayload) ? productsPayload : [];
+                orders = Array.isArray(ordersPayload) ? ordersPayload : [];
+                users = Array.isArray(usersPayload) ? usersPayload : [];
+
+                renderDashboardCards();
+                renderDailySalesHistory(orders);
+                lastDashboardLoadAt = Date.now();
+
+                const ordersTab = document.getElementById('orders-tab');
+                if (ordersTab && ordersTab.style.display === 'block') {
+                    renderOrdersSection(orders);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            } finally {
+                dashboardLoadPromise = null;
+            }
+            })();
+            await dashboardLoadPromise;
+        }
+
+        function getJoinedDateFromObjectId(objectId) {
+            if (!objectId || typeof objectId !== 'string' || objectId.length < 8) return 'N/A';
+            const timestampHex = objectId.substring(0, 8);
+            const timestamp = parseInt(timestampHex, 16) * 1000;
+            if (!Number.isFinite(timestamp)) return 'N/A';
+            return new Date(timestamp).toLocaleDateString();
+        }
+
+        async function loadCustomers() {
+            const table = document.getElementById('customers-table');
+            const empty = document.getElementById('no-customers');
+            if (!table || !empty) return;
+
+            try {
+                if (!users.length || !orders.length) {
+                    await loadDashboardStats();
+                }
+
+                const customers = users.filter(user => user.role !== 'admin');
+                if (!customers.length) {
+                    table.innerHTML = '';
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                empty.style.display = 'none';
+                table.innerHTML = customers.map(user => {
+                    const userOrders = orders.filter(order =>
+                        String(order.userId) === String(user._id) || order.userEmail === user.email
+                    );
+                    const totalSpent = userOrders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+                    return `
+                        <tr>
+                            <td>${user.name || 'N/A'}</td>
+                            <td>${user.email || 'N/A'}</td>
+                            <td><span class="category-badge">${user.role || 'user'}</span></td>
+                            <td>${getJoinedDateFromObjectId(user._id)}</td>
+                            <td>${userOrders.length}</td>
+                            <td class="price">₦${totalSpent.toLocaleString()}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                table.innerHTML = '';
+                empty.style.display = 'block';
+                empty.textContent = 'Error loading customers.';
+            }
+        }
+
+        // Search Products
+        function searchProducts(query) {
+            const searchTerm = query.toLowerCase();
+            const filtered = products.filter(p => 
+                p.name.toLowerCase().includes(searchTerm) ||
+                p.category.toLowerCase().includes(searchTerm) ||
+                p.desc?.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filtered);
+        }
+
+        function showAddProduct() {
+            isEditing = false;
+            selectedImageBase64 = '';
+            ensureCategorySelectOptions('phones');
+            document.getElementById('form-title').textContent = '➕ Add New Product';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-id').value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            
+            // Clear variant options
+            document.getElementById('has-variants').checked = false;
+            toggleVariants();
+            document.getElementById('storage-options').innerHTML = '';
+            document.getElementById('ram-options').innerHTML = '';
+            document.getElementById('color-options').innerHTML = '';
+            
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('product-form-section').style.display = 'block';
+        }
+
+        function showEditProduct(id) {
+            const product = products.find(p => p._id === id || p.id === id);
+            if (!product) {
+                console.error('Product not found for id:', id);
+                return;
+            }
+            
+            console.log('Editing product:', product.name);
+            console.log('Product image:', product.image);
+            
+            isEditing = true;
+            selectedImageBase64 = '';
+            ensureCategorySelectOptions(product.category);
+            document.getElementById('form-title').textContent = '✏️ Edit Product';
+            document.getElementById('product-id').value = product._id || product.id;
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-stock').value = product.stock || 10;
+            document.getElementById('product-desc').value = product.desc || '';
+            document.getElementById('product-full-desc').value = product.fullDesc || '';
+            
+            // Show current image or hide preview
+            const preview = document.getElementById('image-preview');
+            if (product.image) {
+                selectedImageBase64 = product.image;
+                preview.src = product.image;
+                preview.style.display = 'block';
+                console.log('Image preview set, length:', product.image.length);
+            } else {
+                preview.style.display = 'none';
+                console.log('No image to display');
+            }
+            
+            // Load variant data
+            document.getElementById('has-variants').checked = product.hasVariants || false;
+            toggleVariants();
+            
+            // Load variant options
+            const variants = product.variants || { storage: [], ram: [], color: [] };
+            variants.storage.forEach(opt => addVariantOption('storage', opt.option, opt.priceModifier, opt.stock));
+            variants.ram.forEach(opt => addVariantOption('ram', opt.option, opt.priceModifier, opt.stock));
+            variants.color.forEach(opt => addVariantOption('color', opt.option, opt.priceModifier, opt.stock));
+            
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('product-form-section').style.display = 'block';
+        }
+
+        async function loadProducts() {
+            try {
+                console.log('Loading products...');
+                const response = await fetch(API_URL + '/api/products', {
+                    credentials: "include"
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to load products, status:', response.status);
+                    products = [];
+                } else {
+                    products = await response.json();
+                    console.log('Products loaded:', products.length);
+                }
+                
+                renderProducts();
+                // Don't call loadDashboardStats here - it's already called in checkAuth
+            } catch (error) {
+                console.error('Error loading products:', error);
+                products = [];
+                renderProducts();
+            }
+        }
+
+        function renderProducts() {
+            const tbody = document.getElementById('products-table');
+            const noProducts = document.getElementById('no-products');
+            
+            if (products.length === 0) {
+                tbody.innerHTML = '';
+                noProducts.style.display = 'block';
+                return;
+            }
+            
+            noProducts.style.display = 'none';
+            tbody.innerHTML = products.map(p => `
+                <tr>
+                    <td><img src="${p.image || 'logo.png'}" alt="${p.name}" class="product-thumb" onclick="showEditProduct('${p._id || p.id}')" style="cursor: pointer;" title="Click to edit"></td>
+                    <td><strong>${p.name}</strong></td>
+                    <td><span class="category-badge">${p.category}</span></td>
+                    <td class="price">₦${p.price.toLocaleString()}</td>
+                    <td>
+                        <button onclick="showEditProduct('${p._id || p.id}')" class="btn btn-edit">✏️ Edit</button>
+                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn btn-delete">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        let selectedImageBase64 = '';
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Failed to read image'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function loadImageFromDataUrl(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('Invalid image file'));
+                img.src = dataUrl;
+            });
+        }
+
+        async function compressImageToDataUrl(file, maxDimension = 1200, quality = 0.82) {
+            const originalDataUrl = await readFileAsDataUrl(file);
+            const img = await loadImageFromDataUrl(originalDataUrl);
+
+            let width = img.width;
+            let height = img.height;
+            
+            // Scale down if needed
+            if (width > maxDimension || height > maxDimension) {
+                const scale = Math.min(maxDimension / width, maxDimension / height);
+                width = Math.max(1, Math.floor(width * scale));
+                height = Math.max(1, Math.floor(height * scale));
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return originalDataUrl;
+            
+            // Clear canvas to transparent (not white)
+            ctx.clearRect(0, 0, width, height);
+            
+            // Use JPEG with quality setting for better compression on photos
+            // Only use PNG if the original was PNG (for transparency)
+            const originalType = file.type;
+            const usePng = originalType === 'image/png' || originalType === 'image/gif';
+            const mimeType = usePng ? 'image/png' : 'image/jpeg';
+            const exportQuality = usePng ? undefined : quality;
+            return canvas.toDataURL(mimeType, exportQuality);
+        }
+
+        async function previewImage(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('image-preview');
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+
+            console.log('Processing image:', file.name, file.type, file.size);
+
+            try {
+                if (!file.type.startsWith('image/')) {
+                    alert('❌ Please select a valid image file');
+                    return;
+                }
+
+                const compressedImage = await compressImageToDataUrl(file);
+                console.log('Image compressed, length:', compressedImage.length);
+                
+                selectedImageBase64 = compressedImage;
+                preview.src = selectedImageBase64;
+                preview.style.display = 'block';
+                
+                console.log('Image set, selectedImageBase64 length:', selectedImageBase64.length);
+            } catch (error) {
+                console.error('Image processing error:', error);
+                alert('❌ Failed to process image: ' + error.message);
+            }
+        }
+        
+        function clearProductImage() {
+            selectedImageBase64 = '';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('product-image-file').value = '';
+            console.log('Image cleared');
+        }
+
+        // Handle admin login form
+        document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const message = document.getElementById('login-message');
+            
+            try {
+                const response = await fetch(API_URL + '/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                if (response.ok && data.user.role === 'admin') {
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    message.textContent = '';
+                    checkAuth();
+                } else {
+                    message.textContent = data.error || 'Invalid credentials';
+                    message.style.color = 'var(--accent)';
+                }
+            } catch (error) {
+                message.textContent = 'Connection error. Please try again.';
+                message.style.color = 'var(--accent)';
+            }
+        });
+
+        // Toggle variants section visibility
+        function toggleVariants() {
+            const hasVariants = document.getElementById('has-variants').checked;
+            const section = document.getElementById('variants-section');
+            section.style.display = hasVariants ? 'block' : 'none';
+        }
+
+        // Add variant option row
+        function addVariantOption(type, option = '', priceModifier = 0, stock = 10) {
+            const container = document.getElementById(type + '-options');
+            const row = document.createElement('div');
+            row.className = 'variant-row';
+            row.innerHTML = `
+                <input type="text" placeholder="e.g., ${type === 'storage' ? '128GB' : type === 'ram' ? '8GB' : 'Black'}" 
+                       value="${option}" name="${type}-option">
+                <input type="number" placeholder="₦0" value="${priceModifier}" name="${type}-price">
+                <input type="number" placeholder="Stock" value="${stock}" name="${type}-stock">
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Collect variant data from form
+        function collectVariants() {
+            const hasVariants = document.getElementById('has-variants').checked;
+            
+            if (!hasVariants) {
+                return {
+                    hasVariants: false,
+                    variants: {
+                        storage: [],
+                        ram: [],
+                        color: []
+                    }
+                };
+            }
+            
+            const collectType = (type) => {
+                const options = [];
+                const container = document.getElementById(type + '-options');
+                const rows = container.querySelectorAll('.variant-row');
+                rows.forEach(row => {
+                    const option = row.querySelector(`[name="${type}-option"]`).value.trim();
+                    const priceModifier = parseFloat(row.querySelector(`[name="${type}-price"]`).value) || 0;
+                    const stock = parseInt(row.querySelector(`[name="${type}-stock"]`).value) || 0;
+                    if (option) {
+                        options.push({ option, priceModifier, stock });
+                    }
+                });
+                return options;
+            };
+            
+            return {
+                hasVariants: true,
+                variants: {
+                    storage: collectType('storage'),
+                    ram: collectType('ram'),
+                    color: collectType('color')
+                }
+            };
+        }
+
+        // Handle product form
+        document.getElementById('product-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            console.log('Form submitted, isEditing:', isEditing);
+            console.log('selectedImageBase64 length:', selectedImageBase64 ? selectedImageBase64.length : 0);
+            console.log('Image preview src length:', document.getElementById('image-preview').src.length);
+            
+            const variantData = collectVariants();
+            
+            // Validate image before saving
+            let productImage = '';
+            if (selectedImageBase64) {
+                // Check if the base64 string is valid and not corrupted
+                if (!selectedImageBase64.startsWith('data:image/')) {
+                    alert('❌ Invalid image format. Please select a new image.');
+                    return;
+                }
+                // Check if image is too large (base64 should be under 4MB after compression)
+                if (selectedImageBase64.length > 4000000) {
+                    alert('❌ Image is too large. Please select a smaller image.');
+                    return;
+                }
+                productImage = selectedImageBase64;
+            }
+            
+            // For editing: keep original image if nothing selected
+            // For new products: use default image if nothing selected
+            const finalImage = isEditing 
+                ? (productImage || undefined)  
+                : (productImage || 'logo.png');
+            
+            const product = {
+                name: document.getElementById('product-name').value,
+                category: normalizeCategory(document.getElementById('product-category').value),
+                price: parseFloat(document.getElementById('product-price').value),
+                stock: parseInt(document.getElementById('product-stock').value) || 10,
+                desc: document.getElementById('product-desc').value,
+                fullDesc: document.getElementById('product-full-desc').value,
+                ...(finalImage !== undefined && { image: finalImage }),
+                ...variantData
+            };
+            
+            console.log('Product image being sent:', product.image ? product.image.substring(0, 50) + '...' : 'empty/unchanged');
+            
+            try {
+                let response;
+                if (isEditing) {
+                    const id = document.getElementById('product-id').value;
+                    response = await fetch(API_URL + '/api/products/' + id, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: "include",
+                        body: JSON.stringify(product)
+                    });
+                } else {
+                    response = await fetch(API_URL + '/api/products', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: "include",
+                        body: JSON.stringify(product)
+                    });
+                }
+                
+                if (response.ok) {
+                    alert(isEditing ? '✅ Product updated successfully!' : '✅ Product added successfully!');
+                    showDashboard();
+                } else {
+                    let errorMessage = 'Error saving product';
+                    const responseClone = response.clone();
+                    try {
+                        const payload = await responseClone.json();
+                        if (payload && payload.error) errorMessage = payload.error;
+                    } catch (_) {
+                        try {
+                            const textPayload = await response.text();
+                            if (textPayload) errorMessage = textPayload;
+                        } catch (_) {}
+                    }
+                    alert('❌ ' + errorMessage);
+                }
+            } catch (error) {
+                alert('❌ Connection error');
+            }
+        });
 
         async function deleteProduct(id) {
             if (!confirm('Are you sure you want to delete this product?')) return;
             
             try {
-                await fetch('/api/products/' + id, { method: 'DELETE' });
-                loadProducts();
-            } catch (err) {
-                alert('Error deleting product');
+                const response = await fetch(API_URL + '/api/products/' + id, {
+                    method: 'DELETE',
+                    credentials: "include"
+                });
+                
+                if (response.ok) {
+                    alert('✅ Product deleted!');
+                    loadProducts();
+                } else {
+                    alert('❌ Error deleting product');
+                }
+            } catch (error) {
+                alert('❌ Connection error');
             }
         }
 
-        document.getElementById('product-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const productData = {
-                name: document.getElementById('product-name').value,
-                category: document.getElementById('product-category').value,
-                price: parseFloat(document.getElementById('product-price').value),
-                image: document.getElementById('product-image').value || 'xs.png',
-                desc: document.getElementById('product-desc').value
-            };
-
-            const productId = document.getElementById('product-id').value;
-            const url = productId ? '/api/products/' + productId : '/api/products';
-            const method = productId ? 'PUT' : 'POST';
-
-            try {
-                await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(productData)
-                });
-                closeProductModal();
-                loadProducts();
-            } catch (err) {
-                alert('Error saving product');
-            }
-        });
-
-        // Initialize
-        checkAdminAuth();
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 </html>
