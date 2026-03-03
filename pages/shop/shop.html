@@ -10,7 +10,7 @@
     <meta property="og:title" content="Shop - Pajay Gadgets">
     <meta property="og:description" content="Explore gadgets by category and find your next device.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="logo.png">
+    <meta property="og:image" content="../../logo.png">
     <link rel="canonical" href="shop.html">
     <link rel="stylesheet" href="style.css?v=2">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -21,18 +21,18 @@
 <body class="shop-page">
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="../index/index.html" class="logo">Pajay Gadgets</a>
             <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
+                <li><a href="../index/index.html">Home</a></li>
                 <li><a href="shop.html" class="active">Shop</a></li>
-                <li><a href="index.html#about">About</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+                <li><a href="../index/index.html#about">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="../admin/admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div id="auth-buttons">
-                    <a href="login.html" class="auth-btn">Login</a>
-                    <a href="register.html" class="auth-btn register">Register</a>
+                    <a href="../auth/login.html" class="auth-btn">Login</a>
+                    <a href="../auth/register.html" class="auth-btn register">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
                     <div class="user-menu" onclick="toggleUserMenu(event)">
@@ -42,12 +42,12 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
-                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="../cart/cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
                             <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
                                 Logout</a>
                         </div>
                     </div>
-                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
+                    <a href="../cart/cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
                 </div>
                 <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
@@ -73,7 +73,7 @@
         <section class="shop-products-panel">
             <div class="products-head">
                 <h2>Products</h2>
-                <a href="index.html" class="products-head-link">Back Home</a>
+                <a href="../index/index.html" class="products-head-link">Back Home</a>
             </div>
             <div class="product-grid" id="product-grid">
                 <p style="text-align:center; padding: 2rem;">Loading products...</p>
@@ -83,10 +83,10 @@
 
     <footer>
         <div class="footer-links">
-            <a href="contact.html">Contact</a>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms</a>
-            <a href="returns.html">Returns</a>
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
         </div>
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
@@ -250,11 +250,11 @@
             }
             grid.innerHTML = products.map(p => `
                 <div class="product-card" onclick="openProductDetails('${p._id || p.id}')">
-                    <a href="product.html?id=${p._id || p.id}">
-                        <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                    <a href="../product/product.html?id=${p._id || p.id}">
+                        <img src="${p.image}" alt="${p.name}" onerror="this.src='../../logo.png'">
                     </a>
                     <div class="product-card-content">
-                        <a href="product.html?id=${p._id || p.id}">
+                        <a href="../product/product.html?id=${p._id || p.id}">
                             <h3>${p.name}</h3>
                         </a>
                         <p class="price">₦${p.price.toLocaleString()}</p>
@@ -265,7 +265,7 @@
         }
 
         function openProductDetails(productId) {
-            window.location.href = `product.html?id=${productId}`;
+            window.location.href = `../product/product.html?id=${productId}`;
         }
 
         function filterProducts(category, btn) {
@@ -292,7 +292,7 @@
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
             if (!user) {
                 alert('Please login to add to cart');
-                location.href = 'login.html';
+                location.href = '../auth/login.html';
                 return;
             }
 
@@ -365,4 +365,3 @@
 </body>
 
 </html>
-

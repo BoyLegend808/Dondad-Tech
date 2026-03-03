@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Pajay Gadgets</title>
+    <link rel="stylesheet" href="../style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../script.js?v=5"></script>
+</head>
+
+<body>
+    <script>
+        // Immediate check - show user menu if logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const userStr = sessionStorage.getItem('dondad_currentUser');
+            console.log('Cart page - User check:', userStr ? 'Found user' : 'No user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const authLinks = document.getElementById('auth-links');
+                    const userMenu = document.getElementById('user-menu');
+                    const userName = document.getElementById('user-name');
+                    const userAvatar = document.getElementById('user-avatar');
+                    const cartLink = document.getElementById('cart-link');
+                    
+                    console.log('Elements found - authLinks:', !!authLinks, 'userMenu:', !!userMenu);
+                    
+                    if (authLinks) {
+                        authLinks.style.display = 'none';
+                        console.log('Set auth-links to none');
+                    }
+                    if (userMenu) {
+                        userMenu.style.display = 'flex';
+                        console.log('Set user-menu to flex');
+                    }
+                    if (userName) userName.textContent = user.name;
+                    if (userAvatar) {
+                        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                        userAvatar.textContent = initials || user.name.charAt(0);
+                    }
+                    if (cartLink) cartLink.style.display = 'flex';
+                } catch(e) { console.error('Error:', e); }
+            }
+        });
+    </script>
+    <header>
+        <nav class="navbar">
+            <a href="../index/index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="../index/index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a></li>
+                <li><a href="../index/index.html">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+                <li><a href="../index/index.html#about">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+                <li><a href="../admin/admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
+            </ul>
+            <div class="nav-right">
+                <!-- Show user menu by default (will hide if not logged in via JS) -->
+                <div class="auth-links" id="auth-links" style="display:none;">
+                    <a href="../auth/login.html" class="auth-link">Login</a>
+                    <a href="../auth/register.html" class="auth-link">Register</a>
+                </div>
+                <div id="user-menu">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logoutUser(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
+                                Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card" style="max-width: 800px;">
+                <div class="auth-header">
+                    <div class="auth-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h1>Shopping Cart</h1>
+                    <p>Review your items before checkout</p>
+                </div>
+
+                <div class="cart-items" id="cart-items">
+                    <p style="text-align:center; padding: 2rem;">Loading cart...</p>
+                </div>
+
+                <div class="cart-summary" id="cart-summary" style="display:none;">
+                    <h3>Order Summary</h3>
+                    <div class="cart-summary-row">
+                        <span>Subtotal</span>
+                        <span id="cart-subtotal">₦0</span>
+                    </div>
+                    <div class="cart-summary-row">
+                        <span>Total</span>
+                        <span class="cart-summary-total" id="cart-total">₦0</span>
+                    </div>
+                    <a href="../checkout/checkout.html" class="btn btn-primary btn-block" id="checkout-btn">
+                        <i class="fas fa-lock"></i> Proceed to Checkout
+                    </a>
+                    <a href="../shop/shop.html" class="btn btn-block" style="margin-top: 0.5rem; background: #6c757d;">
+                        Continue Shopping
+                    </a>
+                </div>
+
+                <div class="empty-cart" id="empty-cart" style="display:none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Your cart is empty</p>
+                    <a href="../shop/shop.html" class="btn">Start Shopping</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        // Cart functionality
+        let cartItems = [];
+
+        async function loadCart() {
+            const user = getCurrentUser();
+            const cartItemsEl = document.getElementById('cart-items');
+            const cartSummaryEl = document.getElementById('cart-summary');
+            const emptyCartEl = document.getElementById('empty-cart');
+
+            if (!user) {
+                // Load from localStorage
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (localCart.length > 0) {
+                    await loadProductsForCart(localCart, true);
+                } else {
+                    showEmptyCart();
+                }
+                return;
+            }
+
+            const userId = user._id || user.id;
+
+            try {
+                const response = await fetch('/api/cart/' + userId, {
+                    credentials: 'include'
+                });
+                const cart = await response.json();
+
+                if (Array.isArray(cart) && cart.length > 0) {
+                    await loadProductsForCart(cart, false);
+                } else {
+                    // Try localStorage as fallback
+                    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    if (localCart.length > 0) {
+                        await loadProductsForCart(localCart, true);
+                    } else {
+                        showEmptyCart();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                // Try localStorage
+                const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (localCart.length > 0) {
+                    await loadProductsForCart(localCart, true);
+                } else {
+                    showEmptyCart();
+                }
+            }
+        }
+
+        async function loadProductsForCart(cart, isLocal) {
+            cartItems = cart;
+            
+            try {
+                // Fetch all products to get details
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                const products = data.products || data;
+
+                // Map cart items to product details
+                const cartWithProducts = cart.map(item => {
+                    const product = products.find(p => p._id === item.productId || p._id === item._id);
+                    return {
+                        ...item,
+                        product: product
+                    };
+                }).filter(item => item.product);
+
+                if (cartWithProducts.length > 0) {
+                    renderCart(cartWithProducts, isLocal);
+                } else {
+                    showEmptyCart();
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showEmptyCart();
+            }
+        }
+
+        function renderCart(cartWithProducts, isLocal) {
+            const cartItemsEl = document.getElementById('cart-items');
+            const cartSummaryEl = document.getElementById('cart-summary');
+            const emptyCartEl = document.getElementById('empty-cart');
+
+            let subtotal = 0;
+
+            cartItemsEl.innerHTML = cartWithProducts.map((item, index) => {
+                const product = item.product;
+                const price = product.price || 0;
+                const qty = item.qty || 1;
+                const itemTotal = price * qty;
+                subtotal += itemTotal;
+
+                let variantText = '';
+                if (item.variants) {
+                    const vars = [];
+                    if (item.variants.storage) vars.push(item.variants.storage);
+                    if (item.variants.ram) vars.push(item.variants.ram);
+                    if (item.variants.color) vars.push(item.variants.color);
+                    if (vars.length > 0) variantText = `<p class="cart-item-variant">${vars.join(' / ')}</p>`;
+                }
+
+                return `
+                    <div class="cart-item">
+                        <img src="${product.image}" alt="${product.name}" onerror="this.src='../../logo.png'">
+                        <div class="cart-item-info">
+                            <h3>${product.name}</h3>
+                            ${variantText}
+                            <p class="price">₦${price.toLocaleString()}</p>
+                        </div>
+                        <div class="cart-item-qty">
+                            <button onclick="updateQty(${index}, -1, ${isLocal ? 'true' : 'false'})">−</button>
+                            <span>${qty}</span>
+                            <button onclick="updateQty(${index}, 1, ${isLocal ? 'true' : 'false'})">+</button>
+                        </div>
+                        <div class="cart-item-remove">
+                            <button onclick="removeItem(${index}, ${isLocal ? 'true' : 'false'})" class="cart-item-close">×</button>
+                            <p class="cart-item-total">₦${itemTotal.toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cart-subtotal').textContent = '₦' + subtotal.toLocaleString();
+            document.getElementById('cart-total').textContent = '₦' + subtotal.toLocaleString();
+
+            cartItemsEl.style.display = 'block';
+            cartSummaryEl.style.display = 'block';
+            emptyCartEl.style.display = 'none';
+        }
+
+        function showEmptyCart() {
+            document.getElementById('cart-items').style.display = 'none';
+            document.getElementById('cart-summary').style.display = 'none';
+            document.getElementById('empty-cart').style.display = 'block';
+        }
+
+        async function updateQty(index, delta, isLocal) {
+            const user = getCurrentUser();
+            const item = cartItems[index];
+            
+            if (isLocal) {
+                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const cartItem = cart.find(c => c._id === item._id || c.productId === item.productId);
+                if (cartItem) {
+                    cartItem.qty = (cartItem.qty || 1) + delta;
+                    if (cartItem.qty < 1) {
+                        cart = cart.filter(c => c._id !== item._id && c.productId !== item.productId);
+                    }
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                }
+                loadCart();
+            } else if (user) {
+                const userId = user._id || user.id;
+                const productId = item.productId || item._id;
+                
+                try {
+                    if (delta > 0) {
+                        await fetch('/api/cart/' + userId + '/' + productId, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ qty: delta })
+                        });
+                    } else {
+                        await fetch('/api/cart/' + userId + '/' + productId, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                    }
+                    loadCart();
+                } catch (error) {
+                    console.error('Error updating quantity:', error);
+                }
+            }
+        }
+
+        async function removeItem(index, isLocal) {
+            const user = getCurrentUser();
+            const item = cartItems[index];
+            
+            if (isLocal) {
+                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                cart = cart.filter(c => c._id !== item._id && c.productId !== item.productId);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                loadCart();
+            } else if (user) {
+                const userId = user._id || user.id;
+                const productId = item.productId || item._id;
+                
+                try {
+                    await fetch('/api/cart/' + userId + '/' + productId, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    loadCart();
+                } catch (error) {
+                    console.error('Error removing item:', error);
+                }
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pajay Gadgets</title>
+    <meta name="description"
+        content="Pajay Gadgets offers quality phones, laptops, tablets, and accessories with reliable support and fast delivery updates.">
+    <meta name="keywords" content="Pajay Gadgets, phones, laptops, tablets, accessories, electronics shop">
+    <meta property="og:title" content="Pajay Gadgets - Trusted Gadget Store">
+    <meta property="og:description" content="Shop quality gadgets with transparent pricing and responsive support.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../../logo.png">
+    <link rel="canonical" href="index.html">
+    <link rel="stylesheet" href="style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="homepage">
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="../admin/admin.html">Admin</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-buttons">
+                    <a href="../auth/login.html" class="auth-btn">Login</a>
+                    <a href="../auth/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
+                            <a href="../cart/cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
+                                    class="dropdown-icon">🚪</span>
+                                Logout</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><span>🛒</span> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="home-shell">
+        <section class="home-toolbar panel-card">
+            <div class="toolbar-search">
+                <input type="text" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
+                <a href="../shop/shop.html" class="btn">Browse</a>
+            </div>
+            <div class="toolbar-tags">
+                <a href="../shop/shop.html?category=phones">Phones</a>
+                <a href="../shop/shop.html?category=laptops">Laptops</a>
+                <a href="../shop/shop.html?category=tablets">Tablets</a>
+                <a href="../shop/shop.html?category=accessories">Accessories</a>
+            </div>
+        </section>
+
+        <section class="home-spotlight panel-card">
+            <div class="spotlight-main">
+                <p class="spotlight-kicker">Deal Zone</p>
+                <h1>Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
+                <p>Daily deals on top devices with clean pricing and fast delivery support.</p>
+                <a href="../shop/shop.html" class="btn">Shop Now</a>
+            </div>
+            <div class="spotlight-side">
+                <article class="side-tile">
+                    <h3>Noise Cancelling Headsets</h3>
+                    <p>Comfort-first audio picks this week.</p>
+                </article>
+                <article class="side-tile">
+                    <h3>Smart Watches</h3>
+                    <p>Fitness + notifications in one place.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="trust-section panel-card">
+            <h2>Why Shop Here</h2>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <h3>Original Products</h3>
+                    <p>Sourced from trusted suppliers and quality-checked before delivery.</p>
+                </div>
+                <div class="trust-item">
+                    <h3>Secure Payments</h3>
+                    <p>Safe payment options with clear order confirmation and support.</p>
+                </div>
+                <div class="trust-item">
+                    <h3>Fast Support</h3>
+                    <p>Quick help before and after your purchase when you need it.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured panel-card">
+            <div class="section-head">
+                <h2>Featured Products</h2>
+                <a href="../shop/shop.html">View all</a>
+            </div>
+            <div class="product-scroll" id="featured-products"></div>
+        </section>
+
+        <section class="categories panel-card">
+            <div class="section-head">
+                <h2>Top Categories</h2>
+                <a href="../shop/shop.html">Open shop</a>
+            </div>
+            <div class="category-grid">
+                <a href="../shop/shop.html?category=phones" class="category-card">
+                    <img src="../../xs.png" alt="Phones">
+                    <h3>Phones</h3>
+                </a>
+                <a href="../shop/shop.html?category=laptops" class="category-card">
+                    <img src="../../hero img.png" alt="Laptops">
+                    <h3>Laptops</h3>
+                </a>
+                <a href="../shop/shop.html?category=tablets" class="category-card">
+                    <img src="../../xs.png" alt="Tablets">
+                    <h3>Tablets</h3>
+                </a>
+                <a href="../shop/shop.html?category=accessories" class="category-card">
+                    <img src="../../xs.png" alt="Accessories">
+                    <h3>Accessories</h3>
+                </a>
+            </div>
+        </section>
+
+        <section class="about-section panel-card" id="about">
+            <div class="about-grid">
+                <div class="about-content">
+                    <p class="about-label">About Us</p>
+                    <h2>Built for people who want reliable gadgets without stress</h2>
+                    <p>
+                        Pajay Gadgets is focused on making tech shopping simple, transparent, and fast.
+                        We source quality phones, laptops, tablets, and accessories, then back every order
+                        with responsive support.
+                    </p>
+                </div>
+                <div class="about-card">
+                    <h3>Why Customers Choose Us</h3>
+                    <ul>
+                        <li>Original products from trusted sources</li>
+                        <li>Friendly support before and after purchase</li>
+                        <li>Fast order processing and delivery updates</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact-section panel-card" id="contact">
+            <h2>Contact Us</h2>
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <h3>Phone</h3>
+                    <p><a href="tel:+2348012345678">+234 801 234 5678</a></p>
+                </div>
+                <div class="contact-card">
+                    <h3>Email</h3>
+                    <p><a href="mailto:support@pajaygadgets.com">support@pajaygadgets.com</a></p>
+                </div>
+                <div class="contact-card">
+                    <h3>Location</h3>
+                    <p>Lagos, Nigeria</p>
+                </div>
+            </div>
+            <p class="contact-cta"><a href="../contact/contact.html">Contact Page</a>.</p>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        function checkAuth() {
+            const user = getCurrentUser();
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userAvatar = document.getElementById('user-avatar');
+            const adminLink = document.getElementById('admin-nav-link');
+
+            if (!authButtons || !userMenu) return;
+
+            if (user) {
+                authButtons.style.display = 'none';
+                userMenu.style.display = 'flex';
+                const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2);
+                if (userAvatar) userAvatar.textContent = initials || 'U';
+                if (userName) userName.textContent = user.name || 'User';
+                if (adminLink) adminLink.style.display = user.role === 'admin' ? 'block' : 'none';
+            } else {
+                authButtons.style.display = 'flex';
+                userMenu.style.display = 'none';
+                if (adminLink) adminLink.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
+            window.location.href = 'index.html';
+        }
+
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            const menu = document.querySelector('.user-menu');
+            const dropdown = document.querySelector('.user-dropdown');
+            if (!menu) return;
+            if (dropdown && dropdown.contains(e.target)) return;
+            menu.classList.toggle('active');
+        }
+
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const navLinks = document.querySelector('.nav-links');
+            const hamburger = document.querySelector('.hamburger');
+            if (navLinks) navLinks.classList.toggle('active');
+            if (hamburger) hamburger.classList.toggle('active');
+        }
+
+        function updateCartCount() {
+            const cartCountEl = document.getElementById('cart-count');
+            if (!cartCountEl) return;
+
+            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cartCountEl.textContent = localCart.reduce((sum, item) => sum + (item.qty || 0), 0);
+
+            const user = getCurrentUser();
+            if (!user) return;
+            const userId = user._id || user.id;
+            if (!userId) return;
+
+            fetch(`/api/cart/${userId}`, {
+                credentials: "include"
+            })
+                .then(r => (r.ok ? r.json() : []))
+                .then(cart => {
+                    if (Array.isArray(cart)) {
+                        const count = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
+                        cartCountEl.textContent = count;
+                    }
+                })
+                .catch(() => {});
+        }
+
+        function loadFeaturedProducts() {
+            fetch('/api/featured')
+                .then(r => (r.ok ? r.json() : []))
+                .then(products => {
+                    const container = document.getElementById('featured-products');
+                    if (!container || !Array.isArray(products)) return;
+                    container.innerHTML = products.map(p => `
+                        <div class="product-card">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='../../logo.png'">
+                            <h3>${p.name}</h3>
+                            <p>${p.desc}</p>
+                            <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                            <a href="../product/product.html?id=${p._id}" class="btn">View</a>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {});
+        }
+
+        document.addEventListener('click', function (e) {
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            if (userMenu && userDropdown && !userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
+                userMenu.classList.remove('active');
+            }
+
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks && !hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            checkAuth();
+            updateCartCount();
+            loadFeaturedProducts();
+        });
+    </script>
+</body>
+
+</html>

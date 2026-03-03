@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Tracking - Pajay Gadgets</title>
+    <link rel="stylesheet" href="../style.css?v=2">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="../index/index.html" class="logo">Pajay Gadgets</a>
+            <ul class="nav-links">
+                <li><a href="../index/index.html">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="tracking-page">
+        <h1>Track Your Order</h1>
+        
+        <div class="tracking-form">
+            <input type="text" id="order-id" placeholder="Enter Order ID">
+            <button onclick="trackOrder()" class="btn">
+                <i class="fas fa-search"></i> Track
+            </button>
+        </div>
+
+        <div id="tracking-result"></div>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+
+        async function trackOrder() {
+            const orderId = document.getElementById('order-id').value.trim();
+            const result = document.getElementById('tracking-result');
+
+            if (!orderId) {
+                result.innerHTML = '<p class="error">Please enter an order ID</p>';
+                return;
+            }
+
+            result.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch('/api/orders/' + orderId);
+                const order = await response.json();
+
+                if (order._id) {
+                    result.innerHTML = `
+                        <div class="order-details">
+                            <h2>Order #${order._id.substring(0, 8)}</h2>
+                            <p><strong>Status:</strong> ${order.status || 'Processing'}</p>
+                            <p><strong>Total:</strong> ₦${(order.total || 0).toLocaleString()}</p>
+                            <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = '<p class="error">Order not found</p>';
+                }
+            } catch (error) {
+                result.innerHTML = '<p class="error">Error tracking order</p>';
+            }
+        }
+    </script>
+</body>
+</html>

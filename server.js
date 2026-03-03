@@ -1210,6 +1210,7 @@ app.use((req, res, next) => {
   console.log('[DEBUG MIDDLEWARE] req.body =', JSON.stringify(req.body));
   next();
 });
+app.use(express.static(path.join(__dirname, 'pages')));
 app.use(express.static(__dirname));
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {

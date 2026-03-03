@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Pajay Gadgets</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../../admin.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <header>
+        <nav class="navbar">
+            <a href="../index/index.html" class="logo">Pajay Gadgets <span style="color: var(--primary);">Admin</span></a>
+            <div class="nav-right">
+                <!-- Dropdown Menu -->
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <a href="../index/index.html" class="dropdown-item">🌐 View Website</a>
+                    <a href="../shop/shop.html" class="dropdown-item">🛒 Shop Demo</a>
+                    <div class="dropdown-divider" id="dropdown-divider" style="display: none;"></div>
+                    <span id="dropdown-user" class="dropdown-user" style="display: none;"></span>
+                    <button id="dropdown-logout" class="dropdown-item logout-item" style="display: none;" onclick="logout()">🚪 Logout</button>
+                </div>
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Login Section -->
+    <section id="login-section" class="admin-section">
+        <div class="admin-login-box">
+            <h2>🔐 Admin Login</h2>
+            <p>Enter your credentials to access the admin panel</p>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="admin-email" placeholder="admin@dondad.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="admin-password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="btn admin-btn">Login</button>
+            </form>
+            <p id="login-message" class="login-message"></p>
+            <div class="login-hint">
+                <strong>Admin account:</strong> Use your current MongoDB password.
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <section id="dashboard-section" class="admin-section" style="display: none;">
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="products">Products</button>
+            <button class="tab-btn" data-tab="orders">Orders</button>
+            <button class="tab-btn" data-tab="users">Users</button>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products-tab" class="tab-content">
+            <div class="admin-header">
+                <h2>Products Management</h2>
+                <button class="btn admin-btn" onclick="showAddProductForm()">+ Add Product</button>
+            </div>
+            <div id="products-list"></div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="orders-tab" class="tab-content" style="display: none;">
+            <div class="admin-header">
+                <h2>Orders Management</h2>
+            </div>
+            <div id="orders-list"></div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users-tab" class="tab-content" style="display: none;">
+            <div class="admin-header">
+                <h2>Users Management</h2>
+            </div>
+            <div id="users-list"></div>
+        </div>
+    </section>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="product-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeProductModal()">&times;</span>
+            <h2 id="modal-title">Add Product</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="product-category">
+                        <option value="phones">Phones</option>
+                        <option value="laptops">Laptops</option>
+                        <option value="tablets">Tablets</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Price (₦)</label>
+                    <input type="number" id="product-price" required>
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="product-image" placeholder="e.g., xs.png">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="product-desc" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn admin-btn">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../admin.js"></script>
+    <script>
+        // Check if user is admin
+        function checkAdminAuth() {
+            const userStr = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.role === 'admin') {
+                        document.getElementById('login-section').style.display = 'none';
+                        document.getElementById('dashboard-section').style.display = 'block';
+                        loadAdminData();
+                    }
+                } catch (e) {}
+            }
+        }
+
+        // Handle login
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const message = document.getElementById('login-message');
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    checkAdminAuth();
+                } else {
+                    message.textContent = data.error || 'Login failed';
+                    message.className = 'login-message error';
+                }
+            } catch (err) {
+                message.textContent = 'Connection error';
+                message.className = 'login-message error';
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('dondad_currentUser');
+            localStorage.removeItem('dondad_currentUser');
+            location.reload();
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + '-tab').style.display = 'block';
+            });
+        });
+
+        async function loadAdminData() {
+            await Promise.all([loadProducts(), loadOrders(), loadUsers()]);
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const data = await response.json();
+                const products = data.products || data;
+                
+                const container = document.getElementById('products-list');
+                container.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products.map(p => `
+                                <tr>
+                                    <td><img src="${p.image}" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='../../logo.png'"></td>
+                                    <td>${p.name}</td>
+                                    <td>${p.category}</td>
+                                    <td>₦${p.price.toLocaleString()}</td>
+                                    <td>
+                                        <button class="btn" onclick="editProduct('${p._id}')">Edit</button>
+                                        <button class="btn" style="background: #dc3545;" onclick="deleteProduct('${p._id}')">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading products:', err);
+            }
+        }
+
+        async function loadOrders() {
+            try {
+                const response = await fetch('/api/orders');
+                const orders = await response.json();
+                
+                const container = document.getElementById('orders-list');
+                container.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orders.map(o => `
+                                <tr>
+                                    <td>${o._id ? o._id.substring(0, 8) : 'N/A'}</td>
+                                    <td>${o.name || 'N/A'}</td>
+                                    <td>₦${(o.total || 0).toLocaleString()}</td>
+                                    <td>${o.status || 'Processing'}</td>
+                                    <td>${o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading orders:', err);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+                
+                const container = document.getElementById('users-list');
+                container.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(u => `
+                                <tr>
+                                    <td>${u.name || 'N/A'}</td>
+                                    <td>${u.email || 'N/A'}</td>
+                                    <td>${u.phone || 'N/A'}</td>
+                                    <td>${u.role || 'user'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading users:', err);
+            }
+        }
+
+        function showAddProductForm() {
+            document.getElementById('modal-title').textContent = 'Add Product';
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-form').reset();
+            document.getElementById('product-modal').style.display = 'block';
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').style.display = 'none';
+        }
+
+        async function editProduct(id) {
+            try {
+                const response = await fetch('/api/products/' + id);
+                const product = await response.json();
+                
+                document.getElementById('modal-title').textContent = 'Edit Product';
+                document.getElementById('product-id').value = product._id;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-category').value = product.category;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-image').value = product.image;
+                document.getElementById('product-desc').value = product.desc;
+                document.getElementById('product-modal').style.display = 'block';
+            } catch (err) {
+                alert('Error loading product');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Are you sure you want to delete this product?')) return;
+            
+            try {
+                await fetch('/api/products/' + id, { method: 'DELETE' });
+                loadProducts();
+            } catch (err) {
+                alert('Error deleting product');
+            }
+        }
+
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('product-name').value,
+                category: document.getElementById('product-category').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                image: document.getElementById('product-image').value || 'xs.png',
+                desc: document.getElementById('product-desc').value
+            };
+
+            const productId = document.getElementById('product-id').value;
+            const url = productId ? '/api/products/' + productId : '/api/products';
+            const method = productId ? 'PUT' : 'POST';
+
+            try {
+                await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+                closeProductModal();
+                loadProducts();
+            } catch (err) {
+                alert('Error saving product');
+            }
+        });
+
+        // Initialize
+        checkAdminAuth();
+    </script>
+</body>
+</html>
