@@ -69,5 +69,3 @@ A full-stack e-commerce website for premium devices (Phones, Laptops, Tablets & 
 - Order creation and tracking
 - Product search and filtering
 - Responsive design
-  
-  

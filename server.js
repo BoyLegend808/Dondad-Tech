@@ -230,7 +230,7 @@ app.post('/api/payment/initialize', sensitiveRateLimit, async (req, res) => {
                 email,
                 amount: amountInKobo,
                 reference: `ORD_${orderId}_${Date.now()}`,
-                callback_url: `${req.protocol}://${req.get('host')}/pages/checkout/checkout.html?payment=success`
+                callback_url: `${req.protocol}://${req.get('host')}/checkout.html?payment=success`
             })
         });
 
@@ -311,8 +311,8 @@ app.post("/api/payment/stripe/checkout", sensitiveRateLimit, async (req, res) =>
         },
       ],
       metadata: { orderId },
-      success_url: `${origin}/pages/checkout/checkout.html?payment=stripe_success&orderId=${orderId}`,
-      cancel_url: `${origin}/pages/checkout/checkout.html?payment=stripe_cancel&orderId=${orderId}`,
+      success_url: `${origin}/checkout.html?payment=stripe_success&orderId=${orderId}`,
+      cancel_url: `${origin}/checkout.html?payment=stripe_cancel&orderId=${orderId}`,
     });
 
     res.json({ success: true, url: session.url, sessionId: session.id });
@@ -571,54 +571,51 @@ function safeVariant(raw) {
 }
 
 function hashPassword(password) {
-  // Use bcryptjs for secure password hashing
-  const saltRounds = 12;
-  return bcryptjs.hashSync(password, saltRounds);
+  const salt = crypto.randomBytes(16).toString("hex");
+  const iterations = 100000;
+  const hash = crypto
+    .pbkdf2Sync(password, salt, iterations, 64, "sha512")
+    .toString("hex");
+  return `pbkdf2$${iterations}$${salt}$${hash}`;
 }
 
 function isPasswordHashed(password = "") {
-  // bcryptjs hashes start with $2a$, $2b$, or $2y$
-  return typeof password === "string" && /^\$2[aby]\$/.test(password);
+  return typeof password === "string" && password.startsWith("pbkdf2$");
 }
 
 function verifyPassword(inputPassword, storedPassword) {
-  // Check for legacy PBKDF2 or plain-text password - auto-migrate on successful login
+  // Check for legacy plain-text password - auto-migrate on successful login
   if (!isPasswordHashed(storedPassword)) {
     if (inputPassword === storedPassword) {
       // Legacy password match - return true but it will be re-hashed on login
       return true;
     }
-    // Check for PBKDF2 format
-    if (storedPassword.startsWith("pbkdf2$")) {
-      try {
-        const parts = storedPassword.split("$");
-        const iterationStr = parts[1];
-        const salt = parts[2];
-        const storedHash = parts[3];
-        const iterations = parseInt(iterationStr, 10);
-        const computedHash = crypto
-          .pbkdf2Sync(inputPassword, salt, iterations, 64, "sha512")
-          .toString("hex");
-        const a = Buffer.from(computedHash, "hex");
-        const b = Buffer.from(storedHash, "hex");
-        if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
-          return true; // Will be migrated to bcryptjs on successful login
-        }
-      } catch (e) {
-        return false;
-      }
-    }
     return false;
   }
 
-  // Use bcryptjs for verification
-  try {
-    return bcryptjs.compareSync(inputPassword, storedPassword);
-  } catch (e) {
-    console.error('bcryptjs verification error:', e);
+  const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
+  if (scheme !== "pbkdf2" || !iterationStr || !salt || !storedHash) {
     return false;
   }
+
+  const iterations = parseInt(iterationStr, 10);
+  if (!Number.isFinite(iterations) || iterations <= 0) {
+    return false;
+  }
+
+  const computedHash = crypto
+    .pbkdf2Sync(inputPassword, salt, iterations, 64, "sha512")
+    .toString("hex");
+
+  const a = Buffer.from(computedHash, "hex");
+  const b = Buffer.from(storedHash, "hex");
+  if (a.length !== b.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(a, b);
 }
+
+// Auto-migrate password on successful login
 async function migratePassword(userId, newPassword) {
   try {
     const user = await User.findById(userId);
@@ -898,59 +895,41 @@ function getPublicBaseUrl(req) {
 
 function getResetLink(req, token) {
   const base = getPublicBaseUrl(req);
-  return `${base}/pages/reset-password/reset-password.html?token=${encodeURIComponent(token)}`;
+  return `${base}/reset-password.html?token=${encodeURIComponent(token)}`;
 }
 
 async function sendPasswordResetEmail(email, resetUrl) {
   const sendGridApiKey = String(process.env.SENDGRID_API_KEY || "").trim();
   const sender = String(process.env.PASSWORD_RESET_FROM_EMAIL || "").trim();
-  
   if (!sendGridApiKey || !sender) {
-    console.error("[EMAIL] Missing SendGrid configuration:");
-    console.error("[EMAIL] SENDGRID_API_KEY:", sendGridApiKey ? "✓ Set" : "✗ Missing");
-    console.error("[EMAIL] PASSWORD_RESET_FROM_EMAIL:", sender ? "✓ Set" : "✗ Missing");
     return { sent: false, reason: "missing_email_config" };
   }
 
-  // Using @sendgrid/mail library
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(sendGridApiKey);
-
-  const msg = {
-    to: email,
-    from: {
-      email: sender,
-      name: "Dondad Tech"
+  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${sendGridApiKey}`,
+      "Content-Type": "application/json",
     },
-    subject: "Reset your Dondad Tech password",
-    text: `Use this link to reset your password (valid for 1 hour): ${resetUrl}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Password Reset Request</h2>
-        <p style="color: #666; font-size: 16px;">You requested to reset your password for your Dondad Tech account.</p>
-        <p style="color: #666; font-size: 16px;">Click the button below to reset your password:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
-        </div>
-        <p style="color: #999; font-size: 14px;">This link will expire in 1 hour.</p>
-        <p style="color: #999; font-size: 14px;">If you didn't request this, please ignore this email.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="color: #ccc; font-size: 12px;">Dondad Tech - Premium Devices Store</p>
-      </div>
-    `,
-  };
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email }] }],
+      from: { email: sender, name: "Dondad Tech" },
+      subject: "Reset your Dondad Tech password",
+      content: [
+        {
+          type: "text/plain",
+          value: `Use this link to reset your password (valid for 1 hour): ${resetUrl}`,
+        },
+      ],
+    }),
+  });
 
-  try {
-    await sgMail.send(msg);
-    console.log(`[EMAIL] Password reset email sent successfully to: ${email}`);
-    return { sent: true };
-  } catch (error) {
-    console.error("[EMAIL] SendGrid error:", error.message);
-    if (error.response) {
-      console.error("[EMAIL] SendGrid response:", error.response.body);
-    }
-    return { sent: false, reason: error.message };
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`SendGrid error ${response.status}${text ? `: ${text.slice(0, 180)}` : ""}`);
   }
+
+  return { sent: true };
 }
 
 // PLACEHOLDER - Moved after body-parser middleware
@@ -1224,10 +1203,6 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(__dirname));
-
-// Root route
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'pages/index/index.html')));
-
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
@@ -1347,8 +1322,7 @@ app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
     }
     
     // Hash new password
-    const salt = await bcryptjs.genSalt(10);
-    const hashedPassword = await bcryptjs.hash(newPassword, salt);
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
     
     user.password = hashedPassword;
     await user.save();
@@ -2453,7 +2427,7 @@ app.get("/api/auth/facebook/callback", async (req, res) => {
     res.redirect('/index.html');
   } catch (error) {
     console.error('Facebook callback error:', error);
-    res.redirect('/pages/login/login.html?error=facebook_auth_error');
+    res.redirect('/login.html?error=facebook_auth_error');
   }
 });
 
@@ -2598,9 +2572,9 @@ async function sendVerificationEmail(user, token) {
     };
     try {
       await sgMail.send(msg);
-console.log(`[EMAIL] Verification email sent successfully to: ${user.email}`);
+      console.log(`Verification email sent to ${user.email}`);
     } catch (e) {
-      console.error(`[EMAIL] Failed to send verification email: ${e.message}`);
+      console.log(`Failed to send email: ${e.message}`);
     }
   } else {
     console.log(`[DEV] Verification URL for ${user.email}: ${verifyUrl}`);
@@ -2676,3 +2650,4 @@ app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
 
+module.exports = app;

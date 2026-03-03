@@ -174,8 +174,11 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Don't auto-redirect logged in users - let them stay on login page
-            // They can manually navigate if already logged in
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
+                return;
+            }
 
             const form = document.getElementById('login-form');
             form.addEventListener('submit', async function(e) {

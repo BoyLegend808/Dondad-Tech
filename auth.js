@@ -206,7 +206,7 @@ async function logoutUser(message = null) {
         // Ignore API errors, clear local storage anyway
     }
     clearSession();
-    window.location.href = 'pages/index/index.html';
+    window.location.href = 'index.html';
 }
 
 // Update cart count
@@ -281,9 +281,9 @@ async function handleLogin(e) {
             // Store in sessionStorage (more secure, clears on tab close)
             sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.user));
             if (data.user.role === 'admin') {
-                window.location.href = 'pages/admin/admin.html';
+                window.location.href = 'admin.html';
             } else {
-                window.location.href = 'pages/index/index.html';
+                window.location.href = 'index.html';
             }
         } else {
             errorEl.textContent = data.error || 'Invalid credentials';
@@ -325,7 +325,7 @@ async function handleRegister(e) {
         const data = await response.json();
 
         if (response.ok) {
-            window.location.href = 'pages/login/login.html';
+            window.location.href = 'login.html';
         } else {
             errorEl.textContent = data.error || 'Registration failed. Please try again.';
             errorEl.classList.add('visible');

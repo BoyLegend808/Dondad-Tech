@@ -114,11 +114,11 @@ function renderProducts(products) {
 
     grid.innerHTML = products.map(p => `
         <article class="product-card" onclick="openProductDetails('${p._id || p.id}')">
-            <a href="pages/product/product.html?id=${p._id || p.id}">
+            <a href="product.html?id=${p._id || p.id}">
                 <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
             </a>
             <div class="product-card-content">
-                <a href="pages/product/product.html?id=${p._id || p.id}">
+                <a href="product.html?id=${p._id || p.id}">
                     <h3>${p.name}</h3>
                 </a>
                 <p class="product-card-desc">${p.desc || ''}</p>
@@ -130,7 +130,7 @@ function renderProducts(products) {
 }
 
 function openProductDetails(productId) {
-    window.location.href = `pages/product/product.html?id=${productId}`;
+    window.location.href = `product.html?id=${productId}`;
 }
 
 // Filter products
@@ -234,7 +234,7 @@ function showSearchSuggestions(suggestions) {
 
 function selectSearchSuggestion(name, productId) {
     document.getElementById('search-results')?.remove();
-    window.location.href = `pages/product/product.html?id=${productId}`;
+    window.location.href = `product.html?id=${productId}`;
 }
 
 // Hide search results when clicking outside
@@ -249,7 +249,7 @@ async function addToCart(productId, qty = 1) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
         alert('Please login to add items to cart');
-        window.location.href = 'pages/login/login.html';
+        window.location.href = 'login.html';
         return;
     }
     
