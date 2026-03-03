@@ -174,14 +174,8 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Add a small delay to prevent redirect loops
-            setTimeout(function() {
-                const currentUser = getCurrentUser();
-                if (currentUser && currentUser._id) {
-                    window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
-                    return;
-                }
-            }, 100);
+            // Don't auto-redirect logged in users - let them stay on login page
+            // They can manually navigate if already logged in
 
             const form = document.getElementById('login-form');
             form.addEventListener('submit', async function(e) {
