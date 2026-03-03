@@ -1243,6 +1243,9 @@ app.get('/returns.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/admin/admin.html')));
 app.get('/reset-password.html', (req, res) => res.sendFile(path.join(__dirname, 'pages/reset-password/reset-password.html')));
 
+// Root route
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'pages/index/index.html')));
+
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) {
