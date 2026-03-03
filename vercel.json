@@ -11,6 +11,166 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/style.css",
+      "dest": "/style.css"
+    },
+    {
+      "src": "/admin.css",
+      "dest": "/admin.css"
+    },
+    {
+      "src": "/logo.png",
+      "dest": "/logo.png"
+    },
+    {
+      "src": "/(.*\\.png)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.jpg)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*\\.jpeg)",
+      "dest": "/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/pages/index/index.html"
+    },
+    {
+      "src": "/index",
+      "dest": "/pages/index/index.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/pages/index/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/pages/login/login.html"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/pages/login/login.html"
+    },
+    {
+      "src": "/register",
+      "dest": "/pages/register/register.html"
+    },
+    {
+      "src": "/register.html",
+      "dest": "/pages/register/register.html"
+    },
+    {
+      "src": "/shop",
+      "dest": "/pages/shop/shop.html"
+    },
+    {
+      "src": "/shop.html",
+      "dest": "/pages/shop/shop.html"
+    },
+    {
+      "src": "/product",
+      "dest": "/pages/product/product.html"
+    },
+    {
+      "src": "/product.html",
+      "dest": "/pages/product/product.html"
+    },
+    {
+      "src": "/cart",
+      "dest": "/pages/cart/cart.html"
+    },
+    {
+      "src": "/cart.html",
+      "dest": "/pages/cart/cart.html"
+    },
+    {
+      "src": "/checkout",
+      "dest": "/pages/checkout/checkout.html"
+    },
+    {
+      "src": "/checkout.html",
+      "dest": "/pages/checkout/checkout.html"
+    },
+    {
+      "src": "/profile",
+      "dest": "/pages/profile/profile.html"
+    },
+    {
+      "src": "/profile.html",
+      "dest": "/pages/profile/profile.html"
+    },
+    {
+      "src": "/wishlist",
+      "dest": "/pages/wishlist/wishlist.html"
+    },
+    {
+      "src": "/wishlist.html",
+      "dest": "/pages/wishlist/wishlist.html"
+    },
+    {
+      "src": "/order-tracking",
+      "dest": "/pages/order-tracking/order-tracking.html"
+    },
+    {
+      "src": "/order-tracking.html",
+      "dest": "/pages/order-tracking/order-tracking.html"
+    },
+    {
+      "src": "/contact",
+      "dest": "/pages/contact/contact.html"
+    },
+    {
+      "src": "/contact.html",
+      "dest": "/pages/contact/contact.html"
+    },
+    {
+      "src": "/privacy",
+      "dest": "/pages/privacy/privacy.html"
+    },
+    {
+      "src": "/privacy.html",
+      "dest": "/pages/privacy/privacy.html"
+    },
+    {
+      "src": "/terms",
+      "dest": "/pages/terms/terms.html"
+    },
+    {
+      "src": "/terms.html",
+      "dest": "/pages/terms/terms.html"
+    },
+    {
+      "src": "/returns",
+      "dest": "/pages/returns/returns.html"
+    },
+    {
+      "src": "/returns.html",
+      "dest": "/pages/returns/returns.html"
+    },
+    {
+      "src": "/admin",
+      "dest": "/pages/admin/admin.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/pages/admin/admin.html"
+    },
+    {
+      "src": "/reset-password",
+      "dest": "/pages/reset-password/reset-password.html"
+    },
+    {
+      "src": "/reset-password.html",
+      "dest": "/pages/reset-password/reset-password.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "server.js"
     }
