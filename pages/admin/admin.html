@@ -1426,6 +1426,8 @@
                 
                 if (response.ok) {
                     alert(isEditing ? '✅ Product updated successfully!' : '✅ Product added successfully!');
+                    // Reload products directly to ensure fresh data
+                    await loadProducts();
                     showDashboard();
                 } else {
                     let errorMessage = 'Error saving product';
