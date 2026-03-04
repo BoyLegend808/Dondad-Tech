@@ -1212,6 +1212,8 @@
             
             // Clear canvas to transparent (not white)
             ctx.clearRect(0, 0, width, height);
+            // Draw the selected image before exporting.
+            ctx.drawImage(img, 0, 0, width, height);
             
             // Use JPEG with quality setting for better compression on photos
             // Only use PNG if the original was PNG (for transparency)
@@ -1219,7 +1221,8 @@
             const usePng = originalType === 'image/png' || originalType === 'image/gif';
             const mimeType = usePng ? 'image/png' : 'image/jpeg';
             const exportQuality = usePng ? undefined : quality;
-            return canvas.toDataURL(mimeType, exportQuality);
+            const compressed = canvas.toDataURL(mimeType, exportQuality);
+            return compressed && compressed.length > 100 ? compressed : originalDataUrl;
         }
 
         async function previewImage(event) {
@@ -1238,7 +1241,13 @@
                     return;
                 }
 
-                const compressedImage = await compressImageToDataUrl(file);
+                let compressedImage;
+                try {
+                    compressedImage = await compressImageToDataUrl(file);
+                } catch (compressionError) {
+                    console.warn('Compression failed, using original image:', compressionError);
+                    compressedImage = await readFileAsDataUrl(file);
+                }
                 console.log('Image compressed, length:', compressedImage.length);
                 
                 selectedImageBase64 = compressedImage;
