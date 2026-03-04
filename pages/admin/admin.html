@@ -86,6 +86,7 @@
                     <h2>📦 Product Management</h2>
                     <div class="header-actions">
                         <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
+                        <button class="btn admin-btn" onclick="seedProducts()">🔄 Seed Products</button>
                         <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
                     </div>
                 </div>
@@ -1111,6 +1112,35 @@
                 console.error('Error loading products:', error);
                 products = [];
                 renderProducts();
+            }
+        }
+
+        // Seed products from server
+        async function seedProducts() {
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.textContent = 'Seeding...';
+                
+                const response = await fetch(API_URL + '/api/seed-products', {
+                    credentials: "include"
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ ' + result.message);
+                    loadProducts(); // Reload products after seeding
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Failed to seed products'));
+                }
+            } catch (error) {
+                console.error('Error seeding products:', error);
+                alert('❌ Error: Could not connect to server');
+            } finally {
+                const btn = event.target;
+                btn.disabled = false;
+                btn.textContent = '🔄 Seed Products';
             }
         }
 
