@@ -419,6 +419,15 @@
             }
         });
 
+        function normalizeProductsPayload(payload) {
+            if (!payload) return [];
+            if (Array.isArray(payload)) return payload;
+            if (payload && Array.isArray(payload.products)) return payload.products;
+            if (payload && payload.data && Array.isArray(payload.data)) return payload.data;
+            console.warn('Unexpected products payload format:', payload);
+            return [];
+        }
+
         async function checkAuth() {
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
             if (user && user.role === 'admin') {
@@ -885,7 +894,7 @@
                 if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
                 if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
 
-                products = Array.isArray(productsPayload) ? productsPayload : [];
+                products = normalizeProductsPayload(productsPayload);
                 orders = Array.isArray(ordersPayload) ? ordersPayload : [];
                 users = Array.isArray(usersPayload) ? usersPayload : [];
 
@@ -1045,9 +1054,15 @@
                 
                 if (!response.ok) {
                     console.error('Failed to load products, status:', response.status);
+                    if (response.status === 401) {
+                        alert('Session expired. Please login again.');
+                        window.location.href = 'login.html';
+                        return;
+                    }
                     products = [];
                 } else {
-                    products = await response.json();
+                    const payload = await response.json();
+                    products = normalizeProductsPayload(payload);
                     console.log('Products loaded:', products.length);
                 }
                 
@@ -1063,6 +1078,11 @@
         function renderProducts() {
             const tbody = document.getElementById('products-table');
             const noProducts = document.getElementById('no-products');
+
+            if (!Array.isArray(products)) {
+                console.warn('products is not an array:', products);
+                products = [];
+            }
             
             if (products.length === 0) {
                 tbody.innerHTML = '';
