@@ -94,6 +94,7 @@
     <script>
         const API_URL = '';
         let allProducts = [];
+        const SHOP_PRODUCTS_QUERY = '?page=1&limit=500&sort=_id&order=desc';
 
         function checkAuth() {
             const user = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
@@ -226,7 +227,7 @@
         }
 
         function loadProducts(callback) {
-            fetch(`${API_URL}/api/products`)
+            fetch(`${API_URL}/api/products${SHOP_PRODUCTS_QUERY}`)
                 .then(r => r.json())
                 .then(data => {
                     // API returns { products: [...], pagination: {...} }

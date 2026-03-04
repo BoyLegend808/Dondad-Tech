@@ -1,5 +1,6 @@
 // Shop Page JavaScript
 const API_BASE = '';
+const SHOP_PAGE_LIMIT = 500;
 
 // Get current user from sessionStorage first (more secure)
 function getCurrentUser() {
@@ -33,7 +34,7 @@ async function loadProducts(page = 1) {
     currentPage = page;
     
     try {
-        let url = `${API_BASE}/api/products?page=${page}&limit=20`;
+        let url = `${API_BASE}/api/products?page=${page}&limit=${SHOP_PAGE_LIMIT}&sort=_id&order=desc`;
         if (currentCategory && currentCategory !== 'all') {
             url += `&category=${currentCategory}`;
         }
@@ -142,7 +143,7 @@ async function filterByCategory(category, btn) {
     currentPage = 1;
     
     try {
-        let url = `${API_BASE}/api/products?page=1&limit=20`;
+        let url = `${API_BASE}/api/products?page=1&limit=${SHOP_PAGE_LIMIT}&sort=_id&order=desc`;
         if (category && category !== 'all') {
             url += `&category=${category}`;
         }
@@ -166,7 +167,7 @@ async function searchProducts(term) {
     currentPage = 1;
     
     try {
-        const url = `${API_BASE}/api/products?page=1&limit=20&search=${encodeURIComponent(term)}`;
+        const url = `${API_BASE}/api/products?page=1&limit=${SHOP_PAGE_LIMIT}&sort=_id&order=desc&search=${encodeURIComponent(term)}`;
         const response = await fetch(url);
         const data = await response.json();
         
