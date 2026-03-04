@@ -419,13 +419,26 @@
             }
         });
 
+        function getStoredUser() {
+            const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+            if (sessionUser) return sessionUser;
+            return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+        }
+
+        function normalizeProductsPayload(payload) {
+            if (Array.isArray(payload)) return payload;
+            if (payload && Array.isArray(payload.products)) return payload.products;
+            return [];
+        }
+
         async function checkAuth() {
-            const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+            const user = getStoredUser();
             if (user && user.role === 'admin') {
                 try {
                     const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
                     if (!verify.ok) {
                         sessionStorage.removeItem('dondad_currentUser');
+                        localStorage.removeItem('dondad_currentUser');
                         const message = document.getElementById('login-message');
                         if (message) {
                             message.textContent = 'Admin session expired. Please login again.';
@@ -885,7 +898,7 @@
                 if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
                 if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
 
-                products = Array.isArray(productsPayload) ? productsPayload : [];
+                products = normalizeProductsPayload(productsPayload);
                 orders = Array.isArray(ordersPayload) ? ordersPayload : [];
                 users = Array.isArray(usersPayload) ? usersPayload : [];
 
@@ -1047,7 +1060,8 @@
                     console.error('Failed to load products, status:', response.status);
                     products = [];
                 } else {
-                    products = await response.json();
+                    const payload = await response.json();
+                    products = normalizeProductsPayload(payload);
                     console.log('Products loaded:', products.length);
                 }
                 
