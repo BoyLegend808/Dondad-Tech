@@ -351,6 +351,7 @@
         const DASHBOARD_CACHE_MS = 20000;
         let selectedSalesDateKey = '';
         const orderStatusDrafts = {};
+        const ADMIN_PRODUCTS_QUERY = '?page=1&limit=500&sort=_id&order=desc';
         const CATEGORY_OPTIONS = [
             { value: 'phones', label: 'Phones' },
             { value: 'laptops', label: 'Laptops' },
@@ -438,6 +439,10 @@
             // Return empty array if nothing found
             console.warn('Unexpected products payload format:', payload);
             return [];
+        }
+
+        function getAdminProductsUrl() {
+            return API_URL + '/api/products' + ADMIN_PRODUCTS_QUERY;
         }
 
         async function checkAuth() {
@@ -892,7 +897,7 @@
             try {
                 console.log('Loading dashboard data...');
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(API_URL + '/api/products', { credentials: "include" }),
+                    fetch(getAdminProductsUrl(), { credentials: "include" }),
                     fetch(API_URL + '/api/orders', { credentials: "include" }),
                     fetch(API_URL + '/api/users', { credentials: "include" })
                 ]);
@@ -1071,7 +1076,7 @@
         async function loadProducts() {
             try {
                 console.log('Loading products...');
-                const response = await fetch(API_URL + '/api/products', {
+                const response = await fetch(getAdminProductsUrl(), {
                     credentials: "include"
                 });
                 
