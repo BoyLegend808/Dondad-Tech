@@ -442,32 +442,33 @@
 
         async function checkAuth() {
             const user = getStoredUser();
-            if (user && user.role === 'admin') {
-                try {
-                    const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
-                    if (!verify.ok) {
-                        sessionStorage.removeItem('dondad_currentUser');
-                        localStorage.removeItem('dondad_currentUser');
-                        const message = document.getElementById('login-message');
-                        if (message) {
-                            message.textContent = 'Admin session expired. Please login again.';
-                            message.style.color = 'var(--accent)';
-                        }
-                        showLogin();
-                        return;
-                    }
-                    updateAdminNav(user);
-                    showDashboard();
-                    loadDashboardStats(true);
-                } catch (error) {
+            try {
+                const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
+                if (!verify.ok) {
+                    sessionStorage.removeItem('dondad_currentUser');
+                    localStorage.removeItem('dondad_currentUser');
                     const message = document.getElementById('login-message');
                     if (message) {
-                        message.textContent = 'Unable to verify admin session. Please login again.';
+                        message.textContent = 'Admin session expired. Please login again.';
                         message.style.color = 'var(--accent)';
                     }
                     showLogin();
+                    return;
                 }
-            } else {
+
+                const hydratedUser = (user && user.role === 'admin')
+                    ? user
+                    : { name: 'Admin', role: 'admin' };
+                sessionStorage.setItem('dondad_currentUser', JSON.stringify(hydratedUser));
+                updateAdminNav(hydratedUser);
+                showDashboard();
+                loadDashboardStats(true);
+            } catch (error) {
+                const message = document.getElementById('login-message');
+                if (message) {
+                    message.textContent = 'Unable to verify admin session. Please login again.';
+                    message.style.color = 'var(--accent)';
+                }
                 showLogin();
             }
         }
@@ -1076,12 +1077,6 @@
                 
                 if (!response.ok) {
                     console.error('Failed to load products, status:', response.status);
-                    // Check if unauthorized - might need re-login
-                    if (response.status === 401) {
-                        alert('Session expired. Please login again.');
-                        window.location.href = 'login.html';
-                        return;
-                    }
                     products = [];
                 } else {
                     let payload;
