@@ -426,8 +426,16 @@
         }
 
         function normalizeProductsPayload(payload) {
+            // Handle null/undefined
+            if (!payload) return [];
+            // Handle direct array
             if (Array.isArray(payload)) return payload;
+            // Handle pagination format { products: [...], pagination: {...} }
             if (payload && Array.isArray(payload.products)) return payload.products;
+            // Handle case where products might be in a different property
+            if (payload && payload.data && Array.isArray(payload.data)) return payload.data;
+            // Return empty array if nothing found
+            console.warn('Unexpected products payload format:', payload);
             return [];
         }
 
@@ -709,13 +717,19 @@
 
         function renderDashboardCards() {
             const todayKey = getDateKeyLocal(new Date());
-            const todaySales = orders
+            
+            // Ensure products and orders are arrays
+            const safeProducts = Array.isArray(products) ? products : [];
+            const safeOrders = Array.isArray(orders) ? orders : [];
+            const safeUsers = Array.isArray(users) ? users : [];
+            
+            const todaySales = safeOrders
                 .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
                 .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
                 .reduce((sum, order) => sum + (order.subtotal || 0), 0);
-            const pendingOrders = orders.filter(order => String(order?.status || '').toLowerCase() === 'pending').length;
-            const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
-            const customersCount = users.filter(u => u.role !== 'admin').length;
+            const pendingOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending').length;
+            const lowStock = safeProducts.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
+            const customersCount = safeUsers.filter(u => u.role !== 'admin').length;
 
             const totalSalesEl = document.getElementById('stat-total-sales');
             const pendingOrdersEl = document.getElementById('stat-pending-orders');
@@ -874,6 +888,7 @@
 
             dashboardLoadPromise = (async () => {
             try {
+                console.log('Loading dashboard data...');
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
                     fetch(API_URL + '/api/products', { credentials: "include" }),
                     fetch(API_URL + '/api/orders', { credentials: "include" }),
@@ -898,7 +913,9 @@
                 if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
                 if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
 
+                console.log('Products payload from dashboard:', productsPayload);
                 products = normalizeProductsPayload(productsPayload);
+                console.log('Normalized products in dashboard:', products.length);
                 orders = Array.isArray(ordersPayload) ? ordersPayload : [];
                 users = Array.isArray(usersPayload) ? usersPayload : [];
 
@@ -1058,11 +1075,34 @@
                 
                 if (!response.ok) {
                     console.error('Failed to load products, status:', response.status);
+                    // Check if unauthorized - might need re-login
+                    if (response.status === 401) {
+                        alert('Session expired. Please login again.');
+                        window.location.href = 'login.html';
+                        return;
+                    }
                     products = [];
                 } else {
-                    const payload = await response.json();
-                    products = normalizeProductsPayload(payload);
-                    console.log('Products loaded:', products.length);
+                    let payload;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        payload = await response.json();
+                    } else {
+                        // Handle non-JSON response (might be HTML error page)
+                        const text = await response.text();
+                        console.error('Non-JSON response:', text.substring(0, 200));
+                        payload = null;
+                    }
+                    console.log('Products API response:', payload);
+                    
+                    // Check if API returned an error object
+                    if (payload && payload.error) {
+                        console.error('API error:', payload.error);
+                        products = [];
+                    } else {
+                        products = normalizeProductsPayload(payload);
+                        console.log('Normalized products:', products.length);
+                    }
                 }
                 
                 renderProducts();
@@ -1077,6 +1117,12 @@
         function renderProducts() {
             const tbody = document.getElementById('products-table');
             const noProducts = document.getElementById('no-products');
+            
+            // Ensure products is an array
+            if (!Array.isArray(products)) {
+                console.warn('products is not an array:', products);
+                products = [];
+            }
             
             if (products.length === 0) {
                 tbody.innerHTML = '';
