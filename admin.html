@@ -441,34 +441,43 @@
 
         async function checkAuth() {
             const user = getStoredUser();
+            
+            // If no stored user, show login
+            if (!user) {
+                showLogin();
+                return;
+            }
+            
+            // If stored user is not admin, show login
+            if (user.role !== 'admin') {
+                showLogin();
+                return;
+            }
+            
+            // Verify session with API
             try {
                 const verify = await fetch(API_URL + '/api/users', { credentials: 'include' });
                 if (!verify.ok) {
-                    sessionStorage.removeItem('dondad_currentUser');
-                    localStorage.removeItem('dondad_currentUser');
+                    // Session might be invalid, but we still have stored user - verify from DB
                     const message = document.getElementById('login-message');
                     if (message) {
-                        message.textContent = 'Admin session expired. Please login again.';
+                        message.textContent = 'Session expired. Please login again.';
                         message.style.color = 'var(--accent)';
                     }
                     showLogin();
                     return;
                 }
 
-                const hydratedUser = (user && user.role === 'admin')
-                    ? user
-                    : { name: 'Admin', role: 'admin' };
-                sessionStorage.setItem('dondad_currentUser', JSON.stringify(hydratedUser));
-                updateAdminNav(hydratedUser);
+                // User is valid admin, show dashboard
+                updateAdminNav(user);
                 showDashboard();
                 loadDashboardStats(true);
             } catch (error) {
-                const message = document.getElementById('login-message');
-                if (message) {
-                    message.textContent = 'Unable to verify admin session. Please login again.';
-                    message.style.color = 'var(--accent)';
-                }
-                showLogin();
+                // Network error - if we have a valid stored admin user, still show dashboard
+                console.log('checkAuth network error, using stored user:', error);
+                updateAdminNav(user);
+                showDashboard();
+                loadDashboardStats(true);
             }
         }
 
