@@ -1,0 +1,436 @@
+/* ========================================
+   Pajay Gadgets - Simple Page Styles
+   Wishlist, Profile, Contact, Privacy, Terms, Returns, Order Tracking
+   ======================================== */
+
+/* Import Common Styles */
+@import url('common.css');
+
+/* ========================================
+   Page Layout
+   ======================================== */
+.simple-page {
+    padding-top: 70px;
+}
+
+.page-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: var(--muted);
+}
+
+/* ========================================
+   Wishlist Page
+   ======================================== */
+.wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.wishlist-item {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.wishlist-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.25);
+    border-color: var(--primary);
+}
+
+.wishlist-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+    background: var(--bg);
+    border-radius: 10px;
+}
+
+.wishlist-item h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.wishlist-item .price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.wishlist-item .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.remove-wishlist {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-wishlist:hover {
+    transform: scale(1.1);
+}
+
+.empty-wishlist {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-wishlist i {
+    font-size: 4rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+}
+
+/* ========================================
+   Profile Page
+   ======================================== */
+.profile-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+}
+
+.profile-sidebar {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    height: fit-content;
+}
+
+.profile-avatar {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    margin-bottom: 1rem;
+}
+
+.profile-avatar h3 {
+    font-size: 1.1rem;
+}
+
+.profile-avatar p {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.profile-nav {
+    list-style: none;
+}
+
+.profile-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.profile-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: var(--muted);
+    transition: all 0.3s;
+}
+
+.profile-nav a:hover,
+.profile-nav a.active {
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--primary);
+}
+
+.profile-content {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-section:last-child {
+    margin-bottom: 0;
+}
+
+.profile-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* ========================================
+   Contact Page
+   ======================================== */
+.contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.contact-info {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+}
+
+.contact-info h2 {
+    margin-bottom: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.contact-item i {
+    width: 40px;
+    height: 40px;
+    background: rgba(168, 85, 247, 0.15);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.contact-item h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.contact-item p {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.contact-form {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+}
+
+.contact-form h2 {
+    margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   Privacy, Terms, Returns Pages
+   ======================================== */
+.content-page {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content-page h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.content-page .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+.content-page h2 {
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+}
+
+.content-page p {
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.content-page ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.content-page li {
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+/* ========================================
+   Order Tracking Page
+   ======================================== */
+.tracking-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.tracking-form {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.tracking-form input {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.tracking-result {
+    background: var(--card);
+    border-radius: 15px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+}
+
+.tracking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.tracking-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.tracking-timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+.timeline-item.completed::before {
+    background: var(--primary);
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+}
+
+.timeline-item.current::before {
+    background: var(--primary);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(168, 85, 247, 0); }
+}
+
+.timeline-content h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-content p {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.timeline-content .date {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   Responsive Styles
+   ======================================== */
+@media (max-width: 768px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tracking-form {
+        flex-direction: column;
+    }
+
+    .wishlist-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+}
