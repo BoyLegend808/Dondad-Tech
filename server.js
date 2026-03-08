@@ -17,6 +17,7 @@ const Stripe = require("stripe");
 const https = require('https');
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
 
 // Redis client for caching (optional - will work without Redis)
 let redisClient = null;
@@ -51,14 +52,29 @@ const loginAttempts = new Map();
 const apiRateAttempts = new Map();
 const sensitiveRateAttempts = new Map();
 
-// In-memory rate limiting (can be upgraded to Redis in production)
-let globalApiRateLimit = (req, res, next) => next();
-let globalSensitiveRateLimit = (req, res, next) => next();
+// Rate limiting configuration
+const globalApiRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Sensitive operations rate limiter (login, password reset, payment - 10 requests per minute)
+const strictRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: { error: 'Too many attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 function apiRateLimit(req, res, next) {
   return globalApiRateLimit(req, res, next);
 }
 function sensitiveRateLimit(req, res, next) {
-  return globalSensitiveRateLimit(req, res, next);
+  return strictRateLimit(req, res, next);
 }
 
 // MongoDB Connection
@@ -651,42 +667,38 @@ function loginRateLimit(req, res, next) {
   next();
 }
 
-function createIpRateLimiter(store, windowMs, max, errorMessage) {
-  return (req, res, next) => {
-    const key = req.ip || req.connection.remoteAddress || "unknown";
-    const now = Date.now();
-    const record = store.get(key);
+// Allowed origins for redirects (prevent open redirect attacks)
+const ALLOWED_REDIRECTS = [
+  '/index.html',
+  '/login.html',
+  '/register.html',
+  '/shop.html',
+  '/cart.html',
+  '/checkout.html',
+  '/profile.html',
+  '/wishlist.html',
+  '/admin.html',
+  '/pages/index/index.html',
+  '/pages/auth/login.html',
+  '/pages/auth/register.html',
+  '/pages/shop/shop.html',
+  '/pages/cart/cart.html',
+  '/pages/checkout/checkout.html',
+  '/pages/profile/profile.html',
+  '/pages/wishlist/wishlist.html',
+  '/pages/admin/admin.html'
+];
 
-    if (!record || now > record.expiresAt) {
-      store.set(key, { count: 1, expiresAt: now + windowMs });
-      return next();
-    }
-
-    if (record.count >= max) {
-      return res.status(429).json({ error: errorMessage });
-    }
-
-    record.count += 1;
-    store.set(key, record);
-    next();
-  };
+// Validate redirect URL to prevent open redirect attacks
+function validateRedirect(url) {
+  if (!url) return '/index.html';
+  // Only allow relative paths starting with /
+  if (url.startsWith('/') && !url.startsWith('//')) {
+    return ALLOWED_REDIRECTS.includes(url) ? url : '/index.html';
+  }
+  // Default to index if not in allowed list
+  return '/index.html';
 }
-
-globalApiRateLimit = createIpRateLimiter(
-  apiRateAttempts,
-  15 * 60 * 1000,
-  600,
-  "Too many API requests. Please try again later.",
-);
-
-globalSensitiveRateLimit = createIpRateLimiter(
-  sensitiveRateAttempts,
-  15 * 60 * 1000,
-  120,
-  "Too many requests on this endpoint. Please try again later.",
-);
-
-// JWT Secret for session tokens - MUST be set in production
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error("[SECURITY] JWT_SECRET not set! Sessions will not persist across restarts.");
@@ -2696,6 +2708,26 @@ if (process.env.NODE_ENV === 'production') {
     next();
   });
 }
+
+// Global error handler - returns generic messages to users, logs details server-side
+app.use((err, req, res, next) => {
+  // Log the full error details server-side only
+  console.error('[ERROR HANDLER] Error occurred:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Return generic error message to users
+  // Don't expose internal error details to clients
+  const statusCode = err.statusCode || err.status || 500;
+  res.status(statusCode).json({
+    error: statusCode === 500 ? 'An unexpected error occurred' : err.message || 'An error occurred',
+    success: false
+  });
+});
 
 // Start Server
 app.listen(PORT, () => {
