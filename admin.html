@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Pajay Gadgets</title>
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
 </head>
@@ -327,7 +328,7 @@
         const DASHBOARD_CACHE_MS = 20000;
         let selectedSalesDateKey = '';
         const orderStatusDrafts = {};
-        const ADMIN_PRODUCTS_QUERY = '?page=1&limit=500&sort=_id&order=desc';
+        const ADMIN_PRODUCTS_QUERY = '?page=1&limit=50&sort=_id&order=desc';
         const CATEGORY_OPTIONS = [
             { value: 'phones', label: 'Phones' },
             { value: 'laptops', label: 'Laptops' },
@@ -1011,6 +1012,15 @@
         async function loadProducts() {
             try {
                 console.log('Loading products...');
+                
+                // Show loading indicator
+                const tbody = document.getElementById('products-table');
+                const noProducts = document.getElementById('no-products');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;"><div class="loader"></div><p>Loading products...</p></td></tr>';
+                }
+                if (noProducts) noProducts.style.display = 'none';
+                
                 const response = await fetch(getAdminProductsUrl(), {
                     credentials: "include"
                 });
