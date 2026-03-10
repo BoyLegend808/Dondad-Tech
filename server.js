@@ -11,6 +11,8 @@ const helmet = require("helmet");
 const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
+// Suppress Mongoose deprecation warnings
+mongoose.set('strictQuery', false);
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcryptjs = require("bcryptjs");
@@ -216,14 +218,6 @@ const cartSchema = new mongoose.Schema({
 cartSchema.index({ userId: 1, productId: 1 });
 cartSchema.index({ userId: 1 });
 
-// Flutterwave/Paystack Configuration (use environment variables in production)
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-if (!PAYSTACK_SECRET_KEY) {
-  console.error(
-    "[SECURITY] PAYSTACK_SECRET_KEY not set! Payment initialization will fail.",
-  );
-}
-
 // Bank Transfer Configuration
 const BANK_TRANSFER_CONFIG = {
   bankName: "United Bank of Africa (UBA)",
@@ -232,24 +226,11 @@ const BANK_TRANSFER_CONFIG = {
   accountName: "John Ugwuneke",
   instructions: "Make payment to the account above and click 'I Have Made Payment'"
 };
-const PAYSTACK_BASE_URL = "https://api.paystack.co";
+
+// Stripe Configuration (optional - only needed if using Stripe payments)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
-
-// Validate Stripe is properly configured before using
-if (!STRIPE_SECRET_KEY) {
-  console.error(
-    "[SECURITY] STRIPE_SECRET_KEY not set! Stripe payments will not work.",
-  );
-}
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
-
-// Validate Stripe webhook secret in production
-if (process.env.NODE_ENV === "production" && !STRIPE_WEBHOOK_SECRET) {
-  console.error(
-    "[SECURITY] STRIPE_WEBHOOK_SECRET not set! Stripe webhook verification disabled.",
-  );
-}
 
 // Initialize payment
 app.post("/api/payment/initialize", sensitiveRateLimit, async (req, res) => {
