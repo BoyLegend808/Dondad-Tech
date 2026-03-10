@@ -72,6 +72,33 @@
                                 <span>Bank Transfer</span>
                             </label>
                         </div>
+                        
+                        <!-- Bank Transfer Details -->
+                        <div id="bank-details" class="bank-details" style="display: none;">
+                            <h3>Bank Transfer Details</h3>
+                            <div class="bank-info">
+                                <div class="bank-row">
+                                    <span class="bank-label">Bank:</span>
+                                    <span class="bank-value" id="bank-name">Loading...</span>
+                                </div>
+                                <div class="bank-row">
+                                    <span class="bank-label">Account Number:</span>
+                                    <span class="bank-value" id="bank-account">Loading...</span>
+                                </div>
+                                <div class="bank-row">
+                                    <span class="bank-label">Account Name:</span>
+                                    <span class="bank-value" id="bank-owner">Loading...</span>
+                                </div>
+                                <div class="bank-row">
+                                    <span class="bank-label">Amount:</span>
+                                    <span class="bank-value bank-amount" id="bank-amount">₦0</span>
+                                </div>
+                            </div>
+                            <p class="bank-instructions" id="bank-instructions"></p>
+                            <button type="button" class="btn btn-success btn-block" onclick="confirmBankTransfer()">
+                                <i class="fas fa-check"></i> I Have Made Payment
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">
@@ -119,7 +146,71 @@
                 return null;
             }
         }
-
+        
+        // Bank transfer variables
+        let currentOrderId = null;
+        let currentTotal = 0;
+        
+        // Load bank details on page load
+        async function loadBankDetails() {
+            try {
+                const response = await fetch('/api/payment/bank-details');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('bank-name').textContent = data.bankName;
+                    document.getElementById('bank-account').textContent = data.accountNumber;
+                    document.getElementById('bank-owner').textContent = data.accountName;
+                    document.getElementById('bank-instructions').textContent = data.instructions;
+                }
+            } catch (error) {
+                console.error('Error loading bank details:', error);
+            }
+        }
+        
+        // Show/hide bank details based on payment method
+        document.querySelectorAll('input[name="payment"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const bankDetails = document.getElementById('bank-details');
+                if (this.value === 'transfer') {
+                    bankDetails.style.display = 'block';
+                } else {
+                    bankDetails.style.display = 'none';
+                }
+            });
+        });
+        
+        // Confirm bank transfer
+        async function confirmBankTransfer() {
+            if (!currentOrderId) {
+                alert('Please place your order first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/payment/bank-transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: currentOrderId })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Redirect to payment verification page
+                    window.location.href = `payment-verifying.html?orderId=${currentOrderId}`;
+                } else {
+                    alert(data.error || 'Failed to confirm payment');
+                }
+            } catch (error) {
+                console.error('Error confirming transfer:', error);
+                alert('Failed to confirm payment. Please try again.');
+            }
+        }
+        
+        // Load bank details on init
+        loadBankDetails();
+        
         // Check auth
         const user = getCurrentUser();
         if (!user) {
@@ -211,6 +302,11 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Store order ID for bank transfer
+                    currentOrderId = data.order._id;
+                    currentTotal = data.order.subtotal;
+                    document.getElementById('bank-amount').textContent = '₦' + currentTotal.toLocaleString();
+                    
                     // Clear cart
                     if (user) {
                         await fetch('/api/cart/' + (user._id || user.id), {
@@ -219,17 +315,50 @@
                         });
                     }
                     localStorage.removeItem('cart');
-
-                    alert('Order placed successfully! Order ID: ' + data.orderId);
-                    window.location.href = '../order-tracking/order-tracking.html';
+                    
+                    // If bank transfer, show details; otherwise redirect
+                    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
+                    if (paymentMethod === 'transfer') {
+                        document.getElementById('bank-details').style.display = 'block';
+                        showToast('Order placed! Please make payment to the bank details shown below.', 'success');
+                    } else {
+                        showToast('Order placed successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.href = '../order-tracking/order-tracking.html';
+                        }, 1500);
+                    }
                 } else {
-                    alert(data.error || 'Failed to place order');
+                    showToast(data.error || 'Failed to place order', 'error');
                 }
             } catch (error) {
                 console.error('Checkout error:', error);
-                alert('Error placing order. Please try again.');
+                showToast('Error placing order. Please try again.', 'error');
             }
         });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            // Remove existing toast if any
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification' + (type === 'error' ? ' error' : type === 'warning' ? ' warning' : '');
+            toast.innerHTML = `
+                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${type === 'success' ? 'Success!' : type === 'error' ? 'Error' : 'Warning'}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            // Auto dismiss after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
 
         document.addEventListener('DOMContentLoaded', loadCheckoutItems);
     </script>

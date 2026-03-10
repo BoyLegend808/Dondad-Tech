@@ -184,6 +184,43 @@
             </div>
             <p class="contact-cta"><a href="../contact/contact.html">Contact Page</a>.</p>
         </section>
+
+        <!-- Reviews Section -->
+        <section class="reviews-section panel-card">
+            <h2>What Our Customers Say</h2>
+            <div class="reviews-container" id="reviews-container">
+                <!-- Reviews loaded via JavaScript -->
+            </div>
+            <div class="reviews-actions" id="reviews-actions" style="display:none;">
+                <button class="btn" onclick="showAddReviewModal()">Add Your Review</button>
+            </div>
+        </section>
+
+        <!-- Add Review Modal -->
+        <div id="review-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeReviewModal()">&times;</span>
+                <h2>Share Your Experience</h2>
+                <form id="review-form">
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <div class="rating-select">
+                            <span class="star" data-rating="1" onclick="setRating(1)">★</span>
+                            <span class="star" data-rating="2" onclick="setRating(2)">★</span>
+                            <span class="star" data-rating="3" onclick="setRating(3)">★</span>
+                            <span class="star" data-rating="4" onclick="setRating(4)">★</span>
+                            <span class="star" data-rating="5" onclick="setRating(5)">★</span>
+                        </div>
+                        <input type="hidden" id="review-rating" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Your Review</label>
+                        <textarea id="review-comment" placeholder="Tell us about your experience..." rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Submit Review</button>
+                </form>
+            </div>
+        </div>
     </main>
 
     <footer>
@@ -320,6 +357,145 @@
             checkAuth();
             updateCartCount();
             loadFeaturedProducts();
+        });
+        
+        // ==================== REVIEWS FUNCTIONALITY ====================
+        let currentUserReviewId = null;
+        
+        // Load reviews on page load
+        async function loadReviews() {
+            const container = document.getElementById('reviews-container');
+            if (!container) return;
+            
+            container.innerHTML = '<div class="reviews-loading">Loading reviews...</div>';
+            
+            try {
+                const response = await fetch('/api/website-reviews');
+                const reviews = await response.json();
+                
+                if (reviews.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:var(--muted)">No reviews yet. Be the first to review!</p>';
+                    return;
+                }
+                
+                const user = getCurrentUser();
+                let userReviewId = null;
+                
+                // Render reviews
+                container.innerHTML = reviews.map(review => {
+                    const stars = Array(5).fill(0).map((_, i) => 
+                        `<span class="star ${i < review.rating ? '' : 'empty'}">★</span>`
+                    ).join('');
+                    
+                    const date = new Date(review.createdAt).toLocaleDateString();
+                    const avatar = review.profilePicture || '';
+                    const initial = review.userName ? review.userName[0].toUpperCase() : 'U';
+                    
+                    // Store user's own review ID
+                    if (user && review.userId && review.userId._id === user._id) {
+                        userReviewId = review._id;
+                    }
+                    
+                    return `
+                        <div class="review-card" data-review-id="${review._id}">
+                            <div class="review-header">
+                                <div class="review-avatar">
+                                    ${avatar ? `<img src="${avatar}" alt="${review.userName}">` : initial}
+                                </div>
+                                <div class="review-user-info">
+                                    <div class="review-name">${review.userName}</div>
+                                    <div class="review-rating">${stars}</div>
+                                </div>
+                            </div>
+                            <p class="review-comment">${review.comment}</p>
+                            <div class="review-date">${date}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Show add review button if logged in
+                const actionsDiv = document.getElementById('reviews-actions');
+                if (user) {
+                    if (actionsDiv) actionsDiv.style.display = 'block';
+                } else {
+                    if (actionsDiv) actionsDiv.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+                container.innerHTML = '<p style="text-align:center;color:var(--muted)">Failed to load reviews</p>';
+            }
+        }
+        
+        // Show add review modal
+        function showAddReviewModal() {
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            document.getElementById('review-modal').style.display = 'flex';
+        }
+        
+        // Close modal
+        function closeReviewModal() {
+            document.getElementById('review-modal').style.display = 'none';
+            document.getElementById('review-form').reset();
+            setRating(5);
+        }
+        
+        // Set rating
+        function setRating(rating) {
+            document.getElementById('review-rating').value = rating;
+            document.querySelectorAll('.rating-select .star').forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+        }
+        
+        // Submit review
+        document.getElementById('review-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+            
+            const rating = parseInt(document.getElementById('review-rating').value);
+            const comment = document.getElementById('review-comment').value;
+            
+            try {
+                const response = await fetch('/api/website-reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating, comment })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    closeReviewModal();
+                    loadReviews(); // Reload to show new review
+                } else {
+                    alert(data.error || 'Failed to submit review');
+                }
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                alert('Failed to submit review. Please try again.');
+            }
+        });
+        
+        // Close modal on outside click
+        document.getElementById('review-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'review-modal') {
+                closeReviewModal();
+            }
+        });
+        
+        // Initialize reviews on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReviews();
         });
     </script>
 </body>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Verification - Dondad Tech</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="./checkout.css">
+    <style>
+        .verifying-container {
+            max-width: 500px;
+            margin: 100px auto;
+            text-align: center;
+            padding: 2rem;
+            background: var(--card);
+            border-radius: 15px;
+            border: 1px solid var(--border);
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .verifying-title {
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+        
+        .verifying-message {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-info p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="../../index.html" class="logo">Dondad Tech</a>
+        </nav>
+    </header>
+    
+    <main>
+        <div class="verifying-container" id="verifying-state">
+            <div class="spinner"></div>
+            <h2 class="verifying-title">Verifying Payment...</h2>
+            <p class="verifying-message">Please wait while we verify your payment. This may take up to 1 minute.</p>
+            <div class="order-info" id="order-info"></div>
+        </div>
+        
+        <div class="verifying-container" id="success-state" style="display: none;">
+            <div class="success-icon">✅</div>
+            <h2 class="verifying-title">Payment Verified!</h2>
+            <p class="verifying-message">Your order has been confirmed successfully.</p>
+            <div class="order-info" id="success-order-info"></div>
+            <a href="../order-tracking/order-tracking.html" class="btn-primary">View Order</a>
+        </div>
+        
+        <div class="verifying-container" id="pending-state" style="display: none;">
+            <div class="spinner" style="border-top-color: #ffc107;"></div>
+            <h2 class="verifying-title">Payment Pending Verification</h2>
+            <p class="verifying-message">Your payment notification has been received. Our team will verify your payment and confirm your order within 1-2 minutes.</p>
+            <div class="order-info" id="pending-order-info"></div>
+            <p style="color: var(--muted); font-size: 0.9rem;">Please keep an eye on your screen. This page will update automatically.</p>
+        </div>
+    </main>
+    
+    <script>
+        function getCurrentUser() {
+            try {
+                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                if (sessionUser) return sessionUser;
+                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+            } catch {
+                return null;
+            }
+        }
+        
+        async function checkOrderStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            
+            if (!orderId) {
+                document.getElementById('verifying-state').innerHTML = '<div class="error-icon">❌</div><h2>Order Not Found</h2><p>No order ID provided.</p><a href="../../index.html" class="btn-primary">Go Home</a>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/orders/' + orderId);
+                const order = await response.json();
+                
+                if (!order) {
+                    document.getElementById('verifying-state').innerHTML = '<div class="error-icon">❌</div><h2>Order Not Found</h2><p>Order not found.</p><a href="../../index.html" class="btn-primary">Go Home</a>';
+                    return;
+                }
+                
+                const orderInfo = `
+                    <p><strong>Order ID:</strong> ${orderId}</p>
+                    <p><strong>Amount:</strong> ₦${order.subtotal?.toLocaleString() || 0}</p>
+                    <p><strong>Status:</strong> ${order.status}</p>
+                `;
+                
+                document.getElementById('order-info').innerHTML = orderInfo;
+                document.getElementById('pending-order-info').innerHTML = orderInfo;
+                document.getElementById('success-order-info').innerHTML = orderInfo;
+                
+                // Check status
+                if (order.status === 'confirmed' || order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered') {
+                    // Payment verified - show success
+                    document.getElementById('verifying-state').style.display = 'none';
+                    document.getElementById('pending-state').style.display = 'none';
+                    document.getElementById('success-state').style.display = 'block';
+                } else if (order.status === 'payment_pending' || order.paymentStatus === 'pending_verification') {
+                    // Still pending - show pending state
+                    document.getElementById('verifying-state').style.display = 'none';
+                    document.getElementById('success-state').style.display = 'none';
+                    document.getElementById('pending-state').style.display = 'block';
+                    
+                    // Keep checking every 10 seconds
+                    setTimeout(checkOrderStatus, 10000);
+                } else {
+                    // Other status
+                    document.getElementById('verifying-state').style.display = 'none';
+                    document.getElementById('pending-state').style.display = 'none';
+                    document.getElementById('success-state').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error checking order:', error);
+                document.getElementById('verifying-message').textContent = 'Error checking order status. Please refresh the page.';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', checkOrderStatus);
+    </script>
+</body>
+</html>

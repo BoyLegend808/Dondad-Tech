@@ -7,6 +7,7 @@ if (!process.env.RENDER) {
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const bodyParser = require("body-parser");
 const path = require("path");
 const mongoose = require("mongoose");
@@ -143,6 +144,7 @@ const userSchema = new mongoose.Schema({
   verificationToken: { type: String, default: "" },
   googleId: { type: String, default: "" },
   facebookId: { type: String, default: "" },
+  profilePicture: { type: String, default: "" }, // User's profile picture
   createdAt: { type: Date, default: Date.now },
 });
 // Indexes for user schema
@@ -221,6 +223,15 @@ if (!PAYSTACK_SECRET_KEY) {
     "[SECURITY] PAYSTACK_SECRET_KEY not set! Payment initialization will fail.",
   );
 }
+
+// Bank Transfer Configuration
+const BANK_TRANSFER_CONFIG = {
+  bankName: "United Bank of Africa (UBA)",
+  bankShort: "UBA",
+  accountNumber: "2268336000",
+  accountName: "John Ugwuneke",
+  instructions: "Make payment to the account above and click 'I Have Made Payment'"
+};
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
@@ -291,6 +302,52 @@ app.post("/api/payment/initialize", sensitiveRateLimit, async (req, res) => {
   } catch (error) {
     console.error("Payment init error:", error);
     res.status(500).json({ error: "Payment initialization failed" });
+  }
+});
+
+// Get bank transfer details
+app.get("/api/payment/bank-details", async (req, res) => {
+  res.json({
+    success: true,
+    bankName: BANK_TRANSFER_CONFIG.bankName,
+    bankShort: BANK_TRANSFER_CONFIG.bankShort,
+    accountNumber: BANK_TRANSFER_CONFIG.accountNumber,
+    accountName: BANK_TRANSFER_CONFIG.accountName,
+    instructions: BANK_TRANSFER_CONFIG.instructions
+  });
+});
+
+// Mark bank transfer as made
+app.post("/api/payment/bank-transfer", sensitiveRateLimit, async (req, res) => {
+  try {
+    const orderId = String(req.body?.orderId || "");
+    
+    if (!isValidObjectId(orderId)) {
+      return res.status(400).json({ error: "Invalid order ID" });
+    }
+    
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    
+    if (order.paymentMethod !== "transfer") {
+      return res.status(400).json({ error: "This order is not a bank transfer" });
+    }
+    
+    // Update order to pending verification
+    order.paymentStatus = "pending_verification";
+    order.status = "payment_pending";
+    await order.save();
+    
+    res.json({ 
+      success: true, 
+      message: "Payment notification sent. We'll verify and confirm within 1-2 minutes.",
+      order 
+    });
+  } catch (error) {
+    console.error("Bank transfer error:", error);
+    res.status(500).json({ error: "Failed to process payment notification" });
   }
 });
 
@@ -500,6 +557,19 @@ const reviewSchema = new mongoose.Schema({
 reviewSchema.index({ productId: 1, createdAt: -1 });
 reviewSchema.index({ userId: 1 });
 
+// Website Reviews/Testimonials Schema (for homepage)
+const websiteReviewSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional - can be guest
+  userName: { type: String, required: true },
+  profilePicture: { type: String, default: "" }, // Profile picture URL
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true, maxLength: 500 },
+  isDefault: { type: Boolean, default: false }, // If it's a default/sample review
+  isActive: { type: Boolean, default: true }, // For soft delete
+  createdAt: { type: Date, default: Date.now },
+});
+websiteReviewSchema.index({ isActive: 1, createdAt: -1 });
+
 // Wishlist Schema
 const wishlistSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -522,6 +592,7 @@ const passwordResetTokenSchema = new mongoose.Schema(
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Review = mongoose.model("Review", reviewSchema);
+const WebsiteReview = mongoose.model("WebsiteReview", websiteReviewSchema);
 const Wishlist = mongoose.model("Wishlist", wishlistSchema);
 const PasswordResetToken = mongoose.model(
   "PasswordResetToken",
@@ -871,6 +942,81 @@ async function sendOrderConfirmationEmail(order) {
   `;
 
   return sendEmail(order.userEmail, "Order Confirmed - " + order._id, html);
+}
+
+// 1b. Admin New Order Notification
+async function sendAdminNewOrderNotification(order) {
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "dondadtech@gmail.com";
+  
+  const itemsHtml = order.items
+    .map(
+      (item) => `
+    <tr>
+      <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.productName}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.qty}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₦${item.unitPrice.toLocaleString()}</td>
+      <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">₦${(item.unitPrice * item.qty).toLocaleString()}</td>
+    </tr>
+  `,
+    )
+    .join("");
+
+  const totalAmount = order.items.reduce(
+    (sum, item) => sum + item.unitPrice * item.qty,
+    0,
+  );
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #d32f2f;">🛒 New Order Received!</h2>
+      <p>You have a new order from <strong>${order.userName}</strong></p>
+      
+      <p><strong>Order ID:</strong> ${order._id}</p>
+      <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+      <p><strong>Payment Method:</strong> ${order.paymentMethod || "Not specified"}</p>
+      <p><strong>Payment Status:</strong> <span style="color: ${order.paymentStatus === "paid" ? "green" : "orange"};">${order.paymentStatus || "pending"}</span></p>
+      
+      <h3>Customer Details:</h3>
+      <p><strong>Name:</strong> ${order.userName}</p>
+      <p><strong>Email:</strong> ${order.userEmail}</p>
+      <p><strong>Phone:</strong> ${order.deliveryInfo?.phone || "Not provided"}</p>
+      
+      <h3>Delivery Address:</h3>
+      <p>${order.deliveryInfo?.address || "Not provided"}</p>
+      <p><strong>Delivery Method:</strong> ${order.deliveryInfo?.method || "Not specified"}</p>
+      
+      <h3>Order Items:</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f5f5f5;">
+            <th style="padding: 10px; text-align: left;">Product</th>
+            <th style="padding: 10px; text-align: center;">Qty</th>
+            <th style="padding: 10px; text-align: right;">Price</th>
+            <th style="padding: 10px; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml}
+        </tbody>
+        <tfoot>
+          <tr style="background: #f5f5f5;">
+            <td colspan="3" style="padding: 10px; text-align: right;"><strong>Total:</strong></td>
+            <td style="padding: 10px; text-align: right;"><strong>₦${totalAmount.toLocaleString()}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      <p style="margin-top: 20px;">
+        <a href="${process.env.ADMIN_URL || "https://dondadtech.com/admin.html"}" style="background: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View in Admin Panel
+        </a>
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+      <p style="color: #666; font-size: 12px;">Dondad Tech - New Order Notification</p>
+    </div>
+  `;
+
+  return sendEmail(ADMIN_EMAIL, "🛒 New Order - " + order._id, html);
 }
 
 // 2. Order Status Update Email
@@ -1707,6 +1853,55 @@ async function seedDatabase() {
       await Product.insertMany(products);
       console.log("Database seeded with initial data");
     }
+    
+    // Seed default website reviews if none exist
+    const reviewCount = await WebsiteReview.countDocuments();
+    if (reviewCount === 0) {
+      const defaultReviews = [
+        {
+          userName: "Chibuike D.",
+          profilePicture: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='25' fill='%23FF6B6B'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%23FF6B6B'/%3E%3C/svg%3E",
+          rating: 5,
+          comment: "Best place to get quality phones! Fast delivery and excellent customer service.",
+          isDefault: true,
+          isActive: true
+        },
+        {
+          userName: "Sarah M.",
+          profilePicture: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='25' fill='%234ECDC4'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%234ECDC4'/%3E%3C/svg%3E",
+          rating: 5,
+          comment: "Bought my iPhone 13 from here. Absolutely love it! Thank you Dondad Tech!",
+          isDefault: true,
+          isActive: true
+        },
+        {
+          userName: "Michael O.",
+          profilePicture: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='25' fill='%2395E1D3'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%2395E1D3'/%3E%3C/svg%3E",
+          rating: 4,
+          comment: "Great experience! The team was very helpful in choosing the right phone for me.",
+          isDefault: true,
+          isActive: true
+        },
+        {
+          userName: "Adaora N.",
+          profilePicture: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='25' fill='%23F38181'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%23F38181'/%3E%3C/svg%3E",
+          rating: 5,
+          comment: "Reliable and trustworthy! I've recommended all my friends to Dondad Tech.",
+          isDefault: true,
+          isActive: true
+        },
+        {
+          userName: "Emmanuel K.",
+          profilePicture: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='35' r='25' fill='%23AA96DA'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%23AA96DA'/%3E%3C/svg%3E",
+          rating: 5,
+          comment: "Perfect online shopping experience! Products are exactly as described.",
+          isDefault: true,
+          isActive: true
+        }
+      ];
+      await WebsiteReview.insertMany(defaultReviews);
+      console.log("Default website reviews seeded");
+    }
   } catch (err) {
     console.error("Seeding error:", err);
   }
@@ -1735,6 +1930,19 @@ app.use(
     credentials: false,
   }),
 );
+
+// Security: Helmet for HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+
 app.use(bodyParser.json({ limit: "15mb" }));
 // Debug middleware
 app.use((req, res, next) => {
@@ -1749,6 +1957,7 @@ app.use((req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, "pages")));
 app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, "images")));
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
@@ -2536,6 +2745,11 @@ app.post(
         console.error("[AUTOMATION] Order confirmation email failed:", err),
       );
 
+      // Send admin notification (async - don't wait)
+      sendAdminNewOrderNotification(order).catch((err) =>
+        console.error("[AUTOMATION] Admin notification failed:", err),
+      );
+
       res.json({ success: true, order });
     } catch (error) {
       console.error("Create Order Error:", error);
@@ -2620,6 +2834,7 @@ app.put(
       const estimatedDelivery = req.body?.estimatedDelivery;
       const allowedStatuses = new Set([
         "pending",
+        "payment_pending",
         "confirmed",
         "processing",
         "shipped",
@@ -2792,6 +3007,130 @@ app.get("/api/reviews/:productId/average", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to get rating" });
+  }
+});
+
+// ============= WEBSITE REVIEWS (TESTIMONIALS) =============
+
+// Get all website reviews (for homepage)
+app.get("/api/website-reviews", async (req, res) => {
+  try {
+    const reviews = await WebsiteReview.find({ isActive: true })
+      .sort({ createdAt: -1 })
+      .limit(20);
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get reviews" });
+  }
+});
+
+// Add a website review (requires authentication)
+app.post("/api/website-reviews", requireAuth, sensitiveRateLimit, async (req, res) => {
+  try {
+    const userId = String(req.user?._id || req.body?.userId || "");
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Authentication required" });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const rating = parseInt(req.body?.rating || "5", 10);
+    const comment = sanitizeText(req.body?.comment || "", 500);
+    
+    if (!comment || comment.length < 5) {
+      return res.status(400).json({ error: "Comment must be at least 5 characters" });
+    }
+    
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ error: "Rating must be between 1 and 5" });
+    }
+    
+    const review = await WebsiteReview.create({
+      userId,
+      userName: user.name,
+      profilePicture: user.profilePicture || "",
+      rating,
+      comment,
+      isDefault: false,
+      isActive: true
+    });
+    
+    res.json({ success: true, review });
+  } catch (error) {
+    console.error("Add website review error:", error);
+    res.status(500).json({ error: "Failed to add review" });
+  }
+});
+
+// Delete user's own review (permanent delete)
+app.delete("/api/website-reviews/:reviewId", requireAuth, async (req, res) => {
+  try {
+    const reviewId = String(req.params?.reviewId || "");
+    const userId = String(req.user?._id || "");
+    
+    if (!isValidObjectId(reviewId)) {
+      return res.status(400).json({ error: "Invalid review id" });
+    }
+    
+    const review = await WebsiteReview.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ error: "Review not found" });
+    }
+    
+    // Check if user owns the review or is admin
+    const isAdmin = req.user?.role === "admin";
+    const isOwner = review.userId && review.userId.toString() === userId;
+    
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Not authorized to delete this review" });
+    }
+    
+    // Permanent delete
+    await WebsiteReview.findByIdAndDelete(reviewId);
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete review" });
+  }
+});
+
+// Get default profile pictures (from sites folder)
+app.get("/api/default-avatars", async (req, res) => {
+  // Add your profile pictures to the /images/avatars folder in your sites directory
+  // Then update this array with your actual image filenames
+  // Example: { id: 1, url: "/images/avatars/avatar1.png", name: "Blue" }
+  const defaultAvatars = [
+    { id: 1, url: "", name: "Avatar 1 - Add avatar-1.png to /images/avatars/" },
+    { id: 2, url: "", name: "Avatar 2 - Add avatar-2.png to /images/avatars/" },
+    { id: 3, url: "", name: "Avatar 3 - Add avatar-3.png to /images/avatars/" },
+    { id: 4, url: "", name: "Avatar 4 - Add avatar-4.png to /images/avatars/" },
+    { id: 5, url: "", name: "Avatar 5 - Add avatar-5.png to /images/avatars/" }
+  ];
+  res.json(defaultAvatars);
+});
+
+// Update user profile picture
+app.put("/api/users/profile-picture", requireAuth, sensitiveRateLimit, async (req, res) => {
+  try {
+    const userId = String(req.user?._id || "");
+    const profilePicture = sanitizeText(req.body?.profilePicture || "", 500);
+    
+    if (!isValidObjectId(userId)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture },
+      { new: true }
+    ).select("-password");
+    
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update profile picture" });
   }
 });
 
