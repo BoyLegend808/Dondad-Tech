@@ -1016,7 +1016,71 @@ async function sendAdminNewOrderNotification(order) {
     </div>
   `;
 
-  return sendEmail(ADMIN_EMAIL, "🛒 New Order - " + order._id, html);
+  // Send email
+  const emailResult = sendEmail(ADMIN_EMAIL, "🛒 New Order - " + order._id, html);
+  
+  // Also send WhatsApp notification if configured
+  sendAdminWhatsAppNotification(order).catch(err => 
+    console.error("[AUTOMATION] WhatsApp notification failed:", err)
+  );
+  
+  return emailResult;
+}
+
+// 1c. Admin WhatsApp Notification
+async function sendAdminWhatsAppNotification(order) {
+  const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+  const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+  const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER || "+14155238886";
+  const ADMIN_WHATSAPP = process.env.ADMIN_WHATSAPP; // Format: +1234567890
+  
+  // Check if WhatsApp is configured
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !ADMIN_WHATSAPP) {
+    console.log("[AUTOMATION] WhatsApp not configured. Skipping notification.");
+    return;
+  }
+  
+  const totalAmount = order.items.reduce(
+    (sum, item) => sum + item.unitPrice * item.qty,
+    0,
+  );
+  
+  const itemsList = order.items.map(item => `• ${item.productName} x${item.qty} = ₦${(item.unitPrice * item.qty).toLocaleString()}`).join('\n');
+  
+  const message = `🛒 *NEW ORDER*\n\n` +
+    `*Customer:* ${order.userName}\n` +
+    `*Phone:* ${order.deliveryInfo?.phone || 'Not provided'}\n` +
+    `*Total:* ₦${totalAmount.toLocaleString()}\n` +
+    `*Payment:* ${order.paymentMethod || 'Not specified'} (${order.paymentStatus || 'pending'})\n\n` +
+    `*Items:*\n${itemsList}\n\n` +
+    `*Address:* ${order.deliveryInfo?.address || 'Not provided'}`;
+  
+  try {
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(TWILIO_ACCOUNT_SID + ':' + TWILIO_AUTH_TOKEN).toString('base64')
+        },
+        body: new URLSearchParams({
+          To: `whatsapp:${ADMIN_WHATSAPP}`,
+          From: `whatsapp:${TWILIO_WHATSAPP_NUMBER}`,
+          Body: message
+        })
+      }
+    );
+    
+    const result = await response.json();
+    if (result.sid) {
+      console.log("[AUTOMATION] WhatsApp notification sent:", result.sid);
+    } else {
+      console.error("[AUTOMATION] WhatsApp notification failed:", result);
+    }
+  } catch (error) {
+    console.error("[AUTOMATION] WhatsApp notification error:", error);
+  }
 }
 
 // 2. Order Status Update Email
