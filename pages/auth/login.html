@@ -154,9 +154,18 @@
                         sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
                     }
                     
-                    // Redirect to home or previous page
-                    const redirect = new URLSearchParams(window.location.search).get('redirect') || '../index/index.html';
-                    window.location.href = redirect;
+                    // Debug: log the user role
+                    console.log('Login success, user role:', data.user.role);
+                    
+                    // Redirect based on user role - use absolute paths from root
+                    let redirectUrl = '/pages/index/index.html';
+                    if (data.user.role === 'admin') {
+                        redirectUrl = '/pages/admin/admin.html';
+                    }
+                    
+                    // Force redirect
+                    window.location.href = redirectUrl;
+                    return;
                 } else {
                     error.textContent = data.error || 'Login failed';
                     error.style.display = 'block';
