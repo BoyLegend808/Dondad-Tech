@@ -44,7 +44,7 @@
                     <p>Login to your account</p>
                 </div>
 
-                <form id="login-form" onsubmit="return handleLogin(event)">
+                <form id="login-form">
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Email</label>
                         <div class="input-wrapper">
@@ -72,7 +72,7 @@
 
                     <p id="error" class="error-message"></p>
 
-                    <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <button type="button" class="btn btn-primary btn-block" id="login-btn" onclick="handleLoginClick()">
                         <i class="fas fa-sign-in-alt"></i> Login
                     </button>
                 </form>
@@ -181,10 +181,11 @@
             }
         };
         
-        // Global login handler - called from inline onsubmit
-        window.handleLogin = async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Login click handler - called from button onclick
+        window.handleLoginClick = async function() {
+            // Debug: Show we're in the function
+            console.log('handleLoginClick called');
+            alert('Login button clicked');
             
             const email = document.getElementById('email').value.trim().toLowerCase();
             const password = document.getElementById('password').value;
@@ -192,6 +193,14 @@
             const error = document.getElementById('error');
             const btn = document.getElementById('login-btn');
 
+            if (!email || !password) {
+                alert('Please enter email and password');
+                error.textContent = 'Please enter email and password';
+                error.style.display = 'block';
+                return;
+            }
+            
+            alert('Attempting login to API...');
             error.style.display = 'none';
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
@@ -202,7 +211,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
+                alert('API response received: ' + response.status);
                 const data = await response.json();
+                alert('Data: ' + JSON.stringify(data));
                 
                 if (data.success) {
                     const user = data.user;
@@ -211,17 +222,18 @@
                     } else {
                         sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
                     }
+                    alert('Login successful! Redirecting...');
                     window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
                 } else {
                     throw new Error(data.error || 'Login failed');
                 }
             } catch (err) {
+                alert('Error: ' + err.message);
                 error.textContent = err.message || 'Login failed. Please try again.';
                 error.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
             }
-            return false;
         };
     </script>
 </body>
