@@ -15,12 +15,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <script>alert('JavaScript is running on register!');</script>
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets</a>
             <div class="nav-right">
                 <a href="login.html" class="auth-btn">Login</a>
-                <button class="hamburger" aria-label="Toggle menu">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -38,13 +39,13 @@
                     <p>Join Pajay Gadgets today</p>
                 </div>
                 
-                <form id="register-form">
+                <div id="register-form">
                     <div class="form-group">
                         <label for="name">
                             <i class="fas fa-user"></i> Full Name
                         </label>
                         <div class="input-wrapper">
-                            <input type="text" id="name" placeholder="Enter your name" required>
+                            <input type="text" id="name" placeholder="Enter your name">
                         </div>
                     </div>
                     
@@ -53,7 +54,7 @@
                             <i class="fas fa-envelope"></i> Email
                         </label>
                         <div class="input-wrapper">
-                            <input type="email" id="email" placeholder="Enter your email" required>
+                            <input type="email" id="email" placeholder="Enter your email">
                         </div>
                     </div>
                     
@@ -71,7 +72,7 @@
                             <i class="fas fa-lock"></i> Password
                         </label>
                         <div class="input-wrapper">
-                            <input type="password" id="password" placeholder="Create password" required>
+                            <input type="password" id="password" placeholder="Create password">
                             <button type="button" class="toggle-password" data-target="password" aria-label="Toggle password visibility">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -83,7 +84,7 @@
                             <i class="fas fa-lock"></i> Confirm Password
                         </label>
                         <div class="input-wrapper">
-                            <input type="password" id="confirm" placeholder="Confirm password" required>
+                            <input type="password" id="confirm" placeholder="Confirm password">
                             <button type="button" class="toggle-password" data-target="confirm" aria-label="Toggle confirm password visibility">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -92,10 +93,10 @@
                     
                     <p id="error" class="error-message"></p>
                     
-                    <button type="submit" class="btn btn-primary btn-block">
+                    <button type="button" class="btn btn-primary btn-block" onclick="doRegister()">
                         <i class="fas fa-user-plus"></i> Create Account
                     </button>
-                </form>
+                </div>
                 
                 <div class="auth-footer">
                     <p>Already have an account? <a href="login.html">Login</a></p>
@@ -115,5 +116,79 @@
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        function toggleMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.getElementById('navLinks');
+            if (hamburger && navLinks) {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            }
+        }
+        
+        function doRegister() {
+            alert('doRegister called!');
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm').value;
+            const error = document.getElementById('error');
+            const btn = document.querySelector('#register-form button');
+
+            if (!name || !email || !password || !confirm) {
+                alert('Please fill in all required fields');
+                error.textContent = 'Please fill in all required fields';
+                error.style.display = 'block';
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('Passwords do not match');
+                error.textContent = 'Passwords do not match';
+                error.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                error.textContent = 'Password must be at least 6 characters';
+                error.style.display = 'block';
+                return;
+            }
+
+            alert('Attempting registration...');
+            error.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, phone, password })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                alert('Response: ' + JSON.stringify(data));
+                if (data.success) {
+                    alert('Registration successful! Please login.');
+                    window.location.href = 'login.html';
+                } else {
+                    throw new Error(data.error || 'Registration failed');
+                }
+            })
+            .catch(function(err) {
+                alert('Error: ' + err.message);
+                error.textContent = err.message || 'Registration failed. Please try again.';
+                error.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+            });
+        }
+    </script>
 </body>
 </html>
