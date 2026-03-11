@@ -135,7 +135,6 @@
             console.log('Response data:', data);
             if (data.success) {
                 console.log('Login successful');
-                // Store user
                 try {
                     sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
                 } catch(err) {
@@ -172,17 +171,43 @@
         return false;
     }
     
-    // Also handle hamburger menu click inline
+    // Mobile hamburger menu handler
+    function toggleMenu(e) {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        var hamburger = document.querySelector('.hamburger');
+        var navLinks = document.getElementById('navLinks');
+        if (hamburger && navLinks) {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+            console.log('Menu toggled:', navLinks.classList.contains('active'));
+        }
+    }
+    
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded, setting up handlers');
+        
+        // Setup hamburger click
         var hamburger = document.querySelector('.hamburger');
         if (hamburger) {
-            hamburger.addEventListener('click', function(e) {
-                e.preventDefault();
-                var navLinks = document.getElementById('navLinks');
-                if (navLinks) navLinks.classList.toggle('active');
-                hamburger.classList.toggle('active');
-            });
+            hamburger.onclick = toggleMenu;
+            console.log('Hamburger handler attached');
         }
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            var hamburger = document.querySelector('.hamburger');
+            var navLinks = document.getElementById('navLinks');
+            if (hamburger && navLinks && navLinks.classList.contains('active')) {
+                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                    hamburger.classList.remove('active');
+                    navLinks.classList.remove('active');
+                }
+            }
+        });
     });
     </script>
 </body>
