@@ -455,8 +455,8 @@ function setupHamburger() {
   console.log("Hamburger setup - navLinks:", navLinks);
 
   if (hamburger && navLinks) {
-    // Toggle menu function
-    const toggleMenu = function (e) {
+    // Toggle menu function - make it global so onclick works
+    window.toggleMenu = function(e) {
       e.preventDefault();
       e.stopPropagation();
       console.log("Hamburger clicked!");
