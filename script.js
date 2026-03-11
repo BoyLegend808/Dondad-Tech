@@ -472,6 +472,9 @@ function setupHamburger() {
         navLinks.classList.toggle("active");
       };
     }
+    if (!window.toggleHamburger) {
+      window.toggleHamburger = window.toggleMenu;
+    }
 
     // Avoid double-binding when inline onclick exists (prevents double toggle)
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
