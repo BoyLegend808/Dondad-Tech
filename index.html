@@ -16,6 +16,21 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/index.css">
     <script src="script.js"></script>
+    <script>
+        // Global toggle menu function for hamburger - works even if script.js doesn't load
+        window.toggleMenu = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.querySelector('.nav-links');
+            if (hamburger && navLinks) {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            }
+        };
+    </script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
