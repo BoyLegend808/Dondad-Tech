@@ -1957,6 +1957,8 @@ const defaultAllowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "https://dondad-tech-production-0b1a.up.railway.app",
+  "https://dondad-tech.vercel.app",
+  "https://dondad-tech-*.vercel.app",
 ];
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
@@ -3290,7 +3292,7 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
     res.cookie("session", sessionToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: "/",
     });
@@ -3299,7 +3301,7 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
     res.cookie("userId", user._id.toString(), {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
     });
