@@ -1968,16 +1968,15 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 const isProduction = process.env.NODE_ENV === "production";
 app.use(
   cors({
-    origin(origin, callback) {
+    origin: function(origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, postman)
       if (!origin) return callback(null, true);
-      if (!isProduction) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
     credentials: true,
-  }),
+  })
 );
 
 // Security: Helmet for HTTP headers
@@ -3261,9 +3260,12 @@ app.delete(
 
 // Login
 app.post("/api/login", loginRateLimit, async (req, res) => {
+  console.log("[LOGIN] Request body:", req.body);
+  console.log("[LOGIN] Headers:", req.headers);
   try {
     const email = normalizeEmail(req.body?.email || "");
     const password = String(req.body?.password || "").trim();
+    console.log("[LOGIN] Email:", email, "Password length:", password.length);
     if (!email || !password || !isValidEmail(email) || password.length > 200) {
       return res
         .status(400)
@@ -3316,7 +3318,8 @@ app.post("/api/login", loginRateLimit, async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Login failed" });
+    console.error("[LOGIN ERROR]", error);
+    res.status(500).json({ error: "Login failed: " + error.message });
   }
 });
 
