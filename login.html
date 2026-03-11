@@ -72,7 +72,7 @@
 
                     <p id="error" class="error-message"></p>
 
-                    <button type="button" class="btn btn-primary btn-block" id="login-btn" onclick="handleLoginClick()">
+                    <button type="button" class="btn btn-primary btn-block" id="login-btn" onclick="var email=document.getElementById('email').value.trim().toLowerCase(); var password=document.getElementById('password').value; var remember=document.getElementById('remember').checked; var error=document.getElementById('error'); var btn=document.getElementById('login-btn'); if(!email||!password){alert('Please enter email and password');error.textContent='Please enter email and password';error.style.display='block';return;} error.style.display='none'; btn.disabled=true; btn.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Logging in...'; fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})}).then(function(response){return response.json();}).then(function(data){if(data.success){var user=data.user; if(remember){localStorage.setItem('dondad_currentUser',JSON.stringify(user));}else{sessionStorage.setItem('dondad_currentUser',JSON.stringify(user));} window.location.href=user.role==='admin'?'admin.html':'index.html';}else{throw new Error(data.error||'Login failed');}}).catch(function(err){alert('Error: '+err.message);error.textContent=err.message||'Login failed. Please try again.';error.style.display='block';btn.disabled=false;btn.innerHTML='<i class=\'fas fa-sign-in-alt\'></i> Login';});">
                         <i class="fas fa-sign-in-alt"></i> Login
                     </button>
                 </form>
