@@ -166,6 +166,20 @@
 
             throw new Error('Invalid credentials');
         }
+        
+        // Global toggle menu function for hamburger
+        window.toggleMenu = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const hamburger = document.querySelector('.hamburger');
+            const navLinks = document.getElementById('navLinks');
+            if (hamburger && navLinks) {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            }
+        };
 
         document.addEventListener('click', function(e) {
             const navLinks = document.getElementById('navLinks');
@@ -177,6 +191,21 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Inline functions to avoid dependency on external script
+            function getCurrentUser() {
+                try {
+                    const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+                    if (sessionUser) return sessionUser;
+                    return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
+                } catch {
+                    return null;
+                }
+            }
+            
+            function normalizeEmail(email) {
+                return email.trim().toLowerCase();
+            }
+            
             const currentUser = getCurrentUser();
             if (currentUser) {
                 window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
@@ -186,6 +215,7 @@
             const form = document.getElementById('login-form');
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                e.stopPropagation();
 
                 const email = normalizeEmail(document.getElementById('email').value);
                 const password = document.getElementById('password').value;
@@ -198,9 +228,24 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
                 try {
-                    const user = await tryApiLogin(email, password);
-                    persistLoginUser(user, remember);
-                    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const user = data.user;
+                        if (remember) {
+                            localStorage.setItem('dondad_currentUser', JSON.stringify(user));
+                        } else {
+                            sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
+                        }
+                        window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+                    } else {
+                        throw new Error(data.error || 'Login failed');
+                    }
                 } catch (err) {
                     error.textContent = err.message || 'Login failed. Please try again.';
                     error.style.display = 'block';
