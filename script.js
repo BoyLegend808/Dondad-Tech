@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Login page
   const loginForm = document.getElementById("login-form");
-  if (loginForm) {
+  if (loginForm && !loginForm.dataset.loginHandler) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       e.stopPropagation();
