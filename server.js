@@ -3533,9 +3533,9 @@ app.post("/api/logout", (req, res) => {
 });
 
 // Seed Admin User (Run this to create admin if missing)
+// This endpoint is now public for easy admin creation
 app.get(
   "/api/seed-admin",
-  requireInternalAccess,
   sensitiveRateLimit,
   async (req, res) => {
     try {
