@@ -1993,6 +1993,18 @@ app.use(helmet({
 
 app.use(bodyParser.json({ limit: "15mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
+// Cache control to prevent stale HTML/JS/CSS in production
+app.use((req, res, next) => {
+  if (req.method === "GET") {
+    if (req.path.endsWith(".html") || req.path === "/" || req.path === "/index.html") {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    }
+    if (req.path.endsWith(".js") || req.path.endsWith(".css")) {
+      res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+    }
+  }
+  next();
+});
 // Debug middleware
 app.use((req, res, next) => {
   console.log("[DEBUG MIDDLEWARE] req.body =", JSON.stringify(req.body));
