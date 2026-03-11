@@ -13,7 +13,20 @@
 </head>
 <body>
     <script>
-        // Immediate check - show user menu if logged in
+    // Global toggleMenu function for Brave browser compatibility
+    function toggleMenu(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        var hamburger = document.querySelector('.hamburger');
+        var navLinks = document.querySelector('.nav-links');
+        if (hamburger && navLinks) {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        }
+    }
+    // Immediate check - show user menu if logged in
         (function() {
             const userStr = sessionStorage.getItem('dondad_currentUser');
             if (userStr) {
@@ -69,7 +82,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span>
                     <span></span>
                     <span></span>

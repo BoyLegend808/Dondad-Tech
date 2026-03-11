@@ -11,6 +11,21 @@
     <meta http-equiv="Expires" content="0">
 </head>
 <body>
+    <script>
+    // Global toggleMenu function for Brave browser compatibility
+    function toggleMenu(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        var hamburger = document.querySelector('.hamburger');
+        var navLinks = document.querySelector('.nav-links');
+        if (hamburger && navLinks) {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        }
+    }
+    </script>
     <header>
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets</a>
@@ -33,7 +48,7 @@
                     </div>
                     <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
                 </div>
-                <button class="hamburger" aria-label="Toggle menu">
+                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
