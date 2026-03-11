@@ -480,6 +480,7 @@ function setupHamburger() {
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
     if (!hasInlineHandler && !hamburger.dataset.bound) {
       hamburger.addEventListener("click", window.toggleMenu);
+      hamburger.addEventListener("touchstart", window.toggleMenu, { passive: false });
       hamburger.dataset.bound = "true";
     }
 
