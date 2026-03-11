@@ -85,7 +85,10 @@ function getAllProducts() {
   if (stored) {
     return JSON.parse(stored);
   }
-  return products; // Fallback to products.js
+  if (typeof products !== "undefined") {
+    return products; // Fallback to products.js
+  }
+  return [];
 }
 
 // Get products by category
@@ -507,7 +510,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Homepage featured products
   const allProducts = getAllProducts();
-  renderProducts(allProducts.slice(0, 8), "featured-products");
+  if (allProducts.length > 0) {
+    renderProducts(allProducts.slice(0, 8), "featured-products");
+  }
 
   // Shop page
   const productGrid = document.getElementById("product-grid");
