@@ -1963,16 +1963,18 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       .map((o) => o.trim())
       .filter(Boolean)
   : defaultAllowedOrigins;
+const isProduction = process.env.NODE_ENV === "production";
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
+      if (!isProduction) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Admin-Token"],
-    credentials: false,
+    credentials: true,
   }),
 );
 

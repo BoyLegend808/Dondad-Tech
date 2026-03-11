@@ -451,24 +451,31 @@ function setupCategoryFilter() {
 function setupHamburger() {
   const hamburger = document.querySelector(".hamburger");
   const navLinks = document.querySelector(".nav-links");
-  console.log("Hamburger setup - hamburger:", hamburger);
-  console.log("Hamburger setup - navLinks:", navLinks);
 
   if (hamburger && navLinks) {
-    // Toggle menu function - make it global so onclick works
-    window.toggleMenu = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log("Hamburger clicked!");
-      hamburger.classList.toggle("active");
-      navLinks.classList.toggle("active");
-      console.log("Hamburger classes:", hamburger.classList);
-      console.log("NavLinks classes:", navLinks.classList);
-    };
+    let lastToggleAt = 0;
 
-    // Support both click and touch events for mobile
-    hamburger.addEventListener("click", toggleMenu);
-    hamburger.addEventListener("touchstart", toggleMenu, { passive: false });
+    // Toggle menu function - make it global so onclick works
+    if (!window.toggleMenu) {
+      window.toggleMenu = function (e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        const now = Date.now();
+        if (now - lastToggleAt < 250) return;
+        lastToggleAt = now;
+        hamburger.classList.toggle("active");
+        navLinks.classList.toggle("active");
+      };
+    }
+
+    // Avoid double-binding when inline onclick exists (prevents double toggle)
+    const hasInlineHandler = !!hamburger.getAttribute("onclick");
+    if (!hasInlineHandler && !hamburger.dataset.bound) {
+      hamburger.addEventListener("click", window.toggleMenu);
+      hamburger.dataset.bound = "true";
+    }
 
     // Close menu when clicking outside
     document.addEventListener("click", (e) => {
@@ -488,8 +495,6 @@ function setupHamburger() {
         navLinks.classList.remove("active");
       });
     });
-  } else {
-    console.error("Hamburger or navLinks not found!");
   }
 }
 

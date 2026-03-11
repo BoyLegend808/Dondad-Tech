@@ -805,3 +805,40 @@ section h2 {
         opacity: 1;
     }
 }
+
+/* IMPROVED MOBILE NAVIGATION */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex !important;
+        position: absolute !important;
+        right: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 1001 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+    
+    .navbar {
+        position: relative !important;
+        padding-right: 50px !important;
+    }
+    
+    .nav-links {
+        display: none !important;
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: #1a1a2e !important;
+        padding: 1rem !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3) !important;
+        z-index: 1000 !important;
+    }
+    
+    .nav-links.active {
+        display: flex !important;
+    }
+}
