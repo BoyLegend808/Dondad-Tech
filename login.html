@@ -44,7 +44,7 @@
                     <p>Login to your account</p>
                 </div>
 
-                <form id="login-form">
+                <form id="login-form" onsubmit="return handleLogin(event)">
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Email</label>
                         <div class="input-wrapper">
@@ -180,80 +180,49 @@
                 navLinks.classList.toggle('active');
             }
         };
-
-        document.addEventListener('click', function(e) {
-            const navLinks = document.getElementById('navLinks');
-            const hamburger = document.querySelector('.hamburger');
-            if (navLinks && hamburger && !navLinks.contains(e.target) && !hamburger.contains(e.target)) {
-                navLinks.classList.remove('active');
-                hamburger.classList.remove('active');
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inline functions to avoid dependency on external script
-            function getCurrentUser() {
-                try {
-                    const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
-                    if (sessionUser) return sessionUser;
-                    return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
-                } catch {
-                    return null;
-                }
-            }
+        
+        // Global login handler - called from inline onsubmit
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            function normalizeEmail(email) {
-                return email.trim().toLowerCase();
-            }
-            
-            const currentUser = getCurrentUser();
-            if (currentUser) {
-                window.location.href = currentUser.role === 'admin' ? 'admin.html' : 'index.html';
-                return;
-            }
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            const error = document.getElementById('error');
+            const btn = document.getElementById('login-btn');
 
-            const form = document.getElementById('login-form');
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            error.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
 
-                const email = normalizeEmail(document.getElementById('email').value);
-                const password = document.getElementById('password').value;
-                const remember = document.getElementById('remember').checked;
-                const error = document.getElementById('error');
-                const btn = document.getElementById('login-btn');
-
-                error.style.display = 'none';
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-
-                try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password })
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        const user = data.user;
-                        if (remember) {
-                            localStorage.setItem('dondad_currentUser', JSON.stringify(user));
-                        } else {
-                            sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
-                        }
-                        window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const user = data.user;
+                    if (remember) {
+                        localStorage.setItem('dondad_currentUser', JSON.stringify(user));
                     } else {
-                        throw new Error(data.error || 'Login failed');
+                        sessionStorage.setItem('dondad_currentUser', JSON.stringify(user));
                     }
-                } catch (err) {
-                    error.textContent = err.message || 'Login failed. Please try again.';
-                    error.style.display = 'block';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+                } else {
+                    throw new Error(data.error || 'Login failed');
                 }
-            });
-        });
+            } catch (err) {
+                error.textContent = err.message || 'Login failed. Please try again.';
+                error.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+            return false;
+        };
     </script>
 </body>
 </html>
