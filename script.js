@@ -455,9 +455,11 @@ function setupHamburger() {
   const hamburgers = document.querySelectorAll(".hamburger");
   if (!hamburgers.length) return;
 
-  const getNavLinks = (btn) => {
+  const getMenuTargets = (btn) => {
     const nav = btn.closest("nav") || document;
-    return nav.querySelector(".nav-links");
+    const navLinks = nav.querySelector(".nav-links");
+    const dropdown = nav.querySelector(".dropdown-menu");
+    return { nav, navLinks, dropdown };
   };
 
   const toggleForButton = (btn, e) => {
@@ -465,14 +467,15 @@ function setupHamburger() {
       e.preventDefault();
       e.stopPropagation();
     }
-    const navLinks = getNavLinks(btn);
-    if (!navLinks) return;
+    const { navLinks, dropdown } = getMenuTargets(btn);
+    const menu = navLinks || dropdown;
+    if (!menu) return;
     const now = Date.now();
     const lastToggleAt = Number(btn.dataset.lastToggleAt || "0");
     if (now - lastToggleAt < 250) return;
     btn.dataset.lastToggleAt = String(now);
     btn.classList.toggle("active");
-    navLinks.classList.toggle("active");
+    menu.classList.toggle("active");
   };
 
   // Toggle menu function - make it global so onclick works
@@ -491,8 +494,9 @@ function setupHamburger() {
   }
 
   hamburgers.forEach((hamburger) => {
-    const navLinks = getNavLinks(hamburger);
-    if (!navLinks) return;
+    const { navLinks, dropdown } = getMenuTargets(hamburger);
+    const menu = navLinks || dropdown;
+    if (!menu) return;
 
     // Avoid double-binding when inline onclick exists (prevents double toggle)
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
@@ -502,22 +506,26 @@ function setupHamburger() {
       hamburger.dataset.bound = "true";
     }
 
-    navLinks.querySelectorAll("a").forEach((link) => {
+    menu.querySelectorAll("a, button").forEach((link) => {
       link.addEventListener("click", () => {
         hamburger.classList.remove("active");
-        navLinks.classList.remove("active");
+        menu.classList.remove("active");
       });
     });
   });
 
   // Close menu when clicking outside (handles multiple navs)
   document.addEventListener("click", (e) => {
-    document.querySelectorAll(".nav-links.active").forEach((links) => {
-      const nav = links.closest("nav") || document;
+    const activeMenus = [
+      ...document.querySelectorAll(".nav-links.active"),
+      ...document.querySelectorAll(".dropdown-menu.active"),
+    ];
+    activeMenus.forEach((menu) => {
+      const nav = menu.closest("nav") || document;
       const btn = nav.querySelector(".hamburger");
-      if (btn && !btn.contains(e.target) && !links.contains(e.target)) {
+      if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
         btn.classList.remove("active");
-        links.classList.remove("active");
+        menu.classList.remove("active");
       }
     });
   });
