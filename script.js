@@ -452,29 +452,47 @@ function setupCategoryFilter() {
 
 // Hamburger menu
 function setupHamburger() {
-  const hamburger = document.querySelector(".hamburger");
-  const navLinks = document.querySelector(".nav-links");
+  const hamburgers = document.querySelectorAll(".hamburger");
+  if (!hamburgers.length) return;
 
-  if (hamburger && navLinks) {
-    let lastToggleAt = 0;
+  const getNavLinks = (btn) => {
+    const nav = btn.closest("nav") || document;
+    return nav.querySelector(".nav-links");
+  };
 
-    // Toggle menu function - make it global so onclick works
-    if (!window.toggleMenu) {
-      window.toggleMenu = function (e) {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        const now = Date.now();
-        if (now - lastToggleAt < 250) return;
-        lastToggleAt = now;
-        hamburger.classList.toggle("active");
-        navLinks.classList.toggle("active");
-      };
+  const toggleForButton = (btn, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
-    if (!window.toggleHamburger) {
-      window.toggleHamburger = window.toggleMenu;
-    }
+    const navLinks = getNavLinks(btn);
+    if (!navLinks) return;
+    const now = Date.now();
+    const lastToggleAt = Number(btn.dataset.lastToggleAt || "0");
+    if (now - lastToggleAt < 250) return;
+    btn.dataset.lastToggleAt = String(now);
+    btn.classList.toggle("active");
+    navLinks.classList.toggle("active");
+  };
+
+  // Toggle menu function - make it global so onclick works
+  if (!window.toggleMenu) {
+    window.toggleMenu = function (e) {
+      const btn =
+        e?.currentTarget?.closest(".hamburger") ||
+        e?.target?.closest(".hamburger") ||
+        document.querySelector(".hamburger");
+      if (!btn) return;
+      toggleForButton(btn, e);
+    };
+  }
+  if (!window.toggleHamburger) {
+    window.toggleHamburger = window.toggleMenu;
+  }
+
+  hamburgers.forEach((hamburger) => {
+    const navLinks = getNavLinks(hamburger);
+    if (!navLinks) return;
 
     // Avoid double-binding when inline onclick exists (prevents double toggle)
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
@@ -484,25 +502,25 @@ function setupHamburger() {
       hamburger.dataset.bound = "true";
     }
 
-    // Close menu when clicking outside
-    document.addEventListener("click", (e) => {
-      if (
-        navLinks.classList.contains("active") &&
-        !navLinks.contains(e.target) &&
-        !hamburger.contains(e.target)
-      ) {
-        hamburger.classList.remove("active");
-        navLinks.classList.remove("active");
-      }
-    });
-
     navLinks.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", () => {
         hamburger.classList.remove("active");
         navLinks.classList.remove("active");
       });
     });
-  }
+  });
+
+  // Close menu when clicking outside (handles multiple navs)
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".nav-links.active").forEach((links) => {
+      const nav = links.closest("nav") || document;
+      const btn = nav.querySelector(".hamburger");
+      if (btn && !btn.contains(e.target) && !links.contains(e.target)) {
+        btn.classList.remove("active");
+        links.classList.remove("active");
+      }
+    });
+  });
 }
 
 function setupPasswordToggles() {
@@ -544,6 +562,16 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPasswordToggles();
   updateAuthUI();
   setupAutoLogout();
+
+  // Global logout handler (covers inline or dynamic logout buttons)
+  document.addEventListener("click", (e) => {
+    const logoutTrigger = e.target.closest(
+      ".logout-btn, #logout-btn, #dropdown-logout, #admin-logout",
+    );
+    if (!logoutTrigger) return;
+    e.preventDefault();
+    logoutUser();
+  });
 
   // Homepage featured products
   const allProducts = getAllProducts();
