@@ -1984,13 +1984,14 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
     },
   },
 }));
 
 app.use(bodyParser.json({ limit: "15mb" }));
+app.use(bodyParser.urlencoded({ extended: true }));
 // Debug middleware
 app.use((req, res, next) => {
   console.log("[DEBUG MIDDLEWARE] req.body =", JSON.stringify(req.body));

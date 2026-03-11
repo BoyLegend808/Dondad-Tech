@@ -501,10 +501,43 @@ function setupHamburger() {
   }
 }
 
+function setupPasswordToggles() {
+  const toggleButtons = document.querySelectorAll(".toggle-password");
+  if (!toggleButtons.length) return;
+
+  toggleButtons.forEach((btn) => {
+    if (btn.dataset.bound) return;
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      const input = targetId
+        ? document.getElementById(targetId)
+        : btn.closest(".input-wrapper")?.querySelector("input");
+      if (!input) return;
+      const icon = btn.querySelector("i");
+
+      if (input.type === "password") {
+        input.type = "text";
+        if (icon) {
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+        }
+      } else {
+        input.type = "password";
+        if (icon) {
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.add("fa-eye");
+        }
+      }
+    });
+    btn.dataset.bound = "true";
+  });
+}
+
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
   setupHamburger();
+  setupPasswordToggles();
   updateAuthUI();
   setupAutoLogout();
 
@@ -537,6 +570,18 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+      const errorEl = document.getElementById("error") || document.getElementById("login-error");
+      const btn = document.getElementById("login-btn");
+
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.style.display = "none";
+      }
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+      }
+
       console.log("Login attempt for:", email);
 
       try {
@@ -560,12 +605,27 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         } else {
           console.log("Login failed for:", email);
-          alert(data.error || "Invalid email or password!");
+          if (errorEl) {
+            errorEl.textContent = data.error || "Invalid email or password!";
+            errorEl.style.display = "block";
+          } else {
+            alert(data.error || "Invalid email or password!");
+          }
         }
       } catch (error) {
         console.error("Login error:", error);
         console.log("Login failed for:", email);
-        alert("Unable to login right now. Please check your connection and try again.");
+        if (errorEl) {
+          errorEl.textContent = "Unable to login right now. Please check your connection and try again.";
+          errorEl.style.display = "block";
+        } else {
+          alert("Unable to login right now. Please check your connection and try again.");
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+        }
       }
       return false;
     });
