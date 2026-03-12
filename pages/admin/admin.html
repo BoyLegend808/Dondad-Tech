@@ -323,8 +323,12 @@
                 event.preventDefault();
                 event.stopPropagation();
             }
-            document.querySelector('.nav-links')?.classList.toggle('active');
-            document.querySelector('.hamburger')?.classList.toggle('active');
+            // Toggle the dropdown menu for admin
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            const hamburger = document.querySelector('.hamburger');
+            if (dropdownMenu) dropdownMenu.classList.toggle('active');
+            if (hamburger) hamburger.classList.toggle('active');
+            console.log('Admin menu toggled');
         }
         
         // Admin Panel Logic

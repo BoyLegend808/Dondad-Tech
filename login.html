@@ -173,12 +173,12 @@
     
     // Mobile hamburger menu handler
     function toggleMenu(e) {
-        if (e && e.preventDefault) {
+        if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
         var hamburger = document.querySelector('.hamburger');
-        var navLinks = document.getElementById('navLinks');
+        var navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
         if (hamburger && navLinks) {
             hamburger.classList.toggle('active');
             navLinks.classList.toggle('active');
@@ -190,10 +190,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Page loaded, setting up handlers');
         
-        // Setup hamburger click
+        // Setup hamburger click - attach directly
         var hamburger = document.querySelector('.hamburger');
         if (hamburger) {
-            hamburger.onclick = toggleMenu;
+            hamburger.addEventListener('click', toggleMenu);
             console.log('Hamburger handler attached');
         }
         

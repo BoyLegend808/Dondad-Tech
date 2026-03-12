@@ -122,7 +122,7 @@
                 event.stopPropagation();
             }
             const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.getElementById('navLinks');
+            const navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
             if (hamburger && navLinks) {
                 hamburger.classList.toggle('active');
                 navLinks.classList.toggle('active');
@@ -135,7 +135,7 @@
             console.log('Register page loaded');
             var hamburger = document.querySelector('.hamburger');
             if (hamburger) {
-                hamburger.onclick = toggleMenu;
+                hamburger.addEventListener('click', toggleMenu);
                 console.log('Hamburger handler attached');
             }
         });

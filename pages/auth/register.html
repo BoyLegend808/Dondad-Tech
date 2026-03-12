@@ -127,7 +127,17 @@
                 navLinks.classList.toggle('active');
                 hamburger.classList.toggle('active');
             }
+            console.log('Menu toggled');
         }
+
+        // Attach hamburger handler on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.querySelector('.hamburger');
+            if (hamburger) {
+                hamburger.addEventListener('click', toggleMenu);
+                console.log('Hamburger handler attached');
+            }
+        });
 
         function togglePassword(fieldId) {
             const passwordInput = document.getElementById(fieldId);
