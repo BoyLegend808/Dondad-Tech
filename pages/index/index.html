@@ -358,12 +358,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
             
-            // Setup hamburger handler
-            const hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', toggleMenu);
-                console.log('Hamburger handler attached');
-            }
+            // Note: hamburger click is handled by onclick attribute in HTML
             updateCartCount();
             loadFeaturedProducts();
         });
