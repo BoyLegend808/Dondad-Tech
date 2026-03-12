@@ -328,8 +328,8 @@ header {
     z-index: 1000;
 }
 
-/* Show hamburger on tablet and mobile */
-@media (max-width: 1024px) {
+/* Show hamburger only on mobile */
+@media (max-width: 768px) {
     .hamburger {
         display: flex;
     }
@@ -408,7 +408,7 @@ header {
     transform: translateY(-6px) rotate(-45deg);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
     .hamburger {
         display: inline-flex;
     }
