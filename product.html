@@ -113,6 +113,14 @@
         // Check if user is logged in and update UI
         document.addEventListener('DOMContentLoaded', function () {
             const currentUser = getCurrentUser();
+            
+            // Setup hamburger handler
+            const hamburger = document.querySelector('.hamburger');
+            if (hamburger) {
+                hamburger.addEventListener('click', toggleMenu);
+                console.log('Hamburger handler attached');
+            }
+            
             const adminLink = document.getElementById('admin-nav-link');
             const authLinks = document.getElementById('auth-links');
             const userMenu = document.getElementById('user-menu');

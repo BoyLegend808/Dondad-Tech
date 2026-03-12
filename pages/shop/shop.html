@@ -188,6 +188,7 @@
                 navLinks.classList.toggle('active');
                 hamburger.classList.toggle('active');
             }
+            console.log('Menu toggled');
         }
 
         function updateCartCount() {
@@ -347,6 +348,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
             updateCartCount();
+            
+            // Setup hamburger handler
+            const hamburger = document.querySelector('.hamburger');
+            if (hamburger) {
+                hamburger.addEventListener('click', toggleMenu);
+                console.log('Hamburger handler attached');
+            }
             
             // Check if there's a category parameter in the URL
             const urlParams = new URLSearchParams(window.location.search);

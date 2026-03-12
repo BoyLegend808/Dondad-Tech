@@ -407,7 +407,17 @@
             }
             document.querySelector('.nav-links')?.classList.toggle('active');
             document.querySelector('.hamburger')?.classList.toggle('active');
+            console.log('Menu toggled');
         }
+        
+        // Attach hamburger handler on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.querySelector('.hamburger');
+            if (hamburger) {
+                hamburger.addEventListener('click', toggleHamburger);
+                console.log('Hamburger handler attached');
+            }
+        });
     </script>
 
     <style>
