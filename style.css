@@ -2131,11 +2131,15 @@ footer {
 
 .shop-page .shop-controls-panel,
 .shop-page .shop-products-panel {
-    background: linear-gradient(145deg, #1e0d35, #150525);
-    border: 1px solid #34165a;
-    border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 1rem 0;
+    box-shadow: none;
+}
+
+.shop-page .shop-products-panel {
+    margin-top: 1.5rem;
 }
 
 .shop-page .search-wrap {
