@@ -184,20 +184,40 @@
 
 .toggle-password {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--muted);
+    color: #a78bfa;
     cursor: pointer;
-    padding: 5px;
-    font-size: 1rem;
-    transition: color 0.3s;
+    padding: 8px;
+    font-size: 1.25rem;
+    transition: all 0.3s;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(167, 139, 250, 0.15);
 }
 
 .toggle-password:hover {
-    color: var(--primary);
+    color: #c4b5fd;
+    background: rgba(167, 139, 250, 0.25);
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.toggle-password:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Ensure input has enough right padding for the toggle button */
+.input-wrapper input {
+    padding-right: 50px;
 }
 
 .form-options {

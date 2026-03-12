@@ -2131,41 +2131,85 @@ footer {
 
 .shop-page .shop-controls-panel,
 .shop-page .shop-products-panel {
-    background: linear-gradient(145deg, #18082a, #12051f);
-    border: 1px solid #2a1243;
-    border-radius: 16px;
-    padding: 1rem;
+    background: linear-gradient(145deg, #1e0d35, #150525);
+    border: 1px solid #34165a;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .shop-page .search-wrap {
-    margin-bottom: 0.55rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.shop-page .search-wrap::before {
+    content: '\f002';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a78bfa;
+    z-index: 1;
 }
 
 .shop-page .filters {
     justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 0.55rem;
-    margin: 0.8rem 0 0.6rem;
-    padding: 0.2rem 0.2rem 0.45rem;
-    scrollbar-width: thin;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1rem 0 0.5rem;
+    padding: 0.5rem 0;
 }
 
 .shop-page .filter-btn {
     white-space: nowrap;
     flex-shrink: 0;
-    padding: 0.55rem 0.95rem;
-    font-size: 0.88rem;
+    padding: 0.7rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 50px;
+    border: 2px solid #34165a;
+    background: transparent;
+    color: #c4b5fd;
+    transition: all 0.3s ease;
+}
+
+.shop-page .filter-btn:hover {
+    border-color: #a78bfa;
+    color: #a78bfa;
+    transform: translateY(-2px);
+}
+
+.shop-page .filter-btn.active {
+    background: linear-gradient(135deg, #9333ea, #7c3aed);
+    border-color: #9333ea;
+    color: white;
+    box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
 }
 
 .shop-page #search {
     width: 100%;
     max-width: 100%;
-    margin: 0.15rem 0 0.3rem;
-    border: 1px solid #3a1d5b;
-    border-radius: 12px;
-    background: #12051f;
-    padding: 0.85rem 0.95rem;
+    margin: 0.2rem 0 0.5rem;
+    border: 2px solid #34165a;
+    border-radius: 50px;
+    background: #0f0520;
+    padding: 1rem 1rem 1rem 3rem;
+    font-size: 1rem;
+    color: #e9d5ff;
+    transition: all 0.3s ease;
+}
+
+.shop-page #search:focus {
+    outline: none;
+    border-color: #9333ea;
+    box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.2);
+}
+
+.shop-page #search::placeholder {
+    color: #7c3aed;
 }
 
 .shop-page .products-head {
