@@ -204,7 +204,7 @@
                 navLinks.classList.toggle('active');
                 hamburger.classList.toggle('active');
             }
-            console.log('Menu toggled');
+            console.log('Menu toggled:', navLinks?.classList?.contains('active'));
         }
 
         function updateCartCount() {
@@ -365,14 +365,8 @@
             checkAuth();
             updateCartCount();
             
-            // Setup hamburger handler
-            const hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', toggleMenu);
-                console.log('Hamburger handler attached');
-            }
-            
-            // Check if there's a category parameter in the URL
+            // Note: hamburger click is handled by onclick attribute in HTML
+            console.log('Page loaded');
             const urlParams = new URLSearchParams(window.location.search);
             const categoryParam = urlParams.get('category');
             

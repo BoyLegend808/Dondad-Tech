@@ -190,12 +190,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Page loaded, setting up handlers');
         
-        // Setup hamburger click - attach directly
-        var hamburger = document.querySelector('.hamburger');
-        if (hamburger) {
-            hamburger.addEventListener('click', toggleMenu);
-            console.log('Hamburger handler attached');
-        }
+        // Note: hamburger click is handled by onclick attribute in HTML
         
         // Close menu when clicking outside
         document.addEventListener('click', function(e) {

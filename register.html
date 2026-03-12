@@ -133,11 +133,7 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Register page loaded');
-            var hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', toggleMenu);
-                console.log('Hamburger handler attached');
-            }
+            // Note: hamburger click is handled by onclick attribute in HTML
         });
         
         function doRegister() {
