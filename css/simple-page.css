@@ -1,16 +1,84 @@
 /* ========================================
-   Pajay Gadgets - Simple Page Styles
+   PAJAY GADGETS - SIMPLE PAGE STYLES
+   Complete Design System Sync
    Wishlist, Profile, Contact, Privacy, Terms, Returns, Order Tracking
    ======================================== */
 
-/* Import Common Styles */
 @import url('common.css');
 
 /* ========================================
-   Page Layout
+   CSS CUSTOM PROPERTIES
+   ======================================== */
+:root {
+    /* Core Colors */
+    --bg-dark: #0f0518;
+    --bg-dark-end: #1a0a2e;
+    --primary: #a855f7;
+    --primary-light: #c084fc;
+    --primary-dark: #7c3aed;
+    --accent: #ec4899;
+    --accent-light: #f472b6;
+    
+    /* Surface Colors */
+    --surface: rgba(26, 15, 46, 0.8);
+    --surface-light: rgba(42, 18, 67, 0.6);
+    --border: #2d1b4e;
+    --border-light: #3d2b5e;
+    
+    /* Text Colors */
+    --text: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-glow: 0 0 30px rgba(168, 85, 247, 0.3);
+    --shadow-glow-accent: 0 0 30px rgba(236, 72, 153, 0.3);
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.3s ease;
+}
+
+/* ========================================
+   FADE-IN-UP ANIMATION
+   ======================================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-end) 50%, var(--bg-dark) 100%);
+    min-height: 100vh;
+}
+
+/* ========================================
+   PAGE LAYOUT
    ======================================== */
 .simple-page {
     padding-top: 70px;
+    min-height: 100vh;
 }
 
 .page-container {
@@ -22,186 +90,24 @@
 .page-header {
     margin-bottom: 2rem;
     text-align: center;
+    animation: fadeInUp 0.6s ease forwards;
 }
 
 .page-header h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .page-header p {
-    color: var(--muted);
+    color: var(--text-muted);
 }
 
 /* ========================================
-   Wishlist Page
-   ======================================== */
-.wishlist-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-}
-
-.wishlist-item {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-    transition: all 0.3s;
-    position: relative;
-}
-
-.wishlist-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.25);
-    border-color: var(--primary);
-}
-
-.wishlist-item img {
-    width: 100%;
-    height: 150px;
-    object-fit: contain;
-    margin-bottom: 1rem;
-    background: var(--bg);
-    border-radius: 10px;
-}
-
-.wishlist-item h3 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-}
-
-.wishlist-item .price {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-.wishlist-item .btn {
-    width: 100%;
-    margin-bottom: 0.5rem;
-}
-
-.remove-wishlist {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-wishlist:hover {
-    transform: scale(1.1);
-}
-
-.empty-wishlist {
-    text-align: center;
-    padding: 4rem 2rem;
-}
-
-.empty-wishlist i {
-    font-size: 4rem;
-    color: var(--muted);
-    margin-bottom: 1rem;
-}
-
-/* ========================================
-   Profile Page
-   ======================================== */
-.profile-layout {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 2rem;
-}
-
-.profile-sidebar {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 1.5rem;
-    border: 1px solid var(--border);
-    height: fit-content;
-}
-
-.profile-avatar {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.profile-avatar img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 3px solid var(--primary);
-    margin-bottom: 1rem;
-}
-
-.profile-avatar h3 {
-    font-size: 1.1rem;
-}
-
-.profile-avatar p {
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.profile-nav {
-    list-style: none;
-}
-
-.profile-nav li {
-    margin-bottom: 0.5rem;
-}
-
-.profile-nav a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    color: var(--muted);
-    transition: all 0.3s;
-}
-
-.profile-nav a:hover,
-.profile-nav a.active {
-    background: rgba(168, 85, 247, 0.15);
-    color: var(--primary);
-}
-
-.profile-content {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 2rem;
-    border: 1px solid var(--border);
-}
-
-.profile-section {
-    margin-bottom: 2rem;
-}
-
-.profile-section:last-child {
-    margin-bottom: 0;
-}
-
-.profile-section h2 {
-    font-size: 1.25rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
-}
-
-/* ========================================
-   Contact Page
+   CONTACT PAGE
    ======================================== */
 .contact-layout {
     display: grid;
@@ -209,15 +115,32 @@
     gap: 2rem;
 }
 
-.contact-info {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 2rem;
+/* Glassmorphic Card */
+.glass-card {
+    background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all var(--transition-base);
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
 }
 
+.glass-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.glass-card:nth-child(1) { animation-delay: 0.1s; }
+.glass-card:nth-child(2) { animation-delay: 0.2s; }
+.glass-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Contact Info */
 .contact-info h2 {
     margin-bottom: 1.5rem;
+    font-size: 1.5rem;
 }
 
 .contact-item {
@@ -225,212 +148,330 @@
     align-items: flex-start;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(15, 5, 24, 0.5);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.contact-item:hover {
+    background: rgba(168, 85, 247, 0.1);
+    transform: translateX(4px);
 }
 
 .contact-item i {
-    width: 40px;
-    height: 40px;
-    background: rgba(168, 85, 247, 0.15);
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
 }
 
 .contact-item h4 {
     font-size: 1rem;
     margin-bottom: 0.25rem;
+    color: var(--text);
 }
 
 .contact-item p {
-    color: var(--muted);
+    color: var(--text-muted);
     font-size: 0.9rem;
+    margin: 0;
 }
 
+.contact-item a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.contact-item a:hover {
+    color: var(--accent);
+}
+
+/* Contact Form */
 .contact-form {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 2rem;
+    background: var(--surface);
     border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: fadeInUp 0.6s ease forwards;
+    animation-delay: 0.2s;
+    opacity: 0;
 }
 
 .contact-form h2 {
     margin-bottom: 1.5rem;
+    font-size: 1.5rem;
 }
 
-/* ========================================
-   Privacy, Terms, Returns Pages
-   ======================================== */
-.content-page {
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: rgba(15, 5, 24, 0.8);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all var(--transition-base);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15), var(--shadow-glow);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Submit Button */
+.btn-submit {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.5);
+}
+
+/* Contact Section (Inline Style Override) */
+.contact-section {
+    padding-top: 8rem;
     max-width: 800px;
     margin: 0 auto;
 }
 
-.content-page h1 {
+.contact-section .btn {
+    margin-bottom: 1rem;
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.contact-section .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+}
+
+.contact-section h2 {
     font-size: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--text) 0%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
-.content-page .meta {
-    color: var(--muted);
+.contact-section .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.contact-section .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all var(--transition-base);
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.contact-section .contact-card:nth-child(1) { animation-delay: 0.1s; }
+.contact-section .contact-card:nth-child(2) { animation-delay: 0.2s; }
+.contact-section .contact-card:nth-child(3) { animation-delay: 0.3s; }
+
+.contact-section .contact-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.contact-section .contact-card h3 {
+    color: var(--primary);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.contact-section .contact-card p,
+.contact-section .contact-card a {
+    color: var(--text-secondary);
     font-size: 0.9rem;
-    margin-bottom: 2rem;
+    text-decoration: none;
+    transition: color var(--transition-fast);
 }
 
-.content-page h2 {
+.contact-section .contact-card a:hover {
+    color: var(--primary);
+}
+
+.contact-section .contact-cta {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 1rem;
+    background: rgba(168, 85, 247, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border);
+}
+
+/* ========================================
+   PRIVACY, TERMS, RETURNS PAGES
+   ======================================== */
+.content-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.content-card h2 {
     font-size: 1.5rem;
-    margin: 2rem 0 1rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
 }
 
-.content-page p {
-    color: var(--muted);
-    line-height: 1.8;
+.content-card h3 {
+    font-size: 1.15rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+}
+
+.content-card p {
+    color: var(--text-secondary);
+    line-height: 1.7;
     margin-bottom: 1rem;
 }
 
-.content-page ul {
-    margin-bottom: 1rem;
+.content-card ul {
+    color: var(--text-secondary);
     padding-left: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-.content-page li {
-    color: var(--muted);
+.content-card li {
     margin-bottom: 0.5rem;
     line-height: 1.6;
 }
 
-/* ========================================
-   Order Tracking Page
-   ======================================== */
-.tracking-container {
-    max-width: 800px;
-    margin: 0 auto;
+.content-card a {
+    color: var(--primary);
+    text-decoration: none;
 }
 
-.tracking-form {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 2rem;
-    border: 1px solid var(--border);
-    margin-bottom: 2rem;
-    display: flex;
-    gap: 1rem;
-}
-
-.tracking-form input {
-    flex: 1;
-    padding: 1rem;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    font-size: 1rem;
-}
-
-.tracking-result {
-    background: var(--card);
-    border-radius: 15px;
-    padding: 2rem;
-    border: 1px solid var(--border);
-}
-
-.tracking-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-}
-
-.tracking-timeline {
-    position: relative;
-    padding-left: 2rem;
-}
-
-.tracking-timeline::before {
-    content: '';
-    position: absolute;
-    left: 7px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--border);
-}
-
-.timeline-item {
-    position: relative;
-    padding-bottom: 2rem;
-}
-
-.timeline-item:last-child {
-    padding-bottom: 0;
-}
-
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -2rem;
-    top: 0;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--border);
-}
-
-.timeline-item.completed::before {
-    background: var(--primary);
-    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
-}
-
-.timeline-item.current::before {
-    background: var(--primary);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(168, 85, 247, 0); }
-}
-
-.timeline-content h4 {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-}
-
-.timeline-content p {
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-
-.timeline-content .date {
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-top: 0.25rem;
+.content-card a:hover {
+    color: var(--accent);
+    text-decoration: underline;
 }
 
 /* ========================================
-   Responsive Styles
+   RESPONSIVE STYLES
    ======================================== */
 @media (max-width: 768px) {
-    .profile-layout {
-        grid-template-columns: 1fr;
-    }
-
     .contact-layout {
         grid-template-columns: 1fr;
     }
-
-    .tracking-form {
-        flex-direction: column;
-    }
-
-    .wishlist-grid {
-        grid-template-columns: 1fr;
-    }
-
+    
     .page-header h1 {
         font-size: 1.5rem;
+    }
+    
+    .contact-section .contact-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-section {
+        padding-top: 6rem;
+    }
+    
+    .glass-card,
+    .contact-form,
+    .content-card {
+        padding: 1.5rem;
+    }
+    
+    .contact-item {
+        padding: 0.75rem;
+    }
+    
+    .contact-item i {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container {
+        padding: 1rem 0.75rem;
+    }
+    
+    .contact-section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-submit {
+        padding: 0.85rem;
     }
 }

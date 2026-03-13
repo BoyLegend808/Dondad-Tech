@@ -508,7 +508,7 @@
 
 /* Hamburger Button */
 .hamburger {
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 5px;
     cursor: pointer;
@@ -537,7 +537,14 @@
     transform: rotate(-45deg) translate(5px, -6px);
 }
 
-/* Dropdown Menu */
+/* Nav Right */
+.nav-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Dropdown Menu - Outside media queries for desktop and mobile */
 .dropdown-menu {
     display: none;
     position: absolute;
@@ -619,7 +626,28 @@
     align-items: center;
 }
 
-/* Mobile Dropdown */
+/* Dropdown Menu - Outside media queries for desktop and mobile */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 10px 0;
+    z-index: 1000;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.dropdown-menu.active {
+    display: block;
+    animation: dropdownFade 0.2s ease;
+}
+
+/* Mobile Styles */
 @media (max-width: 768px) {
     .hamburger {
         display: flex;

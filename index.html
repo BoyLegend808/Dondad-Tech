@@ -15,9 +15,9 @@
     <link rel="canonical" href="index.html">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/index.css">
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="products.js"></script>
+    <script src="script.js?v=20260312-3" defer></script>
     <script>
-        // Global toggle menu function for hamburger - works even if script.js doesn't load
         window.toggleMenu = function(e) {
             if (e) {
                 e.preventDefault();
@@ -62,9 +62,7 @@
                         <div class="user-dropdown">
                             <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
-                                    class="dropdown-icon">🚪</span>
-                                Logout</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
                         </div>
                     </div>
                     <a href="cart.html" class="cart-btn"><span>🛒</span> Cart (<span id="cart-count">0</span>)</a>
@@ -77,9 +75,10 @@
     </header>
 
     <main class="home-shell">
+        <!-- Search Toolbar -->
         <section class="home-toolbar panel-card">
             <div class="toolbar-search">
-                <input type="text" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
+                <input type="text" id="home-search" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
                 <a href="shop.html" class="btn">Browse</a>
             </div>
             <div class="toolbar-tags">
@@ -90,12 +89,13 @@
             </div>
         </section>
 
+        <!-- Spotlight/Hero Section -->
         <section class="home-spotlight panel-card">
             <div class="spotlight-main">
-                <p class="spotlight-kicker">Deal Zone</p>
-                <h1>Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
-                <p>Daily deals on top devices with clean pricing and fast delivery support.</p>
-                <a href="shop.html" class="btn">Shop Now</a>
+                <p class="spotlight-kicker animate-fade-in">Deal Zone</p>
+                <h1 class="animate-fade-in animate-delay-1">Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
+                <p class="animate-fade-in animate-delay-2">Daily deals on top devices with clean pricing and fast delivery support.</p>
+                <a href="shop.html" class="btn animate-fade-in animate-delay-3">Shop Now</a>
             </div>
             <div class="spotlight-side">
                 <article class="side-tile">
@@ -109,6 +109,7 @@
             </div>
         </section>
 
+        <!-- Trust Section -->
         <section class="trust-section panel-card">
             <h2>Why Shop Here</h2>
             <div class="trust-grid">
@@ -127,6 +128,7 @@
             </div>
         </section>
 
+        <!-- Featured Products -->
         <section class="featured panel-card">
             <div class="section-head">
                 <h2>Featured Products</h2>
@@ -135,6 +137,7 @@
             <div class="product-scroll" id="featured-products"></div>
         </section>
 
+        <!-- Categories -->
         <section class="categories panel-card">
             <div class="section-head">
                 <h2>Top Categories</h2>
@@ -160,6 +163,7 @@
             </div>
         </section>
 
+        <!-- About Section -->
         <section class="about-section panel-card" id="about">
             <div class="about-grid">
                 <div class="about-content">
@@ -182,6 +186,7 @@
             </div>
         </section>
 
+        <!-- Contact Section -->
         <section class="contact-section panel-card" id="contact">
             <h2>Contact Us</h2>
             <div class="contact-grid">
@@ -212,7 +217,83 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Notification Modal -->
+    <div class="modal-overlay" id="notification-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Notification</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message">Message goes here</p>
+                <button class="btn" onclick="closeModal()">Got it</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon} toast-icon"></i>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => {
+                    if (toast.parentElement) toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // Modal functions
+        function openModal(title, message) {
+            const modal = document.getElementById('notification-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            
+            if (modal && modalTitle && modalMessage) {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modal.classList.add('active');
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('notification-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Close modal on overlay click
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('notification-modal');
+            if (modal && e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Auth functions
         function getCurrentUser() {
             try {
                 const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
@@ -262,18 +343,6 @@
             menu.classList.toggle('active');
         }
 
-        function toggleMenu(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const navLinks = document.querySelector('.nav-links');
-            const hamburger = document.querySelector('.hamburger');
-            if (navLinks) navLinks.classList.toggle('active');
-            if (hamburger) hamburger.classList.toggle('active');
-            console.log('Menu toggled');
-        }
-
         function updateCartCount() {
             const cartCountEl = document.getElementById('cart-count');
             if (!cartCountEl) return;
@@ -299,24 +368,56 @@
                 .catch(() => {});
         }
 
+        // Load featured products - use local first, then try API
         function loadFeaturedProducts() {
-            fetch('/api/featured')
-                .then(r => (r.ok ? r.json() : []))
-                .then(products => {
-                    const container = document.getElementById('featured-products');
-                    if (!container || !Array.isArray(products)) return;
-                    container.innerHTML = products.map(p => `
-                        <div class="product-card">
-                            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
-                            <h3>${p.name}</h3>
-                            <p>${p.desc}</p>
-                            <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                            <a href="product.html?id=${p._id}" class="btn">View</a>
-                        </div>
-                    `).join('');
+            const container = document.getElementById('featured-products');
+            if (!container) return;
+            
+            // First, use local products immediately for fast loading
+            if (typeof products !== 'undefined') {
+                const featured = products.slice(0, 8);
+                container.innerHTML = featured.map((p, index) => `
+                    <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                        <img src="${p.image || 'logo.png'}" alt="${p.name}" onerror="this.src='logo.png'">
+                        <h3>${p.name}</h3>
+                        <p>${p.desc || 'Premium gadget'}</p>
+                        <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                        <a href="product.html?id=${p.id}" class="btn">View</a>
+                    </div>
+                `).join('');
+            }
+            
+            // Then try to fetch from API in background
+            fetchWithTimeout('/api/products?limit=8', {}, 3000)
+                .then(r => r.ok ? r.json() : { products: [] })
+                .then(data => {
+                    const products = data.products || [];
+                    if (Array.isArray(products) && products.length > 0) {
+                        container.innerHTML = products.map((p, index) => `
+                            <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                                <img src="${p.image || 'logo.png'}" alt="${p.name}" onerror="this.src='logo.png'">
+                                <h3>${p.name}</h3>
+                                <p>${p.desc || 'Premium gadget'}</p>
+                                <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                                <a href="product.html?id=${p._id || p.id}" class="btn">View</a>
+                            </div>
+                        `).join('');
+                    }
                 })
-                .catch(() => {});
+                .catch(() => {
+                    // Already loaded local products, no action needed
+                });
         }
+
+        // Search functionality
+        document.getElementById('home-search')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.trim();
+                if (searchTerm) {
+                    window.location.href = `shop.html?search=${encodeURIComponent(searchTerm)}`;
+                }
+            }
+        });
 
         document.addEventListener('click', function (e) {
             const userMenu = document.querySelector('.user-menu');
@@ -336,12 +437,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
             
-            // Setup hamburger handler
             const hamburger = document.querySelector('.hamburger');
             if (hamburger) {
-                hamburger.addEventListener('click', toggleMenu);
-                console.log('Hamburger handler attached');
+                hamburger.addEventListener('click', function(e) {
+                    const navLinks = document.querySelector('.nav-links');
+                    if (navLinks) navLinks.classList.toggle('active');
+                    this.classList.toggle('active');
+                });
             }
+            
             updateCartCount();
             loadFeaturedProducts();
         });
@@ -349,6 +453,3 @@
 </body>
 
 </html>
-
-
-

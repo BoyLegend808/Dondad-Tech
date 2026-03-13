@@ -243,6 +243,123 @@
 }
 
 /* ========================================
+   Hamburger Button - Visible on desktop and mobile
+   ======================================== */
+.hamburger {
+    display: flex !important;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    background: none;
+    border: none;
+    z-index: 1001;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background: var(--text);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+/* Nav Right */
+.nav-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* ========================================
+   Dropdown Menu - Outside media queries for desktop and mobile
+   ======================================== */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 10px 0;
+    z-index: 1000;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.dropdown-menu.active {
+    display: block;
+    animation: dropdownFade 0.2s ease;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    color: var(--text);
+    text-decoration: none;
+    transition: background 0.2s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--primary);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+}
+
+.dropdown-user {
+    display: block;
+    padding: 10px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.logout-item {
+    color: var(--accent);
+}
+
+.logout-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--accent);
+}
+
+/* ========================================
    Forms
    ======================================== */
 .admin-form {
