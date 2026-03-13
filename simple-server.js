@@ -303,6 +303,121 @@ app.get('/api/health', (req, res) => {
 });
 
 // ========================================
+// AUTHENTICATION ENDPOINTS (In-memory for demo)
+// ========================================
+
+// Store users in memory (for demo purposes - users are reset when server restarts)
+const users = [];
+
+// POST /api/auth/register - Register a new user
+app.post('/api/auth/register', (req, res) => {
+    try {
+        const { name, email, password, phone } = req.body;
+        
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Name, email and password are required' });
+        }
+        
+        // Check if user already exists
+        const existingUser = users.find(u => u.email === email);
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already registered' });
+        }
+        
+        // Create new user
+        const newUser = {
+            _id: String(users.length + 1),
+            id: users.length + 1,
+            name,
+            email,
+            phone: phone || '',
+            password: password, // In production, hash the password!
+            createdAt: new Date().toISOString()
+        };
+        
+        users.push(newUser);
+        
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json({ user: userWithoutPassword, message: 'Registration successful' });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.status(500).json({ error: 'Failed to register user' });
+    }
+});
+
+// POST /api/register - Register (alternative endpoint)
+app.post('/api/register', (req, res) => {
+    // Forward to /api/auth/register
+    req.url = '/api/auth/register';
+    app._router.handle(req, res);
+});
+
+// POST /api/auth/login - Login user
+app.post('/api/auth/login', (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+        
+        // Find user
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({ user: userWithoutPassword, message: 'Login successful' });
+    } catch (error) {
+        console.error('Error logging in:', error);
+        res.status(500).json({ error: 'Failed to login' });
+    }
+});
+
+// POST /api/login - Login (alternative endpoint)
+app.post('/api/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+    
+    // Find user
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ user: userWithoutPassword, message: 'Login successful' });
+});
+
+// GET /api/auth/me - Get current user
+app.get('/api/auth/me', (req, res) => {
+    try {
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        const user = users.find(u => u._id === userId || u.id === parseInt(userId));
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        console.error('Error getting user:', error);
+        res.status(500).json({ error: 'Failed to get user' });
+    }
+});
+
+// ========================================
 // START SERVER
 // ========================================
 app.listen(PORT, () => {
@@ -311,11 +426,14 @@ app.listen(PORT, () => {
     console.log(`  Running on http://localhost:${PORT}`);
     console.log(`========================================`);
     console.log(`  API Endpoints:`);
-    console.log(`  - GET  /api/products       - List all products`);
-    console.log(`  - GET  /api/products/:id    - Get single product`);
-    console.log(`  - GET  /api/featured       - Featured products`);
-    console.log(`  - POST /api/cart/:uid/:pid - Add to cart`);
-    console.log(`  - GET  /api/cart/:uid      - Get user cart`);
+    console.log(`  - GET    /api/products       - List all products`);
+    console.log(`  - GET    /api/products/:id   - Get single product`);
+    console.log(`  - GET    /api/featured      - Featured products`);
+    console.log(`  - POST   /api/cart/:uid/:pid - Add to cart`);
+    console.log(`  - GET    /api/cart/:uid     - Get user cart`);
+    console.log(`  - POST   /api/auth/register  - Register user`);
+    console.log(`  - POST   /api/auth/login     - Login user`);
+    console.log(`  - GET    /api/auth/me       - Get current user`);
     console.log(`========================================`);
 });
 
