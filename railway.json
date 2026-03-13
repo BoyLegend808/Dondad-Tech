@@ -10,7 +10,7 @@
     "environment": [
       {
         "key": "MONGODB_URI",
-        "value": "${{ MongoDB.MONGODB_URI }}"
+        "value": "mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/"
       }
     ]
   }
