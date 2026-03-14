@@ -297,6 +297,9 @@
     object-fit: contain;
     border-radius: 8px;
     background: var(--bg-color);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .category-badge {
@@ -465,6 +468,9 @@
     padding: 8px 16px;
     font-size: 0.9rem;
     margin-right: 5px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-edit:hover {
@@ -472,11 +478,18 @@
     color: var(--bg-color);
 }
 
+.btn-edit:active {
+    transform: scale(0.98);
+}
+
 .btn-delete {
     background: rgba(239, 68, 68, 0.2);
     color: var(--accent);
     padding: 8px 16px;
     font-size: 0.9rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-delete:hover {
@@ -791,6 +804,8 @@
         margin-right: 0;
         width: 100%;
         text-align: center;
+        position: relative;
+        z-index: 1;
     }
 
     .order-item-row {
