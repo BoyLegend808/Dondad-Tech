@@ -410,6 +410,69 @@
                     }
                 });
             }
+            
+            // Event delegation for edit and delete buttons (better mobile support)
+            document.addEventListener('click', function(e) {
+                // Handle edit button click
+                const editBtn = e.target.closest('.btn-edit');
+                if (editBtn) {
+                    const row = editBtn.closest('tr');
+                    if (row) {
+                        const productId = row.dataset.productId || editBtn.dataset.productId;
+                        if (productId) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showEditProduct(productId);
+                            return;
+                        }
+                    }
+                    // Fallback: try to get ID from onclick
+                    const onclick = editBtn.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/showEditProduct\(['"]([^'"]+)['"]/);
+                        if (match) {
+                            e.preventDefault();
+                            showEditProduct(match[1]);
+                        }
+                    }
+                }
+                
+                // Handle delete button click
+                const deleteBtn = e.target.closest('.btn-delete');
+                if (deleteBtn) {
+                    const row = deleteBtn.closest('tr');
+                    if (row) {
+                        const productId = row.dataset.productId || deleteBtn.dataset.productId;
+                        if (productId) {
+                            e.preventDefault();
+                            deleteProduct(productId);
+                            return;
+                        }
+                    }
+                    // Fallback: try to get ID from onclick
+                    const onclick = deleteBtn.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/deleteProduct\(['"]([^'"]+)['"]/);
+                        if (match) {
+                            e.preventDefault();
+                            deleteProduct(match[1]);
+                        }
+                    }
+                }
+                
+                // Handle product image click (edit via image)
+                const thumb = e.target.closest('.product-thumb');
+                if (thumb) {
+                    const row = thumb.closest('tr');
+                    if (row) {
+                        const productId = row.dataset.productId;
+                        if (productId) {
+                            e.preventDefault();
+                            showEditProduct(productId);
+                        }
+                    }
+                }
+            });
         });
 
         function getStoredUser() {
@@ -1144,7 +1207,7 @@
             
             noProducts.style.display = 'none';
             tbody.innerHTML = products.map(p => `
-                <tr>
+                <tr data-product-id="${p._id || p.id}">
                     <td><img src="${p.image || 'logo.png'}" alt="${p.name}" class="product-thumb" onclick="showEditProduct('${p._id || p.id}')" style="cursor: pointer;" title="Click to edit"></td>
                     <td><strong>${p.name}</strong></td>
                     <td><span class="category-badge">${p.category}</span></td>
