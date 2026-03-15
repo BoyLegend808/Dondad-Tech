@@ -4,6 +4,10 @@
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify');
 const API_BASE = isNetlify ? '/.netlify/functions' : '';
 
+// Debug logging
+console.log('Environment:', isNetlify ? 'Netlify' : 'Local/Vercel');
+console.log('API Base URL:', API_BASE);
+
 // Helper function to safely parse JSON response
 async function safeJsonResponse(response) {
   const contentType = response.headers.get('content-type');
@@ -685,11 +689,12 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Login error:", error);
         console.log("Login failed for:", email);
+        const errorMessage = error.message || "Unable to login right now. Please check your connection and try again.";
         if (errorEl) {
-          errorEl.textContent = "Unable to login right now. Please check your connection and try again.";
+          errorEl.textContent = errorMessage;
           errorEl.style.display = "block";
         } else {
-          alert("Unable to login right now. Please check your connection and try again.");
+          alert(errorMessage);
         }
       } finally {
         if (btn) {
