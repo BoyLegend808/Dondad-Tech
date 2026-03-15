@@ -4,7 +4,7 @@
 const { neon } = require('@netlify/neon');
 
 async function getDb() {
-  const sql = neon(process.env.NETLIFY_DATABASE_URL);
+  const sql = neon(process.env.NETLIFY_DATABASE_URL || 'postgresql://neondb_owner:npg_4DgdZ5HTVmOP@ep-hidden-sound-aeeb211r-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require');
   return sql;
 }
 
