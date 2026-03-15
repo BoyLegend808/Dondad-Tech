@@ -9,7 +9,7 @@ let isConnected = false;
 async function connectDB() {
   if (isConnected) return;
   
-  const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/';
   
   if (!MONGODB_URI) {
     throw new Error('MongoDB URI not configured');
