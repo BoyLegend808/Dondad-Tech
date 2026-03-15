@@ -8,6 +8,19 @@ const API_BASE = isNetlify ? '/.netlify/functions' : '';
 console.log('Environment:', isNetlify ? 'Netlify' : 'Local/Vercel');
 console.log('API Base URL:', API_BASE);
 
+// Test API endpoint on load if on Netlify
+if (isNetlify) {
+  fetch(API_BASE + '/test')
+    .then(r => r.json())
+    .then(data => {
+      console.log('API Test:', data);
+      if (!data.environment.MONGODB_URI) {
+        console.error('MONGODB_URI is not set in Netlify environment variables!');
+      }
+    })
+    .catch(err => console.error('API Test failed:', err));
+}
+
 // Helper function to safely parse JSON response
 async function safeJsonResponse(response) {
   const contentType = response.headers.get('content-type');
