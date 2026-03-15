@@ -4,6 +4,35 @@
 const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify');
 const API_BASE = isNetlify ? '/.netlify/functions' : '';
 
+// Helper function to safely parse JSON response
+async function safeJsonResponse(response) {
+  const contentType = response.headers.get('content-type');
+  
+  if (!response.ok) {
+    // Try to get error message from response
+    if (contentType && contentType.includes('application/json')) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+    throw new Error(`HTTP error ${response.status}: Server returned ${response.statusText}`);
+  }
+  
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  
+  // If not JSON, get text and throw meaningful error
+  const text = await response.text();
+  if (text.startsWith('<') || text.includes('<!DOCTYPE')) {
+    throw new Error('Server returned HTML instead of JSON. The API endpoint may be unreachable.');
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error('Failed to parse server response');
+  }
+}
+
 // Cart functionality
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -259,7 +288,7 @@ function addToCart(productId, qty = 1) {
       credentials: "include",
       body: JSON.stringify({ qty: qty }),
     })
-      .then((r) => r.json())
+      .then((r) => safeJsonResponse(r))
       .then((data) => {
         if (data.success) {
           alert(product.name + " added to cart!");
@@ -318,10 +347,7 @@ function updateCartCount() {
     fetch(`/api/cart/${userId}`, {
       credentials: "include"
     })
-      .then(r => {
-        if (!r.ok) throw new Error('Cart fetch failed');
-        return r.json();
-      })
+      .then(r => safeJsonResponse(r))
       .then(cart => {
         let totalItems = 0;
         if (Array.isArray(cart) && cart.length > 0) {
@@ -634,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
-        const data = await response.json();
+        const data = await safeJsonResponse(response);
         
         if (data.success) {
           // Store user data including the MongoDB _id
@@ -697,7 +723,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, phone, password }),
         });
-        const data = await response.json();
+        const data = await safeJsonResponse(response);
 
         if (data.success) {
           setCurrentUser(data.user);
