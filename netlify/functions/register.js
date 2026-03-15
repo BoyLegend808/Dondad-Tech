@@ -9,19 +9,24 @@ let isConnected = false;
 async function connectDB() {
   if (isConnected) return;
   
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/';
+  const MONGODB_URI = 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/dondad_tech?retryWrites=true&w=majority';
+  
+  console.log('Attempting to connect to MongoDB...');
   
   if (!MONGODB_URI) {
     throw new Error('MongoDB URI not configured');
   }
   
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
     isConnected = true;
     console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
+    console.error('MongoDB connection error:', error.message);
+    throw new Error('Cannot connect to database: ' + error.message);
   }
 }
 
