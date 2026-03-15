@@ -1,5 +1,9 @@
 // Pajay Gadgets - Main JavaScript
 
+// API Configuration - detects if running on Netlify
+const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify');
+const API_BASE = isNetlify ? '/.netlify/functions' : '';
+
 // Cart functionality
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -166,7 +170,7 @@ function setCurrentUser(user) {
 function logoutUser(message = null) {
   sessionStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
-  fetch("/api/logout", { method: "POST" }).catch(() => {});
+  fetch(API_BASE + "/logout", { method: "POST" }).catch(() => {});
   updateAuthUI();
   if (message) {
     alert(message);
@@ -625,7 +629,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Login attempt for:", email);
 
       try {
-        const response = await fetch("/api/login", {
+        const response = await fetch(API_BASE + "/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -688,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const response = await fetch("/api/register", {
+        const response = await fetch(API_BASE + "/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, phone, password }),
