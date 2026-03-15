@@ -1,96 +1,11 @@
 // Netlify Serverless Function - Login
-// This replaces the /api/login endpoint for Netlify deployment
+// Uses Netlify's built-in PostgreSQL database (Neon)
 
-const mongoose = require('mongoose');
+const { neon } = require('@netlify/neon');
 
-// MongoDB Connection
-let isConnected = false;
-
-async function connectDB() {
-  if (isConnected) return;
-  
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/';
-  
-  if (!MONGODB_URI) {
-    throw new Error('MongoDB URI not configured');
-  }
-  
-  try {
-    await mongoose.connect(MONGODB_URI);
-    isConnected = true;
-    console.log('MongoDB connected successfully');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-}
-
-// User Schema
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  password: String,
-  role: { type: String, default: 'user' },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.models.User || mongoose.model('User', userSchema);
-
-// Helper Functions
-function normalizeEmail(email = "") {
-  return email.trim().toLowerCase();
-}
-
-function isValidEmail(email = "") {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email));
-}
-
-function verifyPassword(inputPassword, storedPassword) {
-  // Check for plain-text password (legacy)
-  if (storedPassword && !storedPassword.startsWith('$2')) {
-    return inputPassword === storedPassword;
-  }
-  
-  // Use bcrypt for hashed passwords
-  try {
-    const bcrypt = require('bcryptjs');
-    return bcrypt.compareSync(inputPassword, storedPassword);
-  } catch (error) {
-    console.error('Password verification error:', error);
-    return false;
-  }
-}
-
-function generateToken(user) {
-  const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
-  const jwt = require('jsonwebtoken');
-  
-  return jwt.sign(
-    { userId: user._id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: '24h' }
-  );
-}
-
-// Rate limiting (simple in-memory)
-const loginAttempts = new Map();
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
-
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const attempts = loginAttempts.get(ip) || [];
-  
-  // Remove old attempts
-  const validAttempts = attempts.filter(time => now - time < RATE_LIMIT_WINDOW);
-  
-  if (validAttempts.length >= MAX_ATTEMPTS) {
-    return false;
-  }
-  
-  validAttempts.push(now);
-  loginAttempts.set(ip, validAttempts);
-  return true;
+async function getDb() {
+  const sql = neon(process.env.NETLIFY_DATABASE_URL);
+  return sql;
 }
 
 // Main Handler
@@ -104,7 +19,6 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Set CORS headers
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -112,28 +26,13 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
   try {
-    // Connect to MongoDB
-    await connectDB();
+    const sql = await getDb();
 
-    // Get client IP for rate limiting
-    const ip = event.headers['x-forwarded-for'] || event.headers['client-ip'] || 'unknown';
-    
-    // Check rate limit
-    if (!checkRateLimit(ip)) {
-      return {
-        statusCode: 429,
-        headers,
-        body: JSON.stringify({ success: false, error: 'Too many login attempts. Please try again later.' })
-      };
-    }
-
-    // Parse request body
     let body;
     try {
       body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
@@ -145,22 +44,36 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const email = normalizeEmail(body?.email || '');
+    const email = (body?.email || '').trim().toLowerCase();
     const password = String(body?.password || '').trim();
 
     // Validate input
-    if (!email || !password || !isValidEmail(email) || password.length > 200) {
+    if (!email || !password) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ success: false, error: 'Invalid email or password format' })
+        body: JSON.stringify({ success: false, error: 'Email and password required' })
       };
     }
 
-    // Find user
-    const user = await User.findOne({ email }).select('_id name email role password');
+    // Find user - assuming a 'users' table exists
+    const users = await sql`SELECT * FROM users WHERE email = ${email}`;
     
-    if (!user || !verifyPassword(password, user.password)) {
+    if (users.length === 0) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ success: false, error: 'Invalid email or password' })
+      };
+    }
+
+    const user = users[0];
+    
+    // Verify password
+    const bcrypt = require('bcryptjs');
+    const passwordValid = bcrypt.compareSync(password, user.password);
+    
+    if (!passwordValid) {
       return {
         statusCode: 401,
         headers,
@@ -169,10 +82,14 @@ exports.handler = async (event, context) => {
     }
 
     // Generate token
-    const sessionToken = generateToken(user);
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
+    const sessionToken = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    // Return success with token
-    // Note: Cookies won't work the same way in serverless, so we return the token
     return {
       statusCode: 200,
       headers,
@@ -180,7 +97,7 @@ exports.handler = async (event, context) => {
         success: true,
         token: sessionToken,
         user: {
-          _id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
           role: user.role

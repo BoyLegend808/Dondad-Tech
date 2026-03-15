@@ -14,8 +14,8 @@ if (isNetlify) {
     .then(r => r.json())
     .then(data => {
       console.log('API Test:', data);
-      if (!data.environment.MONGODB_URI) {
-        console.error('MONGODB_URI is not set in Netlify environment variables!');
+      if (!data.environment.NETLIFY_DATABASE_URL) {
+        console.error('NETLIFY_DATABASE_URL is not set in Netlify environment variables!');
       }
     })
     .catch(err => console.error('API Test failed:', err));

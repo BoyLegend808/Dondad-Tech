@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
       success: true,
       message: 'Netlify functions are working!',
       environment: {
-        MONGODB_URI: process.env.MONGODB_URI ? 'SET' : 'NOT SET',
+        NETLIFY_DATABASE_URL: process.env.NETLIFY_DATABASE_URL ? 'SET' : 'NOT SET',
         JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
       }
     })
