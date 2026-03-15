@@ -1,17 +1,6 @@
 [build]
-  command = "npm run build"
+  command = "exit 0"
   publish = "."
 
 [build.environment]
   NODE_VERSION = "18"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/server.js/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/server.js"
-  status = 200
-  force = true
