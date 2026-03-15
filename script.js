@@ -1,7 +1,7 @@
 // Pajay Gadgets - Main JavaScript
 
 // API Configuration - detects if running on Netlify
-const isNetlify = window.location.hostname.includes('netlify.app') || window.location.hostname.includes('netlify');
+const isNetlify = window.location.hostname.includes('netlify.app');
 const API_BASE = isNetlify ? '/.netlify/functions' : '';
 
 // Debug logging
