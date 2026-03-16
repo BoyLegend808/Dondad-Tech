@@ -2,7 +2,7 @@ const dns = require("node:dns");
 require("dotenv").config();
 console.log("[SERVER] Starting server with latest code...");
 if (!process.env.RENDER) {
-  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+  dns.setServers([]); // Use system default DNS servers
 }
 
 const express = require("express");
