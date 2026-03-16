@@ -10,7 +10,7 @@ async function connectDB() {
   if (isConnected) return;
   
   // Your MongoDB connection string
-  const MONGODB_URI = 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/dondad_tech?retryWrites=true&w=majority';
+  const MONGODB_URI = 'mongodb+srv://ugwunekejohn5_db_user:hvu8ud3QFlWojG6o@cluster0.r5kxjyu.mongodb.net/?retryWrites=true&w=majority';
   
   console.log('Attempting to connect to MongoDB...');
   console.log('Connection string (masked):', MONGODB_URI.replace(/\/\/[^@]+@/, '//***:***@'));
