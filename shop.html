@@ -95,8 +95,8 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-    <!-- Products data for fallback -->
-    <script src="products.js"></script>
+     <!-- Products data for fallback -->
+     <script src="js/products.js"></script>
     
     <script>
         const API_URL = '';
@@ -234,31 +234,42 @@
                 });
         }
 
-        // Load products - use local first, then try API
-        function loadProducts(callback) {
-            // First, use local products immediately for fast loading
-            if (typeof products !== 'undefined') {
-                allProducts = products;
-                renderProducts(products);
-            }
-            
-            // Then try to fetch from API in background
-            fetchWithTimeout(`${API_URL}/api/products${SHOP_PRODUCTS_QUERY}`, {}, 3000)
-                .then(r => r.json())
-                .then(data => {
-                    // API returns { products: [...], pagination: {...} }
-                    const products = data.products || data;
-                    if (products.length > 0) {
-                        allProducts = products;
-                        renderProducts(products);
-                    }
-                    if (callback) callback();
-                })
-                .catch(() => {
-                    // Already loaded local products, no action needed
-                    if (callback) callback();
-                });
-        }
+         // Load products - fetch from API first, fallback to local
+         function loadProducts(callback) {
+             // Show loading state
+             const grid = document.getElementById('product-grid');
+             if (grid) {
+                 grid.innerHTML = '<p style="text-align:center; padding: 2rem;">Loading products...</p>';
+             }
+             
+             // Try to fetch from API first
+             fetchWithTimeout(`${API_URL}/api/products${SHOP_PRODUCTS_QUERY}`, {}, 3000)
+                 .then(r => r.json())
+                 .then(data => {
+                     // API returns { products: [...], pagination: {...} }
+                     const products = data.products || data;
+                     if (products.length > 0) {
+                         allProducts = products;
+                         renderProducts(products);
+                         if (callback) callback();
+                     } else {
+                         // Fallback to local products if API returns empty
+                         if (typeof products !== 'undefined') {
+                             allProducts = products;
+                             renderProducts(products);
+                         }
+                         if (callback) callback();
+                     }
+                 })
+                 .catch(() => {
+                     // Fallback to local products on API error
+                     if (typeof products !== 'undefined') {
+                         allProducts = products;
+                         renderProducts(products);
+                     }
+                     if (callback) callback();
+                 });
+         }
 
         function renderProducts(products) {
             const grid = document.getElementById('product-grid');

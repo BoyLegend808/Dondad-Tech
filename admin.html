@@ -1144,41 +1144,57 @@
                 const tbody = document.getElementById('products-table');
                 const noProducts = document.getElementById('no-products');
 
-                // 1. Immediately render local products if available for instant UI feedback
-                if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
-                    console.log('Rendering cached local products instantly...');
-                    products = window.products;
-                    renderProducts();
-                } else if (tbody) {
-                    // Show loading indicator only if we have no local data
+                // Show loading indicator first
+                if (tbody) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;"><div class="loader"></div><p>Loading products...</p></td></tr>';
                     if (noProducts) noProducts.style.display = 'none';
                 }
                 
-                // 2. Fetch fresh data from API in the background
+                // Fetch fresh data from API first
                 const response = await fetch(getAdminProductsUrl(), {
                     credentials: "include"
                 });
                 
                 if (!response.ok) {
                     console.error('Failed to load products, status:', response.status);
-                    if (!products || products.length === 0) products = [];
+                    // Fallback to local products on API error
+                    if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
+                        products = window.products;
+                        renderProducts();
+                    } else {
+                        products = [];
+                        renderProducts();
+                    }
                 } else {
                     const payload = await response.json();
                     const freshProducts = normalizeProductsPayload(payload);
-                    // Only update and re-render if the fresh data is actually different/loaded
                     if (freshProducts.length > 0) {
                         products = freshProducts;
                         console.log('Fresh products loaded from API:', products.length);
                         renderProducts();
+                    } else {
+                        // Fallback to local products if API returns empty
+                        if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
+                            products = window.products;
+                            renderProducts();
+                        } else {
+                            products = [];
+                            renderProducts();
+                        }
                     }
                 }
                 
                 // Don't call loadDashboardStats here - it's already called in checkAuth
             } catch (error) {
                 console.error('Error loading products:', error);
-                if (!products || products.length === 0) products = [];
-                renderProducts();
+                // Fallback to local products on error
+                if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
+                    products = window.products;
+                    renderProducts();
+                } else {
+                    products = [];
+                    renderProducts();
+                }
             }
         }
 

@@ -354,46 +354,61 @@
                 .catch(() => {});
         }
 
-        // Load featured products - use local first, then try API
-        function loadFeaturedProducts() {
-            const container = document.getElementById('featured-products');
-            if (!container) return;
-            
-            // First, use local products immediately for fast loading
-            if (typeof products !== 'undefined') {
-                const featured = products.slice(0, 8);
-                container.innerHTML = featured.map((p, index) => `
-                    <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                        <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
-                        <h3>${p.name}</h3>
-                        <p>${p.desc || 'Premium gadget'}</p>
-                        <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                        <a href="product.html?id=${p.id}" class="btn">View</a>
-                    </div>
-                `).join('');
-            }
-            
-            // Then try to fetch from API in background
-            fetchWithTimeout('/api/products?limit=8', {}, 3000)
-                .then(r => r.ok ? r.json() : { products: [] })
-                .then(data => {
-                    const products = data.products || [];
-                    if (Array.isArray(products) && products.length > 0) {
-                        container.innerHTML = products.map((p, index) => `
-                            <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                                <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
-                                <h3>${p.name}</h3>
-                                <p>${p.desc || 'Premium gadget'}</p>
-                                <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                                <a href="product.html?id=${p._id || p.id}" class="btn">View</a>
-                            </div>
-                        `).join('');
-                    }
-                })
-                .catch(() => {
-                    // Already loaded local products, no action needed
-                });
-        }
+         // Load featured products - fetch from API first, fallback to local
+         function loadFeaturedProducts() {
+             const container = document.getElementById('featured-products');
+             if (!container) return;
+             
+             // Show loading state
+             container.innerHTML = '<p style="text-align:center; padding: 2rem;">Loading products...</p>';
+             
+             // Try to fetch from API first
+             fetchWithTimeout('/api/products?limit=8', {}, 3000)
+                 .then(r => r.ok ? r.json() : { products: [] })
+                 .then(data => {
+                     const products = data.products || [];
+                     if (Array.isArray(products) && products.length > 0) {
+                         container.innerHTML = products.map((p, index) => `
+                             <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                                 <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
+                                 <h3>${p.name}</h3>
+                                 <p>${p.desc || 'Premium gadget'}</p>
+                                 <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                                 <a href="product.html?id=${p._id || p.id}" class="btn">View</a>
+                             </div>
+                         `).join('');
+                     } else {
+                         // Fallback to local products if API returns empty
+                         if (typeof products !== 'undefined') {
+                             const featured = products.slice(0, 8);
+                             container.innerHTML = featured.map((p, index) => `
+                                 <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                                     <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
+                                     <h3>${p.name}</h3>
+                                     <p>${p.desc || 'Premium gadget'}</p>
+                                     <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                                     <a href="product.html?id=${p.id}" class="btn">View</a>
+                                 </div>
+                             `).join('');
+                         }
+                     }
+                 })
+                 .catch(() => {
+                     // Fallback to local products on API error
+                     if (typeof products !== 'undefined') {
+                         const featured = products.slice(0, 8);
+                         container.innerHTML = featured.map((p, index) => `
+                             <div class="product-card" style="animation-delay: ${index * 0.1}s">
+                                 <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
+                                 <h3>${p.name}</h3>
+                                 <p>${p.desc || 'Premium gadget'}</p>
+                                 <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
+                                 <a href="product.html?id=${p.id}" class="btn">View</a>
+                             </div>
+                         `).join('');
+                     }
+                 });
+         }
 
         // Search functionality
         document.getElementById('home-search')?.addEventListener('keypress', function(e) {
