@@ -42,8 +42,9 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
+                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logoutUser(); return false;" class="logout-btn"><span
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
                                     class="dropdown-icon">🚪</span> Logout</a>
                         </div>
                     </div>
@@ -113,13 +114,6 @@
         // Check if user is logged in and update UI
         document.addEventListener('DOMContentLoaded', function () {
             const currentUser = getCurrentUser();
-            
-            // Setup hamburger handler
-            const hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', toggleMenu);
-                console.log('Hamburger handler attached');
-            }
             
             const adminLink = document.getElementById('admin-nav-link');
             const authLinks = document.getElementById('auth-links');

@@ -74,7 +74,7 @@
                         <div class="user-dropdown">
                             <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logoutUser(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
                         </div>
                     </div>
                 </div>
@@ -167,7 +167,7 @@
         function logout() {
             sessionStorage.removeItem('dondad_currentUser');
             localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
 
         function toggleUserMenu(e) {
@@ -296,9 +296,7 @@
         }
 
         function logoutUser() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'index.html';
+            logout();
         }
     </script>
     

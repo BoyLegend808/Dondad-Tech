@@ -26,23 +26,11 @@
             }
             const hamburger = document.querySelector('.hamburger');
             const navLinks = document.querySelector('.nav-links');
-            console.log('Toggle menu clicked', hamburger, navLinks);
             if (hamburger && navLinks) {
                 hamburger.classList.toggle('active');
                 navLinks.classList.toggle('active');
             }
         };
-        
-        // Also add event listener when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', function(e) {
-                    console.log('Hamburger clicked via event listener');
-                    toggleMenu(e);
-                });
-            }
-        });
     </script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -449,16 +437,6 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
-            
-            const hamburger = document.querySelector('.hamburger');
-            if (hamburger) {
-                hamburger.addEventListener('click', function(e) {
-                    const navLinks = document.querySelector('.nav-links');
-                    if (navLinks) navLinks.classList.toggle('active');
-                    this.classList.toggle('active');
-                });
-            }
-            
             updateCartCount();
             loadFeaturedProducts();
         });
