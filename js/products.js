@@ -52,3 +52,4 @@ function searchProducts(query) {
         p.desc.toLowerCase().includes(term)
     );
 }
+window.products = products;
