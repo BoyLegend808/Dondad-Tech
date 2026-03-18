@@ -719,39 +719,50 @@ function hashPassword(password) {
 }
 
 function isPasswordHashed(password = "") {
-  return typeof password === "string" && password.startsWith("pbkdf2$");
+  if (typeof password !== "string") return false;
+  return password.startsWith("pbkdf2$") || password.startsWith("$2b$") || password.startsWith("$2a$");
 }
 
 function verifyPassword(inputPassword, storedPassword) {
-  // Check for legacy plain-text password - auto-migrate on successful login
-  if (!isPasswordHashed(storedPassword)) {
-    if (inputPassword === storedPassword) {
-      // Legacy password match - return true but it will be re-hashed on login
-      return true;
+  if (!storedPassword) return false;
+
+  // Check for Bcrypt hash
+  if (storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2a$")) {
+    try {
+      const bcryptjs = require("bcryptjs");
+      return bcryptjs.compareSync(inputPassword, storedPassword);
+    } catch (err) {
+      console.error("Bcrypt verification failed:", err);
+      return false;
     }
-    return false;
   }
 
-  const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
-  if (scheme !== "pbkdf2" || !iterationStr || !salt || !storedHash) {
-    return false;
+  // Check for PBKDF2 hash
+  if (storedPassword.startsWith("pbkdf2$")) {
+    const [scheme, iterationStr, salt, storedHash] = storedPassword.split("$");
+    if (scheme !== "pbkdf2" || !iterationStr || !salt || !storedHash) {
+      return false;
+    }
+
+    const iterations = parseInt(iterationStr, 10);
+    if (!Number.isFinite(iterations) || iterations <= 0) {
+      return false;
+    }
+
+    const computedHash = crypto
+      .pbkdf2Sync(inputPassword, salt, iterations, 64, "sha512")
+      .toString("hex");
+
+    const a = Buffer.from(computedHash, "hex");
+    const b = Buffer.from(storedHash, "hex");
+    if (a.length !== b.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(a, b);
   }
 
-  const iterations = parseInt(iterationStr, 10);
-  if (!Number.isFinite(iterations) || iterations <= 0) {
-    return false;
-  }
-
-  const computedHash = crypto
-    .pbkdf2Sync(inputPassword, salt, iterations, 64, "sha512")
-    .toString("hex");
-
-  const a = Buffer.from(computedHash, "hex");
-  const b = Buffer.from(storedHash, "hex");
-  if (a.length !== b.length) {
-    return false;
-  }
-  return crypto.timingSafeEqual(a, b);
+  // Fallback: Check for legacy plain-text password
+  return inputPassword === storedPassword;
 }
 
 // Auto-migrate password on successful login
@@ -1655,54 +1666,7 @@ async function sendPasswordResetEmail(email, resetUrl) {
   return { sent: true };
 }
 
-// PLACEHOLDER - Moved after body-parser middleware
-app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
-  try {
-    const token = String(req.body?.token || "").trim();
-    const newPassword = String(req.body?.password || "");
-
-    if (!token || !newPassword) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Missing required fields" });
-    }
-
-    if (newPassword.length < 6 || newPassword.length > 128) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Password must be 6-128 characters" });
-    }
-
-    const tokenHash = sha256(token);
-    const tokenData = await PasswordResetToken.findOne({ tokenHash });
-    if (!tokenData) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid or expired token" });
-    }
-
-    if (Date.now() > new Date(tokenData.expiresAt).getTime()) {
-      await PasswordResetToken.deleteOne({ _id: tokenData._id });
-      return res.status(400).json({ success: false, error: "Token expired" });
-    }
-
-    const user = await User.findOne({ email: tokenData.email });
-    if (!user) {
-      return res.status(400).json({ success: false, error: "User not found" });
-    }
-
-    // Hash and save new password
-    user.password = hashPassword(newPassword);
-    await user.save();
-
-    // Token is single-use; clear any outstanding tokens for this email.
-    await PasswordResetToken.deleteMany({ email: tokenData.email });
-
-    res.json({ success: true, message: "Password reset successful" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to reset password" });
-  }
-});
+// NOTE: reset-password route is defined after body-parser middleware below
 
 // Seed initial data
 async function seedDatabase() {
@@ -2165,10 +2129,8 @@ app.post("/api/reset-password", sensitiveRateLimit, async (req, res) => {
       return res.status(400).json({ success: false, error: "User not found" });
     }
 
-    // Hash new password
-    const hashedPassword = await bcryptjs.hash(newPassword, 10);
-
-    user.password = hashedPassword;
+    // Hash new password using PBKDF2 (same as login verification uses)
+    user.password = hashPassword(newPassword);
     await user.save();
 
     // Delete used token
