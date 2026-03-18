@@ -1198,34 +1198,47 @@
             }
         }
 
-        function renderProducts() {
+        function renderProducts(filtered) {
             const tbody = document.getElementById('products-table');
             const noProducts = document.getElementById('no-products');
 
-            if (!Array.isArray(products)) {
-                console.warn('products is not an array:', products);
-                products = [];
-            }
-            
-            if (products.length === 0) {
-                tbody.innerHTML = '';
-                noProducts.style.display = 'block';
+            const list = Array.isArray(filtered) ? filtered : (Array.isArray(products) ? products : []);
+            console.log('renderProducts - items:', list.length);
+
+            if (!Array.isArray(list) || list.length === 0) {
+                if (tbody) tbody.innerHTML = '';
+                if (noProducts) noProducts.style.display = 'block';
                 return;
             }
-            
-            noProducts.style.display = 'none';
-            tbody.innerHTML = products.map(p => `
-                <tr data-product-id="${p._id || p.id}">
-                    <td><img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'" class="product-thumb" onclick="showEditProduct('${p._id || p.id}')" style="cursor: pointer;" title="Click to edit"></td>
-                    <td><strong>${p.name}</strong></td>
-                    <td><span class="category-badge">${p.category}</span></td>
-                    <td class="price">₦${p.price.toLocaleString()}</td>
-                    <td>
-                        <button onclick="showEditProduct('${p._id || p.id}')" class="btn btn-edit">✏️ Edit</button>
-                        <button onclick="deleteProduct('${p._id || p.id}')" class="btn btn-delete">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+
+            if (noProducts) noProducts.style.display = 'none';
+
+            tbody.innerHTML = list.map(p => {
+                try {
+                    const id = String(p._id || p.id || '');
+                    const name = p.name || 'Untitled Product';
+                    const category = p.category || '';
+                    const image = p.image || 'images/logo.png';
+                    const priceVal = (p.price !== undefined && !Number.isNaN(Number(p.price))) ? Number(p.price) : null;
+                    const priceText = priceVal !== null ? priceVal.toLocaleString() : 'N/A';
+
+                    return `
+                        <tr data-product-id="${id}">
+                            <td><img src="${image}" alt="${name}" onerror="this.src='images/logo.png'" class="product-thumb" onclick="showEditProduct('${id}')" style="cursor: pointer;" title="Click to edit"></td>
+                            <td><strong>${name}</strong></td>
+                            <td><span class="category-badge">${category}</span></td>
+                            <td class="price">₦${priceText}</td>
+                            <td>
+                                <button onclick="showEditProduct('${id}')" class="btn btn-edit">✏️ Edit</button>
+                                <button onclick="deleteProduct('${id}')" class="btn btn-delete">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                } catch (err) {
+                    console.error('Error rendering product row:', err, p);
+                    return '';
+                }
+            }).join('');
         }
 
         let selectedImageBase64 = '';

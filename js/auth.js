@@ -263,7 +263,7 @@ async function handleLogin(e) {
     e.preventDefault();
 
     const errorEl = document.getElementById('login-error');
-    errorEl.classList.remove('visible');
+    if (errorEl) errorEl.classList.remove('visible');
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -279,21 +279,53 @@ async function handleLogin(e) {
         const data = await response.json();
 
         if (response.ok) {
-            // Store in sessionStorage (more secure, clears on tab close)
-            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data.user));
-            if (data.user.role === 'admin') {
+            // Normalize user payload from server (support { success, user } or raw user)
+            const user = (data && data.user) ? data.user : (data && typeof data === 'object' ? data : null);
+            if (!user) {
+                if (errorEl) {
+                    errorEl.textContent = 'Login succeeded but user data is missing';
+                    errorEl.classList.add('visible');
+                }
+                return;
+            }
+
+            // Persist session in sessionStorage and localStorage (so validateSession works)
+            try {
+                sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+                sessionStorage.setItem(SESSION_KEY, 'true');
+                sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+                localStorage.setItem(SESSION_KEY, 'true');
+                localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+            } catch (err) {
+                console.warn('Storage unavailable:', err);
+            }
+
+            // Handle optional redirect query param (only allow relative paths)
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get('redirect');
+            if (redirect && redirect.startsWith('/')) {
+                window.location.href = redirect;
+                return;
+            }
+
+            if (user.role === 'admin') {
                 window.location.href = 'admin.html';
             } else {
                 window.location.href = 'index.html';
             }
+            return;
         } else {
-            errorEl.textContent = data.error || 'Invalid credentials';
-            errorEl.classList.add('visible');
+            if (errorEl) {
+                errorEl.textContent = (data && data.error) ? data.error : 'Invalid credentials';
+                errorEl.classList.add('visible');
+            }
         }
     } catch (error) {
         console.error('Login error:', error);
-        errorEl.textContent = 'Connection error. Please try again.';
-        errorEl.classList.add('visible');
+        if (errorEl) {
+            errorEl.textContent = 'Connection error. Please try again.';
+            errorEl.classList.add('visible');
+        }
     }
 }
 
