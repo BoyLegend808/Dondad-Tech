@@ -22,7 +22,7 @@
                     <span id="dropdown-user" class="dropdown-user" style="display: none;"></span>
                     <button id="dropdown-logout" class="dropdown-item logout-item" style="display: none;" onclick="logout()">🚪 Logout</button>
                 </div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -317,20 +317,6 @@
 
     <script src="auth.js"></script>
     <script>
-        // Toggle hamburger menu
-        function toggleHamburger(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            // Toggle the dropdown menu for admin
-            const dropdownMenu = document.querySelector('.dropdown-menu');
-            const hamburger = document.querySelector('.hamburger');
-            if (dropdownMenu) dropdownMenu.classList.toggle('active');
-            if (hamburger) hamburger.classList.toggle('active');
-            console.log('Admin menu toggled');
-        }
-        
         // Admin Panel Logic
         const API_URL = '';
         let products = [];
