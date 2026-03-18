@@ -1,0 +1,38 @@
+[
+  {
+    "email": "admin@dondad.com",
+    "passwordHash": "pbkdf2$100000$fcfe1d795689ea4a07819a35c95bce7d$e04f143696e67c273b7db02f901fdb1ac3d17b0ec4bb9955d5ea0acf5055c8492ab00bcd71255ffe47f15c32948c505c2cf453c19de0b91dbb8dee56165c5b11",
+    "name": "Admin",
+    "role": "admin"
+  },
+  {
+    "email": "jcoolugwuneke@gmail.com",
+    "passwordHash": "pbkdf2$100000$dbb1425ebc5d3f79d0e7cfabf0a74e59$e14f096c044a5f28365e0e212f5ca51354c45f8eaefd25bbe37cbcec7a663be4be88fd01ee533260e560ef793c409949f44d0b4d8537f33ee45eb3f6b86b6cb5",
+    "name": "Benson West",
+    "role": "user"
+  },
+  {
+    "email": "chibuikedethinker9@gmail.com",
+    "passwordHash": "123456",
+    "name": "Nwafor Chibuike",
+    "role": "user"
+  },
+  {
+    "email": "ugwunekejohn5@gmail.com",
+    "passwordHash": "pbkdf2$100000$cf9637e00856d660dbc7ae9d74298bde$8b73e070b443fa1fdcd72c15aa7fa72e3373eaec42919518dc1d47561164aafa752c80ec4ed00940b2ebd1aad1bb7dae00a326a12848081f7245963303babe5c",
+    "name": "Allen West",
+    "role": "user"
+  },
+  {
+    "email": "admin@dondadtech.com",
+    "passwordHash": "pbkdf2$100000$5f1bf28bcd1489bde0109b6dd4ef4f1f$e69ac524cb33b602e4bacacc885c3acf8e0b21643aec764d402e60117703f403950045b96984c4c9ddf859d1b8b2a9387dbee4b2bc60692b9e5fb59c1ee1b394",
+    "name": "Admin",
+    "role": "admin"
+  },
+  {
+    "email": "chicommy74@gmail.com",
+    "passwordHash": "pbkdf2$100000$11cd96bd9265d9e16b1c79836ad74cfb$f36f39cda7e2f82b446cede09513771d95de91ca593cdf8360cec99a92da36f454f1c38963b06c61a46d4080377e0fc3cf3636625d3efc7535f655dd7534c2a9",
+    "name": "Comfort ugwuneke",
+    "role": "user"
+  }
+]
