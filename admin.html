@@ -15,8 +15,6 @@
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets <span style="color: var(--primary);">Admin</span></a>
             <div class="nav-right">
-                <!-- Direct Logout Button (visible when logged in) -->
-                <button id="nav-logout-btn" class="btn btn-secondary" style="display: none; margin-right: 10px;" onclick="logout()">🚪 Logout</button>
                 <!-- Dropdown Menu -->
                 <div class="dropdown-menu" id="dropdown-menu">
                     <a href="index.html" class="dropdown-item">🌐 View Website</a>
@@ -562,7 +560,6 @@
         function updateAdminNav(user) {
             const userEl = document.getElementById('admin-user');
             const logoutBtn = document.getElementById('admin-logout');
-            const navLogoutBtn = document.getElementById('nav-logout-btn');
             const dropdownUser = document.getElementById('dropdown-user');
             const dropdownLogout = document.getElementById('dropdown-logout');
             const dropdownDivider = document.getElementById('dropdown-divider');
@@ -573,10 +570,6 @@
             }
             if (logoutBtn) {
                 logoutBtn.style.display = 'inline-block';
-            }
-            // Show direct logout button in nav
-            if (navLogoutBtn) {
-                navLogoutBtn.style.display = 'inline-block';
             }
             if (dropdownUser) {
                 dropdownUser.textContent = '👤 ' + user.name;
