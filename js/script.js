@@ -423,7 +423,7 @@ function renderProducts(products, containerId) {
     .map(
       (product) => `
         <div class="product-card" onclick="window.location.href='product.html?id=${product.id}'">
-            <img src="${product.image}" alt="${product.name}">
+            <img src="${product.image}" alt="${product.name}" onerror="this.src='images/logo.png'">
             <h3>${product.name}</h3>
             <p>${product.desc}</p>
             <p class="price">₦${product.price.toLocaleString()}</p>
@@ -452,7 +452,7 @@ function renderCart() {
     .map(
       (item) => `
         <div class="cart-item">
-            <img src="${item.image}" alt="${item.name}">
+            <img src="${item.image}" alt="${item.name}" onerror="this.src='images/logo.png'">
             <div class="cart-item-info">
                 <h3>${item.name}</h3>
                 <p>₦${item.price.toLocaleString()}</p>
@@ -540,6 +540,21 @@ function setupHamburger() {
     window.toggleHamburger = window.toggleMenu;
   }
 
+  // Toggle user menu function - make it global so onclick works
+  if (!window.toggleUserMenu) {
+    window.toggleUserMenu = function (e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const userMenu = e?.currentTarget?.closest(".user-menu") || document.querySelector(".user-menu");
+      if (userMenu) {
+        userMenu.classList.toggle("active");
+        console.log("User menu toggled via script.js, active:", userMenu.classList.contains("active"));
+      }
+    };
+  }
+
   hamburgers.forEach((hamburger) => {
     const { navLinks, dropdown } = getMenuTargets(hamburger);
     const menu = navLinks || dropdown;
@@ -566,10 +581,12 @@ function setupHamburger() {
     const activeMenus = [
       ...document.querySelectorAll(".nav-links.active"),
       ...document.querySelectorAll(".dropdown-menu.active"),
+      ...document.querySelectorAll(".user-menu.active"),
     ];
     activeMenus.forEach((menu) => {
-      const nav = menu.closest("nav") || document;
-      const btn = nav.querySelector(".hamburger");
+      const isUserMenu = menu.classList.contains("user-menu");
+      const btn = isUserMenu ? menu : (menu.closest("nav")?.querySelector(".hamburger") || document.querySelector(".hamburger"));
+      
       if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
         btn.classList.remove("active");
         menu.classList.remove("active");

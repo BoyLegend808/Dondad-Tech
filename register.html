@@ -8,9 +8,9 @@
     <meta property="og:title" content="Register - Pajay Gadgets">
     <meta property="og:description" content="Create a customer account in minutes.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="logo.png">
+    <meta property="og:image" content="images/logo.png">
     <link rel="canonical" href="register.html">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -20,7 +20,7 @@
             <a href="index.html" class="logo">Pajay Gadgets</a>
             <div class="nav-right">
                 <a href="login.html" class="auth-btn">Login</a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -114,22 +114,9 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
     <script>
-        function toggleMenu(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.getElementById('navLinks') || document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                console.log('Menu toggled:', navLinks.classList.contains('active'));
-            }
-        }
-        
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Register page loaded');

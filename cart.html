@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart - Pajay Gadgets</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/cart.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
 </head>
 
 <body>
@@ -67,7 +67,7 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu">
-                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -84,7 +84,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -132,6 +132,12 @@
     </main>
 
     <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
@@ -187,49 +193,6 @@
             window.location.href = 'index.html';
         }
 
-        function toggleUserMenu(e) {
-            // Prevent the click from propagating to parent elements
-            e.stopPropagation();
-            
-            // Find the user-menu element
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            
-            console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu?.classList?.contains('active'));
-            
-            // Don't toggle if clicking inside the dropdown
-            if (userDropdown && userDropdown.contains(e.target)) {
-                return;
-            }
-            
-            if (userMenu) {
-                userMenu.classList.toggle('active');
-                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
-            }
-        }
-
-        // Close dropdown and hamburger when clicking on the page
-        document.addEventListener('click', function(e) {
-            // Close user dropdown
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            if (userMenu && userDropdown) {
-                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userMenu.classList.remove('active');
-                }
-            }
-            
-            // Close hamburger menu
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                    hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
-                }
-            }
-        });
 
         async function loadCart() {
             try {
@@ -281,7 +244,7 @@
                             <button class="cart-item-close" onclick="removeItem('${item.productId?._id}', '${encodeURIComponent(JSON.stringify(item.selectedVariant || {}))}')" title="Remove item">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            <img src="${item.productId?.image || 'logo.png'}" alt="${item.productId?.name}" onerror="this.src='logo.png'">
+                            <img src="${item.productId?.image || 'images/logo.png'}" alt="${item.productId?.name}" onerror="this.src='images/logo.png'">
                             <div class="cart-item-info">
                                 <h3>${item.productId?.name || 'Unknown Product'}</h3>
                                 ${variantStr ? `<p class="variant-info">${variantStr}</p>` : ''}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Wishlist - Pajay Gadgets</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/simple-page.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -19,22 +19,35 @@
                 <li><a href="shop.html">Shop</a></li>
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
-                <div id="auth-buttons">
-                    <a href="login.html" class="auth-btn">Login</a>
+                <div class="auth-links" id="auth-links" style="display:none;">
+                    <a href="login.html" class="auth-link">Login</a>
+                    <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu">
+                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
                             <span class="user-name" id="user-name"></span>
                         </div>
+                        <div class="user-dropdown">
+                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
+                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                        </div>
                     </div>
-                    <a href="cart.html" class="cart-btn">Cart (<span id="cart-count">0</span>)</a>
                 </div>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
-                    <span></span><span></span><span></span>
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                    <span>Cart</span>
+                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
+                </a>
+                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </button>
             </div>
         </nav>
@@ -57,6 +70,12 @@
     </main>
 
     <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
@@ -119,7 +138,7 @@
             grid.innerHTML = products.map(p => `
                 <article class="product-card">
                     <a href="product.html?id=${p._id}">
-                        <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                        <img src="${p.image}" alt="${p.name}" onerror="this.src='images/logo.png'">
                     </a>
                     <div class="product-card-content">
                         <a href="product.html?id=${p._id}">
@@ -210,7 +229,7 @@
             updateCartCount();
         });
     </script>
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
 </body>
 </html>
 

@@ -11,27 +11,12 @@
     <meta property="og:title" content="Pajay Gadgets - Trusted Gadget Store">
     <meta property="og:description" content="Shop quality gadgets with transparent pricing and responsive support.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="logo.png">
+    <meta property="og:image" content="images/logo.png">
     <link rel="canonical" href="index.html">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/index.css">
-    <script src="products.js"></script>
-    <script src="script.js?v=20260312-3" defer></script>
-    <script>
-        // Hamburger menu toggle - ensure it works
-        window.toggleMenu = function(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-            }
-        };
-    </script>
+    <script src="js/products.js"></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -40,7 +25,7 @@
 <body class="homepage">
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo">Pajay Gadgets</a>
+            <a href="index.html" class="logo"><img src="images/logo.png" alt="Pajay Gadgets" style="height: 40px; vertical-align: middle; margin-right: 10px;">Pajay Gadgets</a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
@@ -54,7 +39,7 @@
                     <a href="register.html" class="auth-btn register">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -68,7 +53,7 @@
                     </div>
                     <a href="cart.html" class="cart-btn"><span>🛒</span> Cart (<span id="cart-count">0</span>)</a>
                 </div>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -146,19 +131,19 @@
             </div>
             <div class="category-grid">
                 <a href="shop.html?category=phones" class="category-card">
-                    <img src="xs.png" alt="Phones">
+                    <img src="images/xs.png" alt="Phones">
                     <h3>Phones</h3>
                 </a>
                 <a href="shop.html?category=laptops" class="category-card">
-                    <img src="hero img.png" alt="Laptops">
+                    <img src="images/hero img.png" alt="Laptops">
                     <h3>Laptops</h3>
                 </a>
                 <a href="shop.html?category=tablets" class="category-card">
-                    <img src="xs.png" alt="Tablets">
+                    <img src="images/xs.png" alt="Tablets">
                     <h3>Tablets</h3>
                 </a>
                 <a href="shop.html?category=accessories" class="category-card">
-                    <img src="xs.png" alt="Accessories">
+                    <img src="images/xs.png" alt="Accessories">
                     <h3>Accessories</h3>
                 </a>
             </div>
@@ -379,7 +364,7 @@
                 const featured = products.slice(0, 8);
                 container.innerHTML = featured.map((p, index) => `
                     <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                        <img src="${p.image || 'logo.png'}" alt="${p.name}" onerror="this.src='logo.png'">
+                        <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
                         <h3>${p.name}</h3>
                         <p>${p.desc || 'Premium gadget'}</p>
                         <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
@@ -396,7 +381,7 @@
                     if (Array.isArray(products) && products.length > 0) {
                         container.innerHTML = products.map((p, index) => `
                             <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                                <img src="${p.image || 'logo.png'}" alt="${p.name}" onerror="this.src='logo.png'">
+                                <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
                                 <h3>${p.name}</h3>
                                 <p>${p.desc || 'Premium gadget'}</p>
                                 <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
@@ -420,20 +405,6 @@
             }
         });
 
-        document.addEventListener('click', function (e) {
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            if (userMenu && userDropdown && !userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
-                userMenu.classList.remove('active');
-            }
-
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks && !hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
-            }
-        });
 
         document.addEventListener('DOMContentLoaded', function () {
             checkAuth();

@@ -147,6 +147,8 @@ const userSchema = new mongoose.Schema({
   googleId: { type: String, default: "" },
   facebookId: { type: String, default: "" },
   profilePicture: { type: String, default: "" }, // User's profile picture
+  resetPasswordToken: { type: String, default: "" },
+  resetPasswordExpires: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 // Indexes for user schema
@@ -158,7 +160,7 @@ const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
   price: { type: Number, required: true },
-  image: { type: String, default: "logo.png" },
+  image: { type: String, default: "images/logo.png" },
   desc: { type: String, default: "" }, // Short description for product cards
   fullDesc: { type: String, default: "" }, // Full description for product detail page
   id: { type: Number, default: null }, // Client-side numeric ID for backward compatibility
@@ -2180,7 +2182,7 @@ app.post("/api/products", requireAdmin, async (req, res) => {
 
     // If no image provided, use default
     if (!image) {
-      image = "logo.png";
+        image = "images/logo.png";
     }
 
     const allowedCategories = new Set([

@@ -9,13 +9,16 @@
     <meta property="og:title" content="Product - Pajay Gadgets">
     <meta property="og:description" content="Discover product features and order with confidence.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="logo.png">
+    <meta property="og:image" content="images/logo.png">
     <link rel="canonical" href="product.html">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/product.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <script src="js/products.js"></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
 </head>
 
 <body>
@@ -35,7 +38,7 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -53,7 +56,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -98,8 +101,6 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-    <script src="products.js"></script>
-    <script src="/script.js?v=20260312-3" defer></script>
     <script>
         function getCurrentUser() {
             try {
@@ -148,67 +149,6 @@
             location.reload();
         }
 
-        function toggleMenu(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const navLinks = document.querySelector('.nav-links');
-            const hamburger = document.querySelector('.hamburger');
-
-            if (navLinks && hamburger) {
-                navLinks.classList.toggle('active');
-                hamburger.classList.toggle('active');
-                console.log('Menu toggled - navLinks:', navLinks.classList.contains('active'));
-            } else {
-                console.error('Nav elements not found');
-            }
-        }
-
-        function toggleUserMenu(e) {
-            // Prevent the click from propagating to parent elements
-            e.stopPropagation();
-
-            // Find the user-menu element
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-
-            console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu && userMenu.classList ? userMenu.classList.contains('active') :
-                'no class');
-
-            // Don't toggle if clicking inside the dropdown
-            if (userDropdown && userDropdown.contains(e.target)) {
-                return;
-            }
-
-            if (userMenu) {
-                userMenu.classList.toggle('active');
-                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
-            }
-        }
-
-        // Close dropdown and hamburger when clicking on the page
-        document.addEventListener('click', function (e) {
-            // Close user dropdown
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            if (userMenu && userDropdown) {
-                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userMenu.classList.remove('active');
-                }
-            }
-
-            // Close hamburger menu
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                    hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
-                }
-            }
-        });
 
         // Product detail page logic - Fetch from API
         const urlParams = new URLSearchParams(window.location.search);
@@ -324,7 +264,7 @@
             container.innerHTML = `
                 <div class="product-gallery">
                     <div class="main-image">
-                        <img id="product-image" src="${product.image}" alt="${product.name}" onerror="this.src='logo.png'">
+                        <img id="product-image" src="${product.image}" alt="${product.name}" onerror="this.src='images/logo.png'">
                         <div class="image-badge">${categoryDisplay}</div>
                     </div>
                 </div>
@@ -595,7 +535,7 @@
                 if (related.length > 0) {
                     grid.innerHTML = related.map(p => `
                         <a href="product.html?id=${p._id || p.id}" class="related-card">
-                            <img src="${p.image}" alt="${p.name}" onerror="this.src='logo.png'">
+                            <img src="${p.image}" alt="${p.name}" onerror="this.src='images/logo.png'">
                             <h4>${p.name}</h4>
                             <p class="price">₦${p.price.toLocaleString()}</p>
                         </a>

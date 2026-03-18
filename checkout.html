@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Pajay Gadgets</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/checkout.css">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -24,29 +24,29 @@
                 <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
-                <div class="auth-links" id="auth-links">
+                <div class="auth-links" id="auth-links" style="display:none;">
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="toggleUserMenu(event)">
+                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
+                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logoutUser(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span>
-                                Logout</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
                         </div>
                     </div>
                 </div>
-                <a href="cart.html" class="cart-link">
+                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="toggleHamburger(event)">
+                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -125,8 +125,8 @@
         <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
 
-    <script src="products.js"></script>
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="js/products.js"></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
     <script>
         // Check if user is logged in before showing checkout
         document.addEventListener('DOMContentLoaded', function () {
@@ -156,7 +156,6 @@
 
             // User is logged in - initialize page
             initCheckoutPage();
-            initHamburger();
             updateAuthUI();
             updateCartCount();
         });
@@ -167,107 +166,6 @@
             window.location.href = 'login.html';
         }
 
-        function toggleUserMenu(e) {
-            // Prevent the click from propagating to parent elements
-            e.stopPropagation();
-            
-            // Find the user-menu element
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            
-            console.log('toggleUserMenu clicked, userMenu:', userMenu);
-            console.log('Has active class:', userMenu?.classList?.contains('active'));
-            
-            // Don't toggle if clicking inside the dropdown
-            if (userDropdown && userDropdown.contains(e.target)) {
-                return;
-            }
-            
-            if (userMenu) {
-                userMenu.classList.toggle('active');
-                console.log('Toggled active, now has:', userMenu.classList.contains('active'));
-            }
-        }
-
-        // Close dropdown and hamburger when clicking on the page
-        document.addEventListener('click', function(e) {
-            // Close user dropdown
-            const userMenu = document.querySelector('.user-menu');
-            const userDropdown = document.querySelector('.user-dropdown');
-            if (userMenu && userDropdown) {
-                if (!userMenu.contains(e.target) && !userDropdown.contains(e.target)) {
-                    userMenu.classList.remove('active');
-                }
-            }
-            
-            // Close hamburger menu
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                    hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
-                }
-            }
-        });
-
-        // Toggle hamburger menu
-        function toggleHamburger(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const hamburger = document.getElementById('hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            if (hamburger && navLinks) {
-                hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
-                console.log('Hamburger toggled, active:', hamburger.classList.contains('active'));
-            }
-        }
-
-        function initHamburger() {
-            const hamburger = document.querySelector('.hamburger');
-            const navLinks = document.querySelector('.nav-links');
-            console.log('Hamburger element:', hamburger);
-            console.log('NavLinks element:', navLinks);
-            if (hamburger && navLinks) {
-                // Toggle menu function
-                const toggleMenu = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    hamburger.classList.toggle('active');
-                    navLinks.classList.toggle('active');
-                    console.log('Hamburger clicked, active class:', hamburger.classList.contains('active'));
-                };
-
-                // Support both click and touch events for mobile
-                hamburger.addEventListener('click', toggleMenu);
-                hamburger.addEventListener('touchstart', toggleMenu, {
-                    passive: false
-                });
-
-                // Close menu when clicking outside
-                document.addEventListener('click', function (e) {
-                    if (navLinks.classList.contains('active') &&
-                        !navLinks.contains(e.target) &&
-                        !hamburger.contains(e.target)) {
-                        hamburger.classList.remove('active');
-                        navLinks.classList.remove('active');
-                    }
-                });
-
-                // Close menu when clicking on a nav link
-                navLinks.querySelectorAll('a').forEach(function (link) {
-                    link.addEventListener('click', function () {
-                        hamburger.classList.remove('active');
-                        navLinks.classList.remove('active');
-                    });
-                });
-            } else {
-                console.error('Hamburger or navLinks not found!');
-            }
-        }
 
         function initCheckoutPage() {
             const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
@@ -422,6 +320,17 @@
             });
         }
     </script>
+    <footer>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms</a>
+            <a href="returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+    </footer>
+    <script src="js/products.js"></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
 </body>
 
 </html>

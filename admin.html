@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Pajay Gadgets</title>
     <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -182,16 +182,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="product-image-file">Product Image</label>
-                        <div class="image-upload-container">
-                            <input type="file" id="product-image-file" accept="image/*" onchange="previewImage(event)">
-                            <img id="image-preview" class="image-preview" style="display: none;">
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="clearProductImage()">🗑️ Remove Image</button>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
-                                Upload an image from your device (JPG, PNG, GIF)
-                            </p>
+                        <label>Product Image</label>
+                        <div class="upload-zone" id="upload-zone">
+                            <input type="file" id="product-image-file" accept="image/*" capture="environment" onchange="previewImage(event)" hidden>
+                            <label for="product-image-file" class="upload-label">
+                                <span class="upload-icon">📷</span>
+                                <span class="upload-text">Click to Upload / Take Photo</span>
+                                <span class="upload-hint">JPG, PNG or GIF (Max 4MB)</span>
+                            </label>
+                            <div class="preview-container" id="preview-container" style="display: none;">
+                                <img id="image-preview" class="image-preview">
+                                <button type="button" class="remove-image" onclick="clearProductImage()">×</button>
+                            </div>
                         </div>
                     </div>
 
@@ -303,6 +305,65 @@
                             .variant-row {
                                 grid-template-columns: 1fr;
                             }
+                        }
+                        /* Enhanced Image Upload */
+                        .upload-zone {
+                            border: 2px dashed rgba(168, 85, 247, 0.3);
+                            border-radius: 12px;
+                            padding: 2rem;
+                            text-align: center;
+                            background: rgba(168, 85, 247, 0.03);
+                            position: relative;
+                            transition: all 0.3s ease;
+                        }
+                        .upload-zone:hover {
+                            border-color: var(--primary);
+                            background: rgba(168, 85, 247, 0.08);
+                        }
+                        .upload-label {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            cursor: pointer;
+                        }
+                        .upload-icon {
+                            font-size: 2.5rem;
+                            margin-bottom: 0.5rem;
+                        }
+                        .upload-text {
+                            font-weight: 600;
+                            color: var(--text);
+                        }
+                        .upload-hint {
+                            font-size: 0.85rem;
+                            color: var(--muted);
+                        }
+                        .preview-container {
+                            position: relative;
+                            width: 150px;
+                            margin: 1.5rem auto 0;
+                        }
+                        .image-preview {
+                            width: 100%;
+                            height: 150px;
+                            object-fit: contain;
+                            border-radius: 10px;
+                            border: 2px solid var(--primary);
+                            background: #000;
+                        }
+                        .remove-image {
+                            position: absolute;
+                            top: -10px;
+                            right: -10px;
+                            background: #ef4444;
+                            color: white;
+                            border: none;
+                            border-radius: 50%;
+                            width: 24px;
+                            height: 24px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                         }
                     </style>
 
@@ -773,11 +834,11 @@
                 const paymentMethodRaw = String(order?.paymentMethod || '').toLowerCase();
                 const paymentMethod = paymentMethodRaw === 'cash'
                     ? 'Cash on Delivery'
-                    : paymentMethodRaw === 'transfer'
-                        ? 'Bank Transfer'
-                        : paymentMethodRaw === 'stripe'
-                            ? 'Stripe Card'
-                            : (order?.paymentMethod || 'N/A');
+                        : paymentMethodRaw === 'transfer'
+                            ? 'Bank Transfer'
+                            : paymentMethodRaw === 'stripe'
+                                ? 'Stripe Card'
+                                : (order?.paymentMethod || 'N/A');
                 const draftStatus = orderStatusDrafts[orderId] || status;
                 const hasDraft = draftStatus !== status;
 
@@ -1013,6 +1074,7 @@
             document.getElementById('product-form').reset();
             document.getElementById('product-id').value = '';
             document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('preview-container').style.display = 'none';
             
             // Clear variant options
             document.getElementById('has-variants').checked = false;
@@ -1048,13 +1110,16 @@
             
             // Show current image or hide preview
             const preview = document.getElementById('image-preview');
+            const previewContainer = document.getElementById('preview-container');
             if (product.image) {
                 selectedImageBase64 = product.image;
                 preview.src = product.image;
                 preview.style.display = 'block';
+                previewContainer.style.display = 'block';
                 console.log('Image preview set, length:', product.image.length);
             } else {
                 preview.style.display = 'none';
+                previewContainer.style.display = 'none';
                 console.log('No image to display');
             }
             
@@ -1124,7 +1189,7 @@
             noProducts.style.display = 'none';
             tbody.innerHTML = products.map(p => `
                 <tr data-product-id="${p._id || p.id}">
-                    <td><img src="${p.image || 'logo.png'}" alt="${p.name}" class="product-thumb" onclick="showEditProduct('${p._id || p.id}')" style="cursor: pointer;" title="Click to edit"></td>
+                    <td><img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'" class="product-thumb" onclick="showEditProduct('${p._id || p.id}')" style="cursor: pointer;" title="Click to edit"></td>
                     <td><strong>${p.name}</strong></td>
                     <td><span class="category-badge">${p.category}</span></td>
                     <td class="price">₦${p.price.toLocaleString()}</td>
@@ -1219,6 +1284,7 @@
                 selectedImageBase64 = compressedImage;
                 preview.src = selectedImageBase64;
                 preview.style.display = 'block';
+                document.getElementById('preview-container').style.display = 'block';
                 
                 console.log('Image set, selectedImageBase64 length:', selectedImageBase64.length);
             } catch (error) {
@@ -1230,6 +1296,7 @@
         function clearProductImage() {
             selectedImageBase64 = '';
             document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('preview-container').style.display = 'none';
             document.getElementById('product-image-file').value = '';
             console.log('Image cleared');
         }
@@ -1326,7 +1393,7 @@
             // For new products: use default image if nothing selected
             const finalImage = isEditing 
                 ? (productImage || undefined)  
-                : (productImage || 'logo.png');
+                : (productImage || 'images/logo.png');
             
             const product = {
                 name: document.getElementById('product-name').value,
@@ -1410,7 +1477,7 @@
             window.location.href = 'index.html';
         }
     </script>
-    <script src="/script.js?v=20260312-3" defer></script>
+    <script src="js/script.js?v=20260312-3" defer></script>
 </body>
 </html>
 

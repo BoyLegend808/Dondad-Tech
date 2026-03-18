@@ -1,2 +1,0 @@
-MONGODB_URI=mongodb://ugwunekejohn5_db_user:rAqSq5SSSlcsLdnH@ac-05qfvvj-shard-00-00.r5kxjyu.mongodb.net:27017,ac-05qfvvj-shard-00-01.r5kxjyu.mongodb.net:27017,ac-05qfvvj-shard-00-02.r5kxjyu.mongodb.net:27017/dondadtech?ssl=true&replicaSet=atlas-8meay6-shard-0&authSource=admin&retryWrites=true&w=majority
-JWT_SECRET=f78e37823c2c65474f61ccc1ac9e2346369356224a0f8313efb3b1003ca6c537f4ca51ccfdb954cd4df64af83208f4cdd89031613fceeb6f4c4c81b9341b0297
