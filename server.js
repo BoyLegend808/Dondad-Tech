@@ -26,6 +26,38 @@ const cron = require("node-cron");
 // Redis client for caching (optional - will work without Redis)
 let redisClient = null;
 let isRedisConnected = false;
+
+// Simple in-memory cache as fallback (works without Redis)
+const memoryCache = new Map();
+const MEMORY_CACHE_TTL = 60000; // 1 minute in memory
+
+function getFromMemoryCache(key) {
+  const cached = memoryCache.get(key);
+  if (!cached) return null;
+  if (Date.now() > cached.expiresAt) {
+    memoryCache.delete(key);
+    return null;
+  }
+  return cached.data;
+}
+
+function setToMemoryCache(key, data, ttlMs = MEMORY_CACHE_TTL) {
+  memoryCache.set(key, {
+    data,
+    expiresAt: Date.now() + ttlMs
+  });
+}
+
+// Clear old cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of memoryCache.entries()) {
+    if (now > value.expiresAt) {
+      memoryCache.delete(key);
+    }
+  }
+}, 30000); // Check every 30 seconds
+
 try {
   const Redis = require("ioredis");
   const redisUrl =
@@ -661,16 +693,33 @@ function isValidEmail(email = "") {
 
 // ============ CACHE HELPERS ============
 async function getFromCache(key) {
+  // Try memory cache first (fastest - no network)
+  const memCached = getFromMemoryCache(key);
+  if (memCached) {
+    console.log('[Cache] Memory hit for:', key);
+    return memCached;
+  }
+  // Try Redis if available
   if (!isRedisConnected || !redisClient) return null;
   try {
     const data = await redisClient.get(key);
-    return data ? JSON.parse(data) : null;
+    if (data) {
+      const parsed = JSON.parse(data);
+      // Store in memory cache for faster subsequent access
+      setToMemoryCache(key, parsed, 60000);
+      return parsed;
+    }
+    return null;
   } catch (e) {
     return null;
   }
 }
 
 async function setToCache(key, value, ttlSeconds = 300) {
+  // Always set memory cache (works without Redis)
+  setToMemoryCache(key, value, ttlSeconds * 1000);
+  
+  // Try Redis if available
   if (!isRedisConnected || !redisClient) return;
   try {
     await redisClient.setEx(key, ttlSeconds, JSON.stringify(value));

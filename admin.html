@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/products.js"></script>
 </head>
 <body>
@@ -29,6 +30,29 @@
             </div>
         </nav>
     </header>
+
+    <!-- Admin Login Section (shown when not authenticated) -->
+    <section id="admin-login-section" class="admin-section" style="display: none;">
+        <div class="admin-login-box">
+            <h2>🔐 Admin Login</h2>
+            <p>Please login to access the admin panel</p>
+            <form id="admin-login-form" onsubmit="return handleAdminLogin(event)">
+                <div class="form-group" style="text-align:left;">
+                    <label>Email</label>
+                    <input type="email" id="admin-login-email" placeholder="admin@example.com" required>
+                </div>
+                <div class="form-group" style="text-align:left;">
+                    <label>Password</label>
+                    <input type="password" id="admin-login-password" placeholder="Enter password" required>
+                </div>
+                <p id="admin-login-error" class="login-message" style="display:none;"></p>
+                <button type="submit" class="btn admin-btn" style="width:100%; margin-top:1rem;">Login</button>
+            </form>
+            <div class="login-hint">
+                <p>Already have an account? <a href="login.html" style="color:var(--primary);">Login here</a></p>
+            </div>
+        </div>
+    </section>
 
     <!-- Admin Dashboard (visible by default) -->
     <section id="admin-dashboard" class="admin-section" style="display: block;">
@@ -67,6 +91,12 @@
                         <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
                         <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
                     </div>
+                </div>
+                <div id="admin-debug-banner" style="margin:0.5rem 0 1rem 0; padding:0.75rem 1rem; border-radius:8px; background:rgba(255,255,255,0.03); color:var(--muted); font-size:0.95rem; display:flex; gap:1rem; align-items:center;">
+                    <strong style="color:var(--text); margin-right:.5rem;">Admin Debug:</strong>
+                    <span id="admin-debug-user">user: unknown</span>
+                    <span id="admin-debug-api">api: n/a</span>
+                    <span id="admin-debug-products">products: ?</span>
                 </div>
 
                 <!-- Products Table -->
@@ -390,6 +420,7 @@
         const DASHBOARD_CACHE_MS = 20000;
         let selectedSalesDateKey = '';
         const orderStatusDrafts = {};
+        let lastProductsSource = 'unknown';
         const ADMIN_PRODUCTS_QUERY = '?page=1&limit=50&sort=_id&order=desc';
         const CATEGORY_OPTIONS = [
             { value: 'phones', label: 'Phones' },
@@ -545,16 +576,83 @@
         async function checkAuth() {
             const user = getStoredUser();
             
-            // If no stored user or not admin, redirect to login page
+            // If no stored user or not admin, show login section
             if (!user || user.role !== 'admin') {
-                window.location.href = '../auth/login.html?redirect=' + encodeURIComponent(window.location.href);
+                try {
+                    const dbgUser = document.getElementById('admin-debug-user');
+                    if (dbgUser) dbgUser.textContent = 'user: not logged in';
+                } catch (_) {}
+                
+                // Show login section instead of dashboard
+                document.getElementById('admin-login-section').style.display = 'block';
+                document.getElementById('admin-dashboard').style.display = 'none';
                 return;
             }
             
             // User is valid admin, show dashboard
+            try {
+                const dbgUser = document.getElementById('admin-debug-user');
+                if (dbgUser) dbgUser.textContent = 'user: ' + (user.name || user.email || 'admin');
+            } catch (_) {}
             updateAdminNav(user);
             showDashboard();
             loadDashboardStats(true);
+        }
+
+        // Handle admin login from admin page
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('admin-login-email').value.trim();
+            const password = document.getElementById('admin-login-password').value;
+            const errorEl = document.getElementById('admin-login-error');
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            if (errorEl) {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (data.success && data.user && data.user.role === 'admin') {
+                    // Store user in session
+                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+                    // Show dashboard
+                    checkAuth();
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = data.error || 'Invalid credentials or not an admin account';
+                        errorEl.style.display = 'block';
+                    }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Login';
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                if (errorEl) {
+                    errorEl.textContent = 'Connection error. Please try again.';
+                    errorEl.style.display = 'block';
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Login';
+                }
+            }
+            return false;
         }
 
         function updateAdminNav(user) {
@@ -631,10 +729,16 @@
                 renderOrdersSection(orders);
             }
 
+            // Add timeout controller
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+            
             try {
                 const response = await fetch(API_URL + '/api/orders', {
-                    credentials: "include"
+                    credentials: "include",
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 console.log('Orders response status:', response.status);
                 const payload = await response.json();
                 console.log('Orders API response:', payload);
@@ -661,11 +765,13 @@
 
                 renderOrdersSection(orders);
             } catch (error) {
+                clearTimeout(timeoutId);
                 console.error('Error loading orders:', error);
+                const isAbort = error.name === 'AbortError';
                 if (!Array.isArray(orders) || orders.length === 0) {
                     if (loadingEl) {
                         loadingEl.style.display = 'block';
-                        loadingEl.textContent = 'Error loading orders: ' + error.message;
+                        loadingEl.textContent = isAbort ? 'Orders loading timed out. Showing cached data if available.' : 'Error loading orders: ' + error.message;
                     }
                     return;
                 }
@@ -673,7 +779,7 @@
                 renderOrdersSection(orders);
                 if (loadingEl) {
                     loadingEl.style.display = 'block';
-                    loadingEl.textContent = 'Showing cached orders. Refresh failed: ' + error.message;
+                    loadingEl.textContent = isAbort ? 'Showing cached orders (timeout).' : 'Showing cached orders. Refresh failed: ' + error.message;
                 }
             }
         }
@@ -961,11 +1067,22 @@
 
             dashboardLoadPromise = (async () => {
             try {
+                // Add timeout controller
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                const fetchOptions = { 
+                    credentials: "include",
+                    signal: controller.signal 
+                };
+
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(getAdminProductsUrl(), { credentials: "include" }),
-                    fetch(API_URL + '/api/orders', { credentials: "include" }),
-                    fetch(API_URL + '/api/users', { credentials: "include" })
+                    fetch(getAdminProductsUrl(), fetchOptions),
+                    fetch(API_URL + '/api/orders', fetchOptions),
+                    fetch(API_URL + '/api/users', fetchOptions)
                 ]);
+                
+                clearTimeout(timeoutId);
 
                 const parseJsonSafe = async (res) => {
                     try {
@@ -999,6 +1116,7 @@
                 }
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
+                // Continue with existing cached data if available
             } finally {
                 dashboardLoadPromise = null;
             }
@@ -1140,61 +1258,72 @@
 
         async function loadProducts() {
             try {
-                console.log('Loading products...');
+                console.log('Loading products from database...');
                 const tbody = document.getElementById('products-table');
                 const noProducts = document.getElementById('no-products');
 
                 // Show loading indicator first
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;"><div class="loader"></div><p>Loading products...</p></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;"><div class="loader"></div><p>Loading products from database...</p></td></tr>';
                     if (noProducts) noProducts.style.display = 'none';
                 }
                 
-                // Fetch fresh data from API first
-                const response = await fetch(getAdminProductsUrl(), {
-                    credentials: "include"
-                });
+                // Fetch from API only - with timeout
+                let apiStatus = 'n/a';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
                 
-                if (!response.ok) {
-                    console.error('Failed to load products, status:', response.status);
-                    // Fallback to local products on API error
-                    if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
-                        products = window.products;
-                        renderProducts();
-                    } else {
-                        products = [];
-                        renderProducts();
+                try {
+                    const response = await fetch(getAdminProductsUrl(), {
+                        credentials: "include",
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    apiStatus = String(response.status);
+                    document.getElementById('admin-debug-api').textContent = 'api: ' + apiStatus;
+
+                    if (!response.ok) {
+                        console.warn('Failed to load products, status:', response.status);
+                        if (response.status === 401 || response.status === 403) {
+                            document.getElementById('admin-debug-api').textContent += ' (unauthorized - please login)';
+                        }
+                        // Show error message
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Unable to load products. Please login or try again.</td></tr>';
+                        }
+                        return;
                     }
-                } else {
+
                     const payload = await response.json();
                     const freshProducts = normalizeProductsPayload(payload);
-                    if (freshProducts.length > 0) {
+                    if (Array.isArray(freshProducts) && freshProducts.length > 0) {
                         products = freshProducts;
-                        console.log('Fresh products loaded from API:', products.length);
+                        lastProductsSource = 'api';
+                        console.log('Products loaded from database:', products.length);
+                        document.getElementById('admin-debug-products').textContent = 'products: ' + products.length + ' (database)';
                         renderProducts();
                     } else {
-                        // Fallback to local products if API returns empty
-                        if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
-                            products = window.products;
-                            renderProducts();
-                        } else {
-                            products = [];
-                            renderProducts();
-                        }
+                        // No products in database
+                        products = [];
+                        lastProductsSource = 'empty';
+                        document.getElementById('admin-debug-products').textContent = 'products: 0 (database empty)';
+                        renderProducts();
+                    }
+                } catch (err) {
+                    clearTimeout(timeoutId);
+                    console.error('Error fetching products:', err);
+                    const isAbort = err.name === 'AbortError';
+                    document.getElementById('admin-debug-api').textContent = isAbort ? 'api: timeout (5s)' : 'api: error';
+                    // Show error
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">' + 
+                            (isAbort ? 'Connection timed out. Please try again.' : 'Error connecting to server.') + 
+                            '</td></tr>';
                     }
                 }
                 
-                // Don't call loadDashboardStats here - it's already called in checkAuth
             } catch (error) {
                 console.error('Error loading products:', error);
-                // Fallback to local products on error
-                if (typeof window.products !== 'undefined' && Array.isArray(window.products) && window.products.length > 0) {
-                    products = window.products;
-                    renderProducts();
-                } else {
-                    products = [];
-                    renderProducts();
-                }
             }
         }
 
