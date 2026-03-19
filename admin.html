@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="js/products.js"></script>
+
 </head>
 <body>
     <!-- Navigation -->
@@ -88,16 +88,14 @@
                 <div class="admin-page-header">
                     <h2>📦 Product Management</h2>
                     <div class="header-actions">
+                        <button id="products-refresh-btn" class="btn btn-secondary" onclick="loadProducts()" style="margin-right: auto;" title="Refresh from database">
+                            🔄 Refresh DB
+                        </button>
                         <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
                         <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
                     </div>
                 </div>
-                <div id="admin-debug-banner" style="margin:0.5rem 0 1rem 0; padding:0.75rem 1rem; border-radius:8px; background:rgba(255,255,255,0.03); color:var(--muted); font-size:0.95rem; display:flex; gap:1rem; align-items:center;">
-                    <strong style="color:var(--text); margin-right:.5rem;">Admin Debug:</strong>
-                    <span id="admin-debug-user">user: unknown</span>
-                    <span id="admin-debug-api">api: n/a</span>
-                    <span id="admin-debug-products">products: ?</span>
-                </div>
+
 
                 <!-- Products Table -->
                 <div class="admin-table-container">
@@ -407,10 +405,10 @@
         </div>
     </section>
 
-    <script src="auth.js"></script>
+
     <script>
         // Admin Panel Logic
-        const API_URL = '';
+        const API_URL = '/api'; // Explicit API base URL
         let products = [];
         let orders = [];
         let users = [];
@@ -578,10 +576,7 @@
             
             // If no stored user or not admin, show login section
             if (!user || user.role !== 'admin') {
-                try {
-                    const dbgUser = document.getElementById('admin-debug-user');
-                    if (dbgUser) dbgUser.textContent = 'user: not logged in';
-                } catch (_) {}
+
                 
                 // Show login section instead of dashboard
                 document.getElementById('admin-login-section').style.display = 'block';
@@ -590,10 +585,6 @@
             }
             
             // User is valid admin, show dashboard
-            try {
-                const dbgUser = document.getElementById('admin-debug-user');
-                if (dbgUser) dbgUser.textContent = 'user: ' + (user.name || user.email || 'admin');
-            } catch (_) {}
             updateAdminNav(user);
             showDashboard();
             loadDashboardStats(true);
@@ -729,9 +720,9 @@
                 renderOrdersSection(orders);
             }
 
-            // Add timeout controller
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+             // Add timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
             
             try {
                 const response = await fetch(API_URL + '/api/orders', {
@@ -1067,9 +1058,9 @@
 
             dashboardLoadPromise = (async () => {
             try {
-                // Add timeout controller
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+         // Add timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
                 
                 const fetchOptions = { 
                     credentials: "include",
@@ -1261,17 +1252,39 @@
                 console.log('Loading products from database...');
                 const tbody = document.getElementById('products-table');
                 const noProducts = document.getElementById('no-products');
+                const refreshBtn = document.getElementById('products-refresh-btn') || createRefreshButton();
 
-                // Show loading indicator first
+                // Show loading skeleton first
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;"><div class="loader"></div><p>Loading products from database...</p></td></tr>';
+                    tbody.innerHTML = `
+                        <tr class="loading-skeleton">
+                            <td><div class="skeleton-image"></div></td>
+                            <td><div class="skeleton-text"></div></td>
+                            <td><div class="skeleton-text short"></div></td>
+                            <td><div class="skeleton-price"></div></td>
+                            <td><div class="skeleton-buttons"></div></td>
+                        </tr>
+                        <tr class="loading-skeleton">
+                            <td><div class="skeleton-image"></div></td>
+                            <td><div class="skeleton-text"></div></td>
+                            <td><div class="skeleton-text short"></div></td>
+                            <td><div class="skeleton-price"></div></td>
+                            <td><div class="skeleton-buttons"></div></td>
+                        </tr>
+                        <tr class="loading-skeleton">
+                            <td><div class="skeleton-image"></div></td>
+                            <td><div class="skeleton-text"></div></td>
+                            <td><div class="skeleton-text short"></div></td>
+                            <td><div class="skeleton-price"></div></td>
+                            <td><div class="skeleton-buttons"></div></td>
+                        </tr>`;
                     if (noProducts) noProducts.style.display = 'none';
                 }
                 
                 // Fetch from API only - with timeout
-                let apiStatus = 'n/a';
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    let apiStatus = 'n/a';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
                 
                 try {
                     const response = await fetch(getAdminProductsUrl(), {
@@ -1280,12 +1293,12 @@
                     });
                     clearTimeout(timeoutId);
                     apiStatus = String(response.status);
-                    document.getElementById('admin-debug-api').textContent = 'api: ' + apiStatus;
+                    console.log('Products API status:', apiStatus);
 
                     if (!response.ok) {
                         console.warn('Failed to load products, status:', response.status);
                         if (response.status === 401 || response.status === 403) {
-                            document.getElementById('admin-debug-api').textContent += ' (unauthorized - please login)';
+                        console.warn('Products API unauthorized:', response.status);
                         }
                         // Show error message
                         if (tbody) {
@@ -1300,13 +1313,13 @@
                         products = freshProducts;
                         lastProductsSource = 'api';
                         console.log('Products loaded from database:', products.length);
-                        document.getElementById('admin-debug-products').textContent = 'products: ' + products.length + ' (database)';
+                        console.log('Products loaded from database:', products.length);
                         renderProducts();
                     } else {
                         // No products in database
                         products = [];
                         lastProductsSource = 'empty';
-                        document.getElementById('admin-debug-products').textContent = 'products: 0 (database empty)';
+                        console.log('No products in database, using fallback');
                         renderProducts();
                     }
                 } catch (err) {
