@@ -1308,7 +1308,10 @@
                     }
 
                     const payload = await response.json();
+                    console.log('API Response:', payload);
+                    console.log('Response has products:', payload && payload.products);
                     const freshProducts = normalizeProductsPayload(payload);
+                    console.log('Normalized products:', freshProducts);
                     if (Array.isArray(freshProducts) && freshProducts.length > 0) {
                         products = freshProducts;
                         lastProductsSource = 'api';
@@ -1325,8 +1328,13 @@
                 } catch (err) {
                     clearTimeout(timeoutId);
                     console.error('Error fetching products:', err);
+                    console.error('Error stack:', err.stack);
                     const isAbort = err.name === 'AbortError';
                     document.getElementById('admin-debug-api').textContent = isAbort ? 'api: timeout (5s)' : 'api: error';
+                    // Force show skeleton as error indicator
+                    if (tbody) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Error: ' + err.message + '</td></tr>';
+                    }
                     // Show error
                     if (tbody) {
                         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">' + 
@@ -1341,46 +1349,51 @@
         }
 
         function renderProducts(filtered) {
-            const tbody = document.getElementById('products-table');
-            const noProducts = document.getElementById('no-products');
+            try {
+                const tbody = document.getElementById('products-table');
+                const noProducts = document.getElementById('no-products');
+                console.log('renderProducts called, products global:', products);
 
-            const list = Array.isArray(filtered) ? filtered : (Array.isArray(products) ? products : []);
-            console.log('renderProducts - items:', list.length);
+                const list = Array.isArray(filtered) ? filtered : (Array.isArray(products) ? products : []);
+                console.log('renderProducts - items:', list.length);
 
-            if (!Array.isArray(list) || list.length === 0) {
-                if (tbody) tbody.innerHTML = '';
-                if (noProducts) noProducts.style.display = 'block';
-                return;
-            }
-
-            if (noProducts) noProducts.style.display = 'none';
-
-            tbody.innerHTML = list.map(p => {
-                try {
-                    const id = String(p._id || p.id || '');
-                    const name = p.name || 'Untitled Product';
-                    const category = p.category || '';
-                    const image = p.image || 'images/logo.png';
-                    const priceVal = (p.price !== undefined && !Number.isNaN(Number(p.price))) ? Number(p.price) : null;
-                    const priceText = priceVal !== null ? priceVal.toLocaleString() : 'N/A';
-
-                    return `
-                        <tr data-product-id="${id}">
-                            <td><img src="${image}" alt="${name}" onerror="this.src='images/logo.png'" class="product-thumb" onclick="showEditProduct('${id}')" style="cursor: pointer;" title="Click to edit"></td>
-                            <td><strong>${name}</strong></td>
-                            <td><span class="category-badge">${category}</span></td>
-                            <td class="price">₦${priceText}</td>
-                            <td>
-                                <button onclick="showEditProduct('${id}')" class="btn btn-edit">✏️ Edit</button>
-                                <button onclick="deleteProduct('${id}')" class="btn btn-delete">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
-                } catch (err) {
-                    console.error('Error rendering product row:', err, p);
-                    return '';
+                if (!Array.isArray(list) || list.length === 0) {
+                    if (tbody) tbody.innerHTML = '';
+                    if (noProducts) noProducts.style.display = 'block';
+                    return;
                 }
-            }).join('');
+
+                if (noProducts) noProducts.style.display = 'none';
+
+                tbody.innerHTML = list.map(p => {
+                    try {
+                        const id = String(p._id || p.id || '');
+                        const name = p.name || 'Untitled Product';
+                        const category = p.category || '';
+                        const image = p.image || 'images/logo.png';
+                        const priceVal = (p.price !== undefined && !Number.isNaN(Number(p.price))) ? Number(p.price) : null;
+                        const priceText = priceVal !== null ? priceVal.toLocaleString() : 'N/A';
+
+                        return `
+                            <tr data-product-id="${id}">
+                                <td><img src="${image}" alt="${name}" onerror="this.src='images/logo.png'" class="product-thumb" onclick="showEditProduct('${id}')" style="cursor: pointer;" title="Click to edit"></td>
+                                <td><strong>${name}</strong></td>
+                                <td><span class="category-badge">${category}</span></td>
+                                <td class="price">₦${priceText}</td>
+                                <td>
+                                    <button onclick="showEditProduct('${id}')" class="btn btn-edit">✏️ Edit</button>
+                                    <button onclick="deleteProduct('${id}')" class="btn btn-delete">🗑️</button>
+                                </td>
+                            </tr>
+                        `;
+                    } catch (err) {
+                        console.error('Error rendering product row:', err, p);
+                        return '';
+                    }
+                }).join('');
+            } catch (err) {
+                console.error('Error in renderProducts:', err);
+            }
         }
 
         let selectedImageBase64 = '';
