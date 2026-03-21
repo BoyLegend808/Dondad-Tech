@@ -568,7 +568,7 @@
         }
 
         function getAdminProductsUrl() {
-            return API_URL + '/api/products' + ADMIN_PRODUCTS_QUERY;
+            return API_URL + '/products' + ADMIN_PRODUCTS_QUERY;
         }
 
         async function checkAuth() {
@@ -725,7 +725,7 @@
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
             
             try {
-                const response = await fetch(API_URL + '/api/orders', {
+                const response = await fetch(API_URL + '/orders', {
                     credentials: "include",
                     signal: controller.signal
                 });
@@ -1008,7 +1008,7 @@
             }
 
             try {
-                const response = await fetch(API_URL + '/api/orders/' + orderId, {
+                const response = await fetch(API_URL + '/orders/' + orderId, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: "include",
@@ -1069,8 +1069,8 @@
 
                 const [productsRes, ordersRes, usersRes] = await Promise.all([
                     fetch(getAdminProductsUrl(), fetchOptions),
-                    fetch(API_URL + '/api/orders', fetchOptions),
-                    fetch(API_URL + '/api/users', fetchOptions)
+                    fetch(API_URL + '/orders', fetchOptions),
+                    fetch(API_URL + '/users', fetchOptions)
                 ]);
                 
                 clearTimeout(timeoutId);
@@ -1594,14 +1594,14 @@
                 let response;
                 if (isEditing) {
                     const id = document.getElementById('product-id').value;
-                    response = await fetch(API_URL + '/api/products/' + id, {
+                    response = await fetch(API_URL + '/products/' + id, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: "include",
                         body: JSON.stringify(product)
                     });
                 } else {
-                    response = await fetch(API_URL + '/api/products', {
+                    response = await fetch(API_URL + '/products', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: "include",
@@ -1637,7 +1637,7 @@
             if (!confirm('Are you sure you want to delete this product?')) return;
             
             try {
-                const response = await fetch(API_URL + '/api/products/' + id, {
+                const response = await fetch(API_URL + '/products/' + id, {
                     method: 'DELETE',
                     credentials: "include"
                 });
