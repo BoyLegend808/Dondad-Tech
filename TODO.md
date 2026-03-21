@@ -1,21 +1,65 @@
-# Admin Page Fix - TODO Tracker
+# Fix Admin Products Loading Issue - Products Show Loading Skeleton Only
 
-## ✅ Completed
-- [ ] 1. Create TODO.md ✅ **DONE**
+## Plan Overview
+**Issue**: Admin panel shows loading skeleton but never loads products  
+**Root Cause**: Frontend calls wrong API endpoint (`/api/products` public) instead of `/api/admin/products` (admin protected)  
+**Status**: ✅ Approved by user
 
-## ⏳ In Progress  
-## ✅ Completed
-- [x] 1. Create TODO.md 
-- [x] **2. Remove debug code** (6 edits)
-- [x] **3. Add fallback + UX** (refresh btn, 3s timeout)
-- [x] **4. Loading skeletons + CSS**
+## Steps (3/5 Complete)
 
-## ⏳ In Progress  
+### 1. ✅ Create TODO.md [DONE]
+Track progress of the fix
 
+### 2. ✅ Fix js/admin.js API endpoints [DONE]
+- Change all `/api/products` → `/api/admin/products` for admin operations
+- `loadProducts()`: `/api/products` → `/api/admin/products`
+- `editProduct()`: `/api/products/:id` → `/api/admin/products/:id` 
+- `deleteProduct()`: `/api/products/:id` → `/api/admin/products/:id`
+- `product-form` submit: `/products` → `/admin/products`
 
-### **Phase 2: CSS & Final Polish**
-- [ ] **5. Add CSS loading styles**
-- [ ] **6. Test & attempt_completion**
+### 3. ✅ Test server & seed products [DONE]
+```bash
+npm start
+# Visit http://localhost:3000/api/seed-products (seeds public products)
+# Login: admin@dondad.com / admin123
+```
 
-**Current: Step 2/6** - Editing `admin.html` to remove debug + fix products loading
+### 4. 🔄 Test admin panel [PENDING]
+```
+1. Visit http://localhost:3000/admin.html (or pages/admin/admin.html)
+2. Login as admin
+3. Verify products table loads (not stuck on "Loading...")
+4. Check Network tab: /api/admin/products → 200 + products array
+```
+
+### 5. ✅ Complete & verify [PENDING]
+- Products list loads with data
+- Edit/Delete/Create work
+- Network requests use correct admin endpoints
+
+## Commands to Test
+```bash
+# Terminal 1: Start server
+npm start
+
+# Browser: Seed products (if empty)
+http://localhost:3000/api/seed-products
+
+# Browser: Test public products
+http://localhost:3000/api/products
+
+# Admin login
+admin@dondad.com / admin123
+```
+
+## Expected Result
+Admin table shows products like:
+```
+[Product Image] | iPhone 13 Pro Max | phones | ₦450,000 | [Edit][Delete]
+[Product Image] | MacBook Pro 14    | laptops| ₦850,000 | [Edit][Delete]
+```
+
+---
+
+**Next**: Test admin panel (Step 4)
 

@@ -20,7 +20,7 @@ async function loadProducts() {
     const tbody = document.getElementById('products-table');
     tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
     
-    const response = await fetch(API_URL + '/products?page=1&limit=50');
+    const response = await fetch(API_URL + '/admin/products?page=1&limit=50');
     const data = await response.json();
     products = data.products || [];
     
@@ -73,7 +73,7 @@ function editProduct(id) {
 async function deleteProduct(id) {
   if (!confirm('Delete?')) return;
   try {
-    await fetch(API_URL + '/products/' + id, { method: 'DELETE' });
+    await fetch(API_URL + '/admin/products/' + id, { method: 'DELETE' });
     loadProducts();
   } catch (e) {
     alert('Delete error');
@@ -92,7 +92,7 @@ document.getElementById('product-form').onsubmit = async (e) => {
   };
   
   try {
-    const url = id ? `/products/${id}` : '/products';
+    const url = id ? `/admin/products/${id}` : '/admin/products';
     const method = id ? 'PUT' : 'POST';
     await fetch(API_URL + url, {
       method,
