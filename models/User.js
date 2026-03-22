@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+// Prevent model overwrite error
+let User;
+try {
+  User = mongoose.model('User');
+} catch (e) {
+  User = null;
+}
+
+if (User) {
+  module.exports = User;
+} else {
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -20,5 +32,5 @@ userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 userSchema.index({ facebookId: 1 });
 
-module.exports = mongoose.model('User', userSchema);
-
+  module.exports = mongoose.model('User', userSchema);
+}

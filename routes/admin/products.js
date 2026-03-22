@@ -68,7 +68,10 @@ router.get('/', requireAdmin, async (req, res) => {
       Product.countDocuments(query)
     ]);
 
+    console.log(`[ADMIN-PRODUCTS] Serving ${products.length} products (page ${page}) to admin ${req.user?._id}`);
+    
     res.json({
+      success: true,
       products,
       pagination: {
         page,
@@ -79,7 +82,10 @@ router.get('/', requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Admin products list error:', error);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch products' 
+    });
   }
 });
 

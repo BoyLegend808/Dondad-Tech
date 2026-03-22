@@ -614,6 +614,28 @@ const PasswordResetToken = mongoose.model(
   passwordResetTokenSchema,
 );
 
+// PHASE 1: Unprotected test route for product data verification
+app.get("/api/test-products", async (req, res) => {
+  try {
+    console.log("🔍 TEST-PRODUCTS: Database query started");
+    const products = await Product.find({}).lean().limit(20);
+    console.log("✅ TEST-PRODUCTS: Found", products.length, "products");
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      count: products.length,
+      products: products
+    });
+  } catch (error) {
+    console.error("❌ TEST-PRODUCTS ERROR:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 const DEFAULT_USERS = [
   {
     name: "Admin",
@@ -2031,6 +2053,14 @@ app.use((req, res, next) => {
   console.log("[DEBUG MIDDLEWARE] req.body =", JSON.stringify(req.body));
   next();
 });
+
+// ===== PHASE 3: MOUNT ADMIN ROUTES =====
+console.log('[ROUTES] Mounting admin routes...');
+app.use('/api/admin/products', require('./routes/admin/products'));
+app.use('/api/admin/users', require('./routes/admin/users'));
+app.use('/api/admin/orders', require('./routes/admin/orders'));
+app.use('/api/admin/dashboard', require('./routes/admin/dashboard'));
+console.log('[ROUTES] ✅ All admin routes mounted');
 app.use(express.static(path.join(__dirname, "pages")));
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, "images")));

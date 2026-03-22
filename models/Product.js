@@ -1,5 +1,17 @@
 const mongoose = require('mongoose');
 
+// Prevent model overwrite error
+let Product;
+try {
+  Product = mongoose.model('Product');
+} catch (e) {
+  Product = null;
+}
+
+if (Product) {
+  module.exports = Product;
+} else {
+
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
@@ -35,5 +47,6 @@ productSchema.index({ category: 1, price: 1 });
 productSchema.index({ name: "text", desc: "text" });
 productSchema.index({ id: 1 });
 
-module.exports = mongoose.model('Product', productSchema);
+  module.exports = mongoose.model('Product', productSchema);
+}
 

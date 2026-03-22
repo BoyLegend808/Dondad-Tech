@@ -1,65 +1,23 @@
-# Fix Admin Products Loading Issue - Products Show Loading Skeleton Only
+# Admin Product Management System Fix
+## Status: [IN PROGRESS] 5/8 steps complete ✅
 
-## Plan Overview
-**Issue**: Admin panel shows loading skeleton but never loads products  
-**Root Cause**: Frontend calls wrong API endpoint (`/api/products` public) instead of `/api/admin/products` (admin protected)  
-**Status**: ✅ Approved by user
+### PHASE 1: Backend Verification
+- [x] 1. Add unprotected GET /api/test-products in server.js ✅
+- [x] 2. Mount admin routes in server.js ✅
 
-## Steps (3/5 Complete)
+### PHASE 2: Admin API
+- [x] 3. routes/admin/products.js: {success:true, products:[], pagination:...} + console.log ✅
 
-### 1. ✅ Create TODO.md [DONE]
-Track progress of the fix
+### PHASE 3-4: Frontend Data Pipeline & Rendering
+- [x] 4. Rebuild js/admin.js loadProducts(): credentials:'include', logs, /api/admin/products, error handling ✅
+- [x] 5. renderProductsTable(): image/name/category/price/stock/edit/delete buttons ✅
+- [x] 6. editProduct(), create, delete: PUT/POST/DELETE w/ credentials:'include' ✅
 
-### 2. ✅ Fix js/admin.js API endpoints [DONE]
-- Change all `/api/products` → `/api/admin/products` for admin operations
-- `loadProducts()`: `/api/products` → `/api/admin/products`
-- `editProduct()`: `/api/products/:id` → `/api/admin/products/:id` 
-- `deleteProduct()`: `/api/products/:id` → `/api/admin/products/:id`
-- `product-form` submit: `/products` → `/admin/products`
+### PHASE 5-7: Validation & Edit Functionality
+- [ ] 7. Test /api/test-products → data confirmed
+- [ ] 8. Full E2E: admin.html products render + edit works
 
-### 3. ✅ Test server & seed products [DONE]
-```bash
-npm start
-# Visit http://localhost:3000/api/seed-products (seeds public products)
-# Login: admin@dondad.com / admin123
-```
+**Next:** Step 7 - Test /api/test-products in browser → confirm data flow
 
-### 4. 🔄 Test admin panel [PENDING]
-```
-1. Visit http://localhost:3000/admin.html (or pages/admin/admin.html)
-2. Login as admin
-3. Verify products table loads (not stuck on "Loading...")
-4. Check Network tab: /api/admin/products → 200 + products array
-```
 
-### 5. ✅ Complete & verify [PENDING]
-- Products list loads with data
-- Edit/Delete/Create work
-- Network requests use correct admin endpoints
-
-## Commands to Test
-```bash
-# Terminal 1: Start server
-npm start
-
-# Browser: Seed products (if empty)
-http://localhost:3000/api/seed-products
-
-# Browser: Test public products
-http://localhost:3000/api/products
-
-# Admin login
-admin@dondad.com / admin123
-```
-
-## Expected Result
-Admin table shows products like:
-```
-[Product Image] | iPhone 13 Pro Max | phones | ₦450,000 | [Edit][Delete]
-[Product Image] | MacBook Pro 14    | laptops| ₦850,000 | [Edit][Delete]
-```
-
----
-
-**Next**: Test admin panel (Step 4)
 
