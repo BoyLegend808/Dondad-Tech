@@ -616,7 +616,8 @@
         }
 
         function getAdminProductsUrl() {
-            return API_URL + '/products' + ADMIN_PRODUCTS_QUERY;
+            // Admin panel reads from secure admin endpoint
+            return API_URL + '/admin/products' + ADMIN_PRODUCTS_QUERY;
         }
 
         async function checkAuth() {
@@ -1371,13 +1372,29 @@
 
                     if (!response.ok) {
                         console.warn('Failed to load products, status:', response.status);
-                        if (response.status === 401 || response.status === 403) {
-                            console.warn('Products API unauthorized:', response.status);
-                        }
-                        // Show error message
+                        const message = (response.status === 401 || response.status === 403)
+                            ? 'Unauthorized (admin login required). Please login again.'
+                            : 'Unable to load products. Please try again.';
+
                         if (tbody) {
-                            tbody.innerHTML =
-                                '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Unable to load products. Please login or try again.</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">' + message + '</td></tr>';
+                        }
+
+                        // Try admin products endpoint as fallback if first route is not set
+                        if (response.status !== 401 && response.status !== 403 && !getAdminProductsUrl().includes('/admin/products')) {
+                            console.log('Retrying with /admin/products URL');
+                            const fallback = await fetch(API_URL + '/admin/products' + ADMIN_PRODUCTS_QUERY, {
+                                credentials: 'include',
+                                signal: controller.signal
+                            });
+                            if (fallback.ok) {
+                                const payloadFallback = await fallback.json();
+                                const freshFallback = normalizeProductsPayload(payloadFallback);
+                                products = Array.isArray(freshFallback) ? freshFallback : [];
+                                lastProductsSource = 'api-fallback';
+                                renderProducts();
+                                return;
+                            }
                         }
                         return;
                     }
