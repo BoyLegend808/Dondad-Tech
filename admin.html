@@ -101,6 +101,18 @@
                     </div>
                     <p id="admin-debug-api" class="admin-debug-message"
                         style="margin-top: 0.6rem; color: var(--accent); display: none;"></p>
+                    <div id="admin-debug-section" style="margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; display: none;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary);">🔧 Debug Info</h4>
+                        <p style="margin: 0.25rem 0; font-size: 0.9rem;">API URL: <code id="debug-api-url"></code></p>
+                        <p style="margin: 0.25rem 0; font-size: 0.9rem;">Auth Status: <span id="debug-auth-status">Checking...</span></p>
+                        <div style="margin-top: 0.5rem;">
+                            <label style="font-size: 0.8rem;">Set Custom Backend URL:</label><br>
+                            <input type="text" id="custom-backend-url" placeholder="https://your-backend-domain.com" style="width: 100%; margin: 0.25rem 0; padding: 0.25rem; font-size: 0.8rem;">
+                            <button onclick="setCustomBackendUrl()" style="font-size: 0.8rem;">Set & Reload</button>
+                        </div>
+                        <button onclick="toggleDebugSection()" style="margin-top: 0.5rem; font-size: 0.8rem;">Hide Debug</button>
+                    </div>
+                    <button onclick="toggleDebugSection()" style="margin-top: 0.5rem; font-size: 0.8rem;">🔧 Show Debug</button>
                 </div>
 
 
@@ -450,10 +462,8 @@
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 return 'http://localhost:3000/api';
             }
-            // For production deployments, use the backend URL
-            // Replace with your actual backend URL when deploying
-            if (window.location.hostname.includes('pajey-gadgets') || window.location.hostname.includes(
-                    'render.com')) {
+            // For production deployments on Render
+            if (window.location.hostname.includes('onrender.com') || window.location.hostname.includes('pajey-gadgets')) {
                 return 'https://pajey-gadgets.onrender.com/api';
             }
             // Check for custom backend URL in localStorage (for manual configuration)
@@ -464,6 +474,34 @@
             // Fallback for other environments
             return '/api';
         })();
+
+        // Debug: Log API URL on load
+        console.log('Admin API_URL set to:', API_URL);
+
+        // Update debug info
+        function updateDebugInfo() {
+            const apiUrlEl = document.getElementById('debug-api-url');
+            const authStatusEl = document.getElementById('debug-auth-status');
+            if (apiUrlEl) apiUrlEl.textContent = API_URL;
+            if (authStatusEl) {
+                const user = getStoredUser();
+                authStatusEl.textContent = user && user.role === 'admin' ? 'Logged in as admin' : 'Not logged in';
+                authStatusEl.style.color = user && user.role === 'admin' ? 'green' : 'red';
+            }
+        }
+
+        function setCustomBackendUrl() {
+            const url = document.getElementById('custom-backend-url').value.trim();
+            if (url) {
+                localStorage.setItem('admin_backend_url', url);
+                alert('Custom backend URL set. Reloading page...');
+                window.location.reload();
+            } else {
+                localStorage.removeItem('admin_backend_url');
+                alert('Custom backend URL cleared. Reloading page...');
+                window.location.reload();
+            }
+        }
         let products = [];
         let orders = [];
         let users = [];
@@ -1159,9 +1197,15 @@
 
                     const [productsRes, ordersRes, usersRes] = await Promise.all([
                         fetch(getAdminProductsUrl(), fetchOptions),
-                        fetch(API_URL + '/orders', fetchOptions),
-                        fetch(API_URL + '/users', fetchOptions)
+                        fetch(API_URL + '/admin/orders', fetchOptions),
+                        fetch(API_URL + '/admin/users', fetchOptions)
                     ]);
+
+                    console.log('API calls made to:', {
+                        products: getAdminProductsUrl(),
+                        orders: API_URL + '/admin/orders',
+                        users: API_URL + '/admin/users'
+                    });
 
                     clearTimeout(timeoutId);
 
