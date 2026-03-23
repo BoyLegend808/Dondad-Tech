@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 </head>
+
 <body>
     <!-- Navigation -->
     <header>
@@ -22,7 +24,8 @@
                     <a href="shop.html" class="dropdown-item">🛒 Shop Demo</a>
                     <div class="dropdown-divider" id="dropdown-divider" style="display: none;"></div>
                     <span id="dropdown-user" class="dropdown-user" style="display: none;"></span>
-                    <button id="dropdown-logout" class="dropdown-item logout-item" style="display: none;" onclick="logout()">🚪 Logout</button>
+                    <button id="dropdown-logout" class="dropdown-item logout-item" style="display: none;"
+                        onclick="logout()">🚪 Logout</button>
                 </div>
                 <button class="hamburger" id="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
@@ -88,12 +91,16 @@
                 <div class="admin-page-header">
                     <h2>📦 Product Management</h2>
                     <div class="header-actions">
-                        <button id="products-refresh-btn" class="btn btn-secondary" onclick="loadProducts()" style="margin-right: auto;" title="Refresh from database">
+                        <button id="products-refresh-btn" class="btn btn-secondary" onclick="loadProducts()"
+                            style="margin-right: auto;" title="Refresh from database">
                             🔄 Refresh DB
                         </button>
-                        <input type="text" id="admin-search" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" class="admin-search">
+                        <input type="text" id="admin-search" placeholder="🔍 Search products..."
+                            oninput="searchProducts(this.value)" class="admin-search">
                         <button class="btn admin-btn" onclick="showAddProduct()">➕ Add Product</button>
                     </div>
+                    <p id="admin-debug-api" class="admin-debug-message"
+                        style="margin-top: 0.6rem; color: var(--accent); display: none;"></p>
                 </div>
 
 
@@ -112,9 +119,10 @@
                         <tbody id="products-table">
                             <!-- Products loaded here -->
                         </tbody>
-                </table>
-                <p id="no-products" class="no-products">No products found. Click "Add Product" to create your first product!</p>
-            </div>
+                    </table>
+                    <p id="no-products" class="no-products">No products found. Click "Add Product" to create your first
+                        product!</p>
+                </div>
             </div>
 
             <!-- Orders Tab -->
@@ -122,9 +130,12 @@
                 <div class="admin-page-header">
                     <h2>📋 Order Management</h2>
                 </div>
-                <div id="orders-filter-bar" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0 0 1rem 0; flex-wrap:wrap;">
-                    <span id="orders-filter-label" style="color:var(--text-muted); font-size:0.95rem;">Showing pending orders (default)</span>
-                    <button id="clear-date-filter-btn" class="btn btn-secondary" style="display:none;" onclick="clearSalesHistoryDateFilter()">Clear Date Filter</button>
+                <div id="orders-filter-bar"
+                    style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:0 0 1rem 0; flex-wrap:wrap;">
+                    <span id="orders-filter-label" style="color:var(--text-muted); font-size:0.95rem;">Showing pending
+                        orders (default)</span>
+                    <button id="clear-date-filter-btn" class="btn btn-secondary" style="display:none;"
+                        onclick="clearSalesHistoryDateFilter()">Clear Date Filter</button>
                 </div>
                 <div class="admin-table-container" style="margin-bottom: 1rem;">
                     <table class="admin-table">
@@ -141,7 +152,8 @@
                     </table>
                     <p id="no-sales-history" class="no-products" style="display: none;">No sales history yet.</p>
                 </div>
-                <p id="orders-count" style="display:none; margin:0 0 1rem 0; color:var(--text-muted); font-size:0.95rem;"></p>
+                <p id="orders-count"
+                    style="display:none; margin:0 0 1rem 0; color:var(--text-muted); font-size:0.95rem;"></p>
                 <div id="orders-loading" style="text-align: center; padding: 2rem;">Loading orders...</div>
                 <div id="orders-list" style="display: none;"></div>
                 <p id="no-orders" class="no-products" style="display: none;">No orders yet!</p>
@@ -182,7 +194,7 @@
             <div class="admin-form-container">
                 <form id="product-form">
                     <input type="hidden" id="product-id">
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Product Name *</label>
@@ -213,7 +225,8 @@
                     <div class="form-group">
                         <label>Product Image</label>
                         <div class="upload-zone" id="upload-zone">
-                            <input type="file" id="product-image-file" accept="image/*" capture="environment" onchange="previewImage(event)" hidden>
+                            <input type="file" id="product-image-file" accept="image/*" capture="environment"
+                                onchange="previewImage(event)" hidden>
                             <label for="product-image-file" class="upload-label">
                                 <span class="upload-icon">📷</span>
                                 <span class="upload-text">Click to Upload / Take Photo</span>
@@ -228,12 +241,14 @@
 
                     <div class="form-group">
                         <label>Short Description (shown on product cards) *</label>
-                        <textarea id="product-desc" rows="2" placeholder="Brief description shown in shop grid..." required></textarea>
+                        <textarea id="product-desc" rows="2" placeholder="Brief description shown in shop grid..."
+                            required></textarea>
                     </div>
 
                     <div class="form-group">
                         <label>Full Description (shown on product page)</label>
-                        <textarea id="product-full-desc" rows="6" placeholder="Detailed description shown when opening the product..."></textarea>
+                        <textarea id="product-full-desc" rows="6"
+                            placeholder="Detailed description shown when opening the product..."></textarea>
                     </div>
 
                     <!-- Product Variants Section -->
@@ -251,21 +266,24 @@
                         <div class="variant-group">
                             <h4>📦 Storage Options</h4>
                             <div id="storage-options"></div>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('storage')">+ Add Storage Option</button>
+                            <button type="button" class="btn btn-secondary btn-sm"
+                                onclick="addVariantOption('storage')">+ Add Storage Option</button>
                         </div>
 
                         <!-- RAM Options -->
                         <div class="variant-group">
                             <h4>🧠 RAM Options</h4>
                             <div id="ram-options"></div>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('ram')">+ Add RAM Option</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('ram')">+
+                                Add RAM Option</button>
                         </div>
 
                         <!-- Color Options -->
                         <div class="variant-group">
                             <h4>🎨 Color Options</h4>
                             <div id="color-options"></div>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('color')">+ Add Color Option</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantOption('color')">+
+                                Add Color Option</button>
                         </div>
                     </div>
 
@@ -276,6 +294,7 @@
                             border-radius: 8px;
                             border: 1px solid rgba(59, 130, 246, 0.3);
                         }
+
                         .checkbox-label {
                             display: flex;
                             align-items: center;
@@ -283,21 +302,25 @@
                             cursor: pointer;
                             font-weight: 500;
                         }
+
                         .checkbox-label input[type="checkbox"] {
                             width: 18px;
                             height: 18px;
                             cursor: pointer;
                         }
+
                         .variant-group {
                             margin: 1.5rem 0;
                             padding: 1rem;
                             background: #1f2937;
                             border-radius: 8px;
                         }
+
                         .variant-group h4 {
                             margin: 0 0 1rem 0;
                             color: #e5e7eb;
                         }
+
                         .variant-row {
                             display: grid;
                             grid-template-columns: 1fr 100px 80px 40px;
@@ -305,6 +328,7 @@
                             margin-bottom: 0.5rem;
                             align-items: center;
                         }
+
                         .variant-row input {
                             padding: 0.5rem;
                             border: 1px solid #374151;
@@ -313,6 +337,7 @@
                             color: #fff;
                             font-size: 0.9rem;
                         }
+
                         .variant-row .remove-btn {
                             background: #dc2626;
                             color: #fff;
@@ -322,19 +347,23 @@
                             cursor: pointer;
                             font-size: 1rem;
                         }
+
                         .variant-row .remove-btn:hover {
                             background: #b91c1c;
                         }
+
                         .btn-sm {
                             font-size: 0.85rem;
                             padding: 0.5rem 1rem;
                             margin-top: 0.5rem;
                         }
+
                         @media (max-width: 600px) {
                             .variant-row {
                                 grid-template-columns: 1fr;
                             }
                         }
+
                         /* Enhanced Image Upload */
                         .upload-zone {
                             border: 2px dashed rgba(168, 85, 247, 0.3);
@@ -345,33 +374,40 @@
                             position: relative;
                             transition: all 0.3s ease;
                         }
+
                         .upload-zone:hover {
                             border-color: var(--primary);
                             background: rgba(168, 85, 247, 0.08);
                         }
+
                         .upload-label {
                             display: flex;
                             flex-direction: column;
                             align-items: center;
                             cursor: pointer;
                         }
+
                         .upload-icon {
                             font-size: 2.5rem;
                             margin-bottom: 0.5rem;
                         }
+
                         .upload-text {
                             font-weight: 600;
                             color: var(--text);
                         }
+
                         .upload-hint {
                             font-size: 0.85rem;
                             color: var(--muted);
                         }
+
                         .preview-container {
                             position: relative;
                             width: 150px;
                             margin: 1.5rem auto 0;
                         }
+
                         .image-preview {
                             width: 100%;
                             height: 150px;
@@ -380,6 +416,7 @@
                             border: 2px solid var(--primary);
                             background: #000;
                         }
+
                         .remove-image {
                             position: absolute;
                             top: -10px;
@@ -392,7 +429,7 @@
                             height: 24px;
                             cursor: pointer;
                             font-weight: bold;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
                         }
                     </style>
 
@@ -420,11 +457,22 @@
         const orderStatusDrafts = {};
         let lastProductsSource = 'unknown';
         const ADMIN_PRODUCTS_QUERY = '?page=1&limit=50&sort=_id&order=desc';
-        const CATEGORY_OPTIONS = [
-            { value: 'phones', label: 'Phones' },
-            { value: 'laptops', label: 'Laptops' },
-            { value: 'tablets', label: 'Tablets' },
-            { value: 'accessories', label: 'Accessories' }
+        const CATEGORY_OPTIONS = [{
+                value: 'phones',
+                label: 'Phones'
+            },
+            {
+                value: 'laptops',
+                label: 'Laptops'
+            },
+            {
+                value: 'tablets',
+                label: 'Tablets'
+            },
+            {
+                value: 'accessories',
+                label: 'Accessories'
+            }
         ];
 
         function normalizeCategory(category) {
@@ -454,21 +502,21 @@
         }
 
         // Check login status on load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             checkAuth();
-            
+
             // Dropdown toggle for hamburger
             const hamburger = document.getElementById('hamburger');
             const dropdown = document.getElementById('dropdown-menu');
-            
+
             if (hamburger && dropdown) {
-                hamburger.addEventListener('click', function(e) {
+                hamburger.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();
                     hamburger.classList.toggle('active');
                     dropdown.classList.toggle('active');
                 });
-                
+
                 // Close dropdown when clicking on a link
                 dropdown.querySelectorAll('a, button').forEach(link => {
                     link.addEventListener('click', () => {
@@ -476,20 +524,20 @@
                         dropdown.classList.remove('active');
                     });
                 });
-                
+
                 // Close dropdown when clicking outside
                 document.addEventListener('click', (e) => {
-                    if (dropdown.classList.contains('active') && 
-                        !dropdown.contains(e.target) && 
+                    if (dropdown.classList.contains('active') &&
+                        !dropdown.contains(e.target) &&
                         !hamburger.contains(e.target)) {
                         hamburger.classList.remove('active');
                         dropdown.classList.remove('active');
                     }
                 });
             }
-            
+
             // Event delegation for edit and delete buttons (better mobile support)
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 // Handle edit button click
                 const editBtn = e.target.closest('.btn-edit');
                 if (editBtn) {
@@ -513,7 +561,7 @@
                         }
                     }
                 }
-                
+
                 // Handle delete button click
                 const deleteBtn = e.target.closest('.btn-delete');
                 if (deleteBtn) {
@@ -536,7 +584,7 @@
                         }
                     }
                 }
-                
+
                 // Handle product image click (edit via image)
                 const thumb = e.target.closest('.product-thumb');
                 if (thumb) {
@@ -573,17 +621,17 @@
 
         async function checkAuth() {
             const user = getStoredUser();
-            
+
             // If no stored user or not admin, show login section
             if (!user || user.role !== 'admin') {
 
-                
+
                 // Show login section instead of dashboard
                 document.getElementById('admin-login-section').style.display = 'block';
                 document.getElementById('admin-dashboard').style.display = 'none';
                 return;
             }
-            
+
             // User is valid admin, show dashboard
             updateAdminNav(user);
             showDashboard();
@@ -597,7 +645,7 @@
             const password = document.getElementById('admin-login-password').value;
             const errorEl = document.getElementById('admin-login-error');
             const btn = e.target.querySelector('button[type="submit"]');
-            
+
             if (errorEl) {
                 errorEl.style.display = 'none';
                 errorEl.textContent = '';
@@ -606,16 +654,21 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
             }
-            
+
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     credentials: 'include',
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({
+                        email,
+                        password
+                    })
                 });
                 const data = await response.json();
-                
+
                 if (data.success && data.user && data.user.role === 'admin') {
                     // Store user in session
                     sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
@@ -652,7 +705,7 @@
             const dropdownUser = document.getElementById('dropdown-user');
             const dropdownLogout = document.getElementById('dropdown-logout');
             const dropdownDivider = document.getElementById('dropdown-divider');
-            
+
             if (userEl) {
                 userEl.textContent = '👤 ' + user.name;
                 userEl.style.display = 'inline-block';
@@ -720,10 +773,10 @@
                 renderOrdersSection(orders);
             }
 
-             // Add timeout controller
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-            
+            // Add timeout controller
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
             try {
                 const response = await fetch(API_URL + '/orders', {
                     credentials: "include",
@@ -739,9 +792,9 @@
 
                 if (!response.ok) {
                     const serverError = payload && typeof payload === 'object' ? payload.error : '';
-                    const authHint = response.status === 401 || response.status === 403
-                        ? ' Please login again with an admin account.'
-                        : '';
+                    const authHint = response.status === 401 || response.status === 403 ?
+                        ' Please login again with an admin account.' :
+                        '';
                     if (loadingEl) {
                         loadingEl.style.display = 'block';
                         loadingEl.textContent = 'Error: ' + (serverError || 'Failed to load orders.') + authHint;
@@ -762,7 +815,9 @@
                 if (!Array.isArray(orders) || orders.length === 0) {
                     if (loadingEl) {
                         loadingEl.style.display = 'block';
-                        loadingEl.textContent = isAbort ? 'Orders loading timed out. Showing cached data if available.' : 'Error loading orders: ' + error.message;
+                        loadingEl.textContent = isAbort ?
+                            'Orders loading timed out. Showing cached data if available.' :
+                            'Error loading orders: ' + error.message;
                     }
                     return;
                 }
@@ -770,7 +825,8 @@
                 renderOrdersSection(orders);
                 if (loadingEl) {
                     loadingEl.style.display = 'block';
-                    loadingEl.textContent = isAbort ? 'Showing cached orders (timeout).' : 'Showing cached orders. Refresh failed: ' + error.message;
+                    loadingEl.textContent = isAbort ? 'Showing cached orders (timeout).' :
+                        'Showing cached orders. Refresh failed: ' + error.message;
                 }
             }
         }
@@ -788,15 +844,15 @@
 
             if (selectedSalesDateKey) {
                 displayOrders = safeOrders.filter(order =>
-                    getDateKeyLocal(order?.createdAt) === selectedSalesDateKey &&
-                    String(order?.status || '').toLowerCase() !== 'cancelled'
+                    getDateKeyLocal(order ? .createdAt) === selectedSalesDateKey &&
+                    String(order ? .status || '').toLowerCase() !== 'cancelled'
                 );
                 const selectedDate = new Date(selectedSalesDateKey + 'T00:00:00').toLocaleDateString();
                 title = `Showing all sales for ${selectedDate}`;
                 if (filterLabelEl) filterLabelEl.textContent = title;
                 if (clearFilterBtn) clearFilterBtn.style.display = 'inline-block';
             } else {
-                displayOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
+                displayOrders = safeOrders.filter(order => String(order ? .status || '').toLowerCase() === 'pending');
                 title = 'Showing pending orders (default)';
                 if (filterLabelEl) filterLabelEl.textContent = title;
                 if (clearFilterBtn) clearFilterBtn.style.display = 'none';
@@ -808,9 +864,10 @@
                 if (listEl) listEl.style.display = 'none';
                 if (emptyEl) emptyEl.style.display = 'block';
                 if (emptyEl) {
-                    emptyEl.textContent = safeOrders.length
-                        ? (selectedSalesDateKey ? 'No sales found for the selected date.' : 'No pending orders right now.')
-                        : 'No orders yet!';
+                    emptyEl.textContent = safeOrders.length ?
+                        (selectedSalesDateKey ? 'No sales found for the selected date.' :
+                            'No pending orders right now.') :
+                        'No orders yet!';
                 }
                 if (countEl) {
                     countEl.style.display = 'block';
@@ -822,7 +879,8 @@
             if (emptyEl) emptyEl.style.display = 'none';
             if (listEl) listEl.style.display = 'block';
             if (countEl) {
-                countEl.textContent = `${title} | ${displayOrders.length} order${displayOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
+                countEl.textContent =
+                    `${title} | ${displayOrders.length} order${displayOrders.length === 1 ? '' : 's'} (Total: ${safeOrders.length})`;
                 countEl.style.display = 'block';
             }
             renderOrders(displayOrders);
@@ -846,18 +904,24 @@
             const byDay = new Map();
 
             safeOrders.forEach(order => {
-                if (String(order?.status || '').toLowerCase() === 'cancelled') return;
-                const key = getDateKeyLocal(order?.createdAt);
+                if (String(order ? .status || '').toLowerCase() === 'cancelled') return;
+                const key = getDateKeyLocal(order ? .createdAt);
                 if (!key) return;
 
                 if (!byDay.has(key)) {
-                    byDay.set(key, { key, orders: 0, revenue: 0, pending: 0, delivered: 0 });
+                    byDay.set(key, {
+                        key,
+                        orders: 0,
+                        revenue: 0,
+                        pending: 0,
+                        delivered: 0
+                    });
                 }
                 const day = byDay.get(key);
                 day.orders += 1;
-                day.revenue += Number(order?.subtotal || 0);
-                if (String(order?.status || '').toLowerCase() === 'pending') day.pending += 1;
-                if (String(order?.status || '').toLowerCase() === 'delivered') day.delivered += 1;
+                day.revenue += Number(order ? .subtotal || 0);
+                if (String(order ? .status || '').toLowerCase() === 'pending') day.pending += 1;
+                if (String(order ? .status || '').toLowerCase() === 'delivered') day.delivered += 1;
             });
 
             const rows = Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
@@ -894,10 +958,11 @@
         function renderDashboardCards() {
             const todayKey = getDateKeyLocal(new Date());
             const todaySales = orders
-                .filter(order => String(order?.status || '').toLowerCase() !== 'cancelled')
-                .filter(order => getDateKeyLocal(order?.createdAt) === todayKey)
+                .filter(order => String(order ? .status || '').toLowerCase() !== 'cancelled')
+                .filter(order => getDateKeyLocal(order ? .createdAt) === todayKey)
                 .reduce((sum, order) => sum + (order.subtotal || 0), 0);
-            const pendingOrders = orders.filter(order => String(order?.status || '').toLowerCase() === 'pending').length;
+            const pendingOrders = orders.filter(order => String(order ? .status || '').toLowerCase() === 'pending')
+                .length;
             const lowStock = products.filter(p => Number.isFinite(p.stock) && p.stock <= 5).length;
             const customersCount = users.filter(u => u.role !== 'admin').length;
 
@@ -919,24 +984,24 @@
                 const orderId = order && order._id ? String(order._id) : 'Unknown';
                 const shortId = orderId.length >= 8 ? orderId.substring(0, 8) : orderId;
                 const createdAt = order && order.createdAt ? new Date(order.createdAt) : null;
-                const orderDate = createdAt && !Number.isNaN(createdAt.getTime())
-                    ? createdAt.toLocaleDateString()
-                    : 'N/A';
-                const orderItems = Array.isArray(order?.items) ? order.items : [];
-                const subtotal = Number.isFinite(order?.subtotal) ? order.subtotal : 0;
-                const status = String(order?.status || 'pending');
-                const userName = order?.userName || 'Unknown customer';
-                const userEmail = order?.userEmail || 'No email';
-                const userPhone = order?.userPhone || 'No phone';
-                const deliveryMethod = order?.deliveryInfo?.method || 'N/A';
-                const paymentMethodRaw = String(order?.paymentMethod || '').toLowerCase();
-                const paymentMethod = paymentMethodRaw === 'cash'
-                    ? 'Cash on Delivery'
-                        : paymentMethodRaw === 'transfer'
-                            ? 'Bank Transfer'
-                            : paymentMethodRaw === 'stripe'
-                                ? 'Stripe Card'
-                                : (order?.paymentMethod || 'N/A');
+                const orderDate = createdAt && !Number.isNaN(createdAt.getTime()) ?
+                    createdAt.toLocaleDateString() :
+                    'N/A';
+                const orderItems = Array.isArray(order ? .items) ? order.items : [];
+                const subtotal = Number.isFinite(order ? .subtotal) ? order.subtotal : 0;
+                const status = String(order ? .status || 'pending');
+                const userName = order ? .userName || 'Unknown customer';
+                const userEmail = order ? .userEmail || 'No email';
+                const userPhone = order ? .userPhone || 'No phone';
+                const deliveryMethod = order ? .deliveryInfo ? .method || 'N/A';
+                const paymentMethodRaw = String(order ? .paymentMethod || '').toLowerCase();
+                const paymentMethod = paymentMethodRaw === 'cash' ?
+                    'Cash on Delivery' :
+                    paymentMethodRaw === 'transfer' ?
+                    'Bank Transfer' :
+                    paymentMethodRaw === 'stripe' ?
+                    'Stripe Card' :
+                    (order ? .paymentMethod || 'N/A');
                 const draftStatus = orderStatusDrafts[orderId] || status;
                 const hasDraft = draftStatus !== status;
 
@@ -1010,15 +1075,19 @@
             try {
                 const response = await fetch(API_URL + '/orders/' + orderId, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     credentials: "include",
-                    body: JSON.stringify({ status })
+                    body: JSON.stringify({
+                        status
+                    })
                 });
                 const result = await response.json();
                 if (result.success) {
                     alert('Order status updated to ' + status);
                     if (selectEl) selectEl.setAttribute('data-current', status);
-                    const targetOrder = orders.find(o => String(o?._id) === String(orderId));
+                    const targetOrder = orders.find(o => String(o ? ._id) === String(orderId));
                     if (targetOrder) targetOrder.status = status;
                     delete orderStatusDrafts[orderId];
                     renderDashboardCards();
@@ -1040,8 +1109,8 @@
         }
 
         async function loadDashboardStats(forceRefresh = false) {
-            const hasCachedData = Array.isArray(products) && Array.isArray(orders) && Array.isArray(users)
-                && (products.length > 0 || orders.length > 0 || users.length > 0);
+            const hasCachedData = Array.isArray(products) && Array.isArray(orders) && Array.isArray(users) &&
+                (products.length > 0 || orders.length > 0 || users.length > 0);
             if (!forceRefresh && hasCachedData && (Date.now() - lastDashboardLoadAt) < DASHBOARD_CACHE_MS) {
                 renderDashboardCards();
                 renderDailySalesHistory(orders);
@@ -1057,60 +1126,61 @@
             }
 
             dashboardLoadPromise = (async () => {
-            try {
-         // Add timeout controller
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
-                
-                const fetchOptions = { 
-                    credentials: "include",
-                    signal: controller.signal 
-                };
+                try {
+                    // Add timeout controller
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
-                const [productsRes, ordersRes, usersRes] = await Promise.all([
-                    fetch(getAdminProductsUrl(), fetchOptions),
-                    fetch(API_URL + '/orders', fetchOptions),
-                    fetch(API_URL + '/users', fetchOptions)
-                ]);
-                
-                clearTimeout(timeoutId);
+                    const fetchOptions = {
+                        credentials: "include",
+                        signal: controller.signal
+                    };
 
-                const parseJsonSafe = async (res) => {
-                    try {
-                        return await res.json();
-                    } catch (_) {
-                        return null;
+                    const [productsRes, ordersRes, usersRes] = await Promise.all([
+                        fetch(getAdminProductsUrl(), fetchOptions),
+                        fetch(API_URL + '/orders', fetchOptions),
+                        fetch(API_URL + '/users', fetchOptions)
+                    ]);
+
+                    clearTimeout(timeoutId);
+
+                    const parseJsonSafe = async (res) => {
+                        try {
+                            return await res.json();
+                        } catch (_) {
+                            return null;
+                        }
+                    };
+
+                    const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
+                        parseJsonSafe(productsRes),
+                        parseJsonSafe(ordersRes),
+                        parseJsonSafe(usersRes)
+                    ]);
+
+                    if (!productsRes.ok) console.error('Products error:', productsRes.status,
+                        productsPayload);
+                    if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
+                    if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
+
+                    products = normalizeProductsPayload(productsPayload);
+                    orders = Array.isArray(ordersPayload) ? ordersPayload : [];
+                    users = Array.isArray(usersPayload) ? usersPayload : [];
+
+                    renderDashboardCards();
+                    renderDailySalesHistory(orders);
+                    lastDashboardLoadAt = Date.now();
+
+                    const ordersTab = document.getElementById('orders-tab');
+                    if (ordersTab && ordersTab.style.display === 'block') {
+                        renderOrdersSection(orders);
                     }
-                };
-
-                const [productsPayload, ordersPayload, usersPayload] = await Promise.all([
-                    parseJsonSafe(productsRes),
-                    parseJsonSafe(ordersRes),
-                    parseJsonSafe(usersRes)
-                ]);
-
-                if (!productsRes.ok) console.error('Products error:', productsRes.status, productsPayload);
-                if (!ordersRes.ok) console.error('Orders error:', ordersRes.status, ordersPayload);
-                if (!usersRes.ok) console.error('Users error:', usersRes.status, usersPayload);
-
-                products = normalizeProductsPayload(productsPayload);
-                orders = Array.isArray(ordersPayload) ? ordersPayload : [];
-                users = Array.isArray(usersPayload) ? usersPayload : [];
-
-                renderDashboardCards();
-                renderDailySalesHistory(orders);
-                lastDashboardLoadAt = Date.now();
-
-                const ordersTab = document.getElementById('orders-tab');
-                if (ordersTab && ordersTab.style.display === 'block') {
-                    renderOrdersSection(orders);
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
+                    // Continue with existing cached data if available
+                } finally {
+                    dashboardLoadPromise = null;
                 }
-            } catch (error) {
-                console.error('Error loading dashboard stats:', error);
-                // Continue with existing cached data if available
-            } finally {
-                dashboardLoadPromise = null;
-            }
             })();
             await dashboardLoadPromise;
         }
@@ -1168,10 +1238,10 @@
         // Search Products
         function searchProducts(query) {
             const searchTerm = query.toLowerCase();
-            const filtered = products.filter(p => 
+            const filtered = products.filter(p =>
                 p.name.toLowerCase().includes(searchTerm) ||
                 p.category.toLowerCase().includes(searchTerm) ||
-                p.desc?.toLowerCase().includes(searchTerm)
+                p.desc ? .toLowerCase().includes(searchTerm)
             );
             renderProducts(filtered);
         }
@@ -1185,14 +1255,14 @@
             document.getElementById('product-id').value = '';
             document.getElementById('image-preview').style.display = 'none';
             document.getElementById('preview-container').style.display = 'none';
-            
+
             // Clear variant options
             document.getElementById('has-variants').checked = false;
             toggleVariants();
             document.getElementById('storage-options').innerHTML = '';
             document.getElementById('ram-options').innerHTML = '';
             document.getElementById('color-options').innerHTML = '';
-            
+
             document.getElementById('admin-dashboard').style.display = 'none';
             document.getElementById('product-form-section').style.display = 'block';
         }
@@ -1203,10 +1273,10 @@
                 console.error('Product not found for id:', id);
                 return;
             }
-            
+
             console.log('Editing product:', product.name);
             console.log('Product image:', product.image);
-            
+
             isEditing = true;
             selectedImageBase64 = '';
             ensureCategorySelectOptions(product.category);
@@ -1217,7 +1287,7 @@
             document.getElementById('product-stock').value = product.stock || 10;
             document.getElementById('product-desc').value = product.desc || '';
             document.getElementById('product-full-desc').value = product.fullDesc || '';
-            
+
             // Show current image or hide preview
             const preview = document.getElementById('image-preview');
             const previewContainer = document.getElementById('preview-container');
@@ -1232,17 +1302,21 @@
                 previewContainer.style.display = 'none';
                 console.log('No image to display');
             }
-            
+
             // Load variant data
             document.getElementById('has-variants').checked = product.hasVariants || false;
             toggleVariants();
-            
+
             // Load variant options
-            const variants = product.variants || { storage: [], ram: [], color: [] };
+            const variants = product.variants || {
+                storage: [],
+                ram: [],
+                color: []
+            };
             variants.storage.forEach(opt => addVariantOption('storage', opt.option, opt.priceModifier, opt.stock));
             variants.ram.forEach(opt => addVariantOption('ram', opt.option, opt.priceModifier, opt.stock));
             variants.color.forEach(opt => addVariantOption('color', opt.option, opt.priceModifier, opt.stock));
-            
+
             document.getElementById('admin-dashboard').style.display = 'none';
             document.getElementById('product-form-section').style.display = 'block';
         }
@@ -1280,12 +1354,12 @@
                         </tr>`;
                     if (noProducts) noProducts.style.display = 'none';
                 }
-                
+
                 // Fetch from API only - with timeout
-    let apiStatus = 'n/a';
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-                
+                let apiStatus = 'n/a';
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
                 try {
                     const response = await fetch(getAdminProductsUrl(), {
                         credentials: "include",
@@ -1298,11 +1372,12 @@
                     if (!response.ok) {
                         console.warn('Failed to load products, status:', response.status);
                         if (response.status === 401 || response.status === 403) {
-                        console.warn('Products API unauthorized:', response.status);
+                            console.warn('Products API unauthorized:', response.status);
                         }
                         // Show error message
                         if (tbody) {
-                            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Unable to load products. Please login or try again.</td></tr>';
+                            tbody.innerHTML =
+                                '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Unable to load products. Please login or try again.</td></tr>';
                         }
                         return;
                     }
@@ -1312,6 +1387,11 @@
                     console.log('Response has products:', payload && payload.products);
                     const freshProducts = normalizeProductsPayload(payload);
                     console.log('Normalized products:', freshProducts);
+                    const debugEl = document.getElementById('admin-debug-api');
+                    if (debugEl) {
+                        debugEl.textContent = '';
+                        debugEl.style.display = 'none';
+                    }
                     if (Array.isArray(freshProducts) && freshProducts.length > 0) {
                         products = freshProducts;
                         lastProductsSource = 'api';
@@ -1330,19 +1410,21 @@
                     console.error('Error fetching products:', err);
                     console.error('Error stack:', err.stack);
                     const isAbort = err.name === 'AbortError';
-                    document.getElementById('admin-debug-api').textContent = isAbort ? 'api: timeout (5s)' : 'api: error';
-                    // Force show skeleton as error indicator
-                    if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">Error: ' + err.message + '</td></tr>';
+                    const debugEl = document.getElementById('admin-debug-api');
+                    if (debugEl) {
+                        debugEl.textContent = isAbort ? 'api: timeout (3s)' : 'api: error';
+                        debugEl.style.display = 'block';
                     }
-                    // Show error
+                    const errorMessage = isAbort ? 'Connection timed out. Please try again.' :
+                        'Error connecting to server.';
+
                     if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">' + 
-                            (isAbort ? 'Connection timed out. Please try again.' : 'Error connecting to server.') + 
-                            '</td></tr>';
+                        tbody.innerHTML =
+                            '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--accent);">' +
+                            errorMessage + '</td></tr>';
                     }
                 }
-                
+
             } catch (error) {
                 console.error('Error loading products:', error);
             }
@@ -1371,7 +1453,8 @@
                         const name = p.name || 'Untitled Product';
                         const category = p.category || '';
                         const image = p.image || 'images/logo.png';
-                        const priceVal = (p.price !== undefined && !Number.isNaN(Number(p.price))) ? Number(p.price) : null;
+                        const priceVal = (p.price !== undefined && !Number.isNaN(Number(p.price))) ? Number(p
+                            .price) : null;
                         const priceText = priceVal !== null ? priceVal.toLocaleString() : 'N/A';
 
                         return `
@@ -1422,7 +1505,7 @@
 
             let width = img.width;
             let height = img.height;
-            
+
             // Scale down if needed
             if (width > maxDimension || height > maxDimension) {
                 const scale = Math.min(maxDimension / width, maxDimension / height);
@@ -1435,12 +1518,12 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             if (!ctx) return originalDataUrl;
-            
+
             // Clear canvas to transparent (not white)
             ctx.clearRect(0, 0, width, height);
             // Draw the selected image before exporting.
             ctx.drawImage(img, 0, 0, width, height);
-            
+
             // Use JPEG with quality setting for better compression on photos
             // Only use PNG if the original was PNG (for transparency)
             const originalType = file.type;
@@ -1475,19 +1558,19 @@
                     compressedImage = await readFileAsDataUrl(file);
                 }
                 console.log('Image compressed, length:', compressedImage.length);
-                
+
                 selectedImageBase64 = compressedImage;
                 preview.src = selectedImageBase64;
                 preview.style.display = 'block';
                 document.getElementById('preview-container').style.display = 'block';
-                
+
                 console.log('Image set, selectedImageBase64 length:', selectedImageBase64.length);
             } catch (error) {
                 console.error('Image processing error:', error);
                 alert('❌ Failed to process image: ' + error.message);
             }
         }
-        
+
         function clearProductImage() {
             selectedImageBase64 = '';
             document.getElementById('image-preview').style.display = 'none';
@@ -1521,7 +1604,7 @@
         // Collect variant data from form
         function collectVariants() {
             const hasVariants = document.getElementById('has-variants').checked;
-            
+
             if (!hasVariants) {
                 return {
                     hasVariants: false,
@@ -1532,22 +1615,27 @@
                     }
                 };
             }
-            
+
             const collectType = (type) => {
                 const options = [];
                 const container = document.getElementById(type + '-options');
                 const rows = container.querySelectorAll('.variant-row');
                 rows.forEach(row => {
                     const option = row.querySelector(`[name="${type}-option"]`).value.trim();
-                    const priceModifier = parseFloat(row.querySelector(`[name="${type}-price"]`).value) || 0;
+                    const priceModifier = parseFloat(row.querySelector(`[name="${type}-price"]`).value) ||
+                        0;
                     const stock = parseInt(row.querySelector(`[name="${type}-stock"]`).value) || 0;
                     if (option) {
-                        options.push({ option, priceModifier, stock });
+                        options.push({
+                            option,
+                            priceModifier,
+                            stock
+                        });
                     }
                 });
                 return options;
             };
-            
+
             return {
                 hasVariants: true,
                 variants: {
@@ -1559,15 +1647,16 @@
         }
 
         // Handle product form
-        document.getElementById('product-form').addEventListener('submit', async function(e) {
+        document.getElementById('product-form').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             console.log('Form submitted, isEditing:', isEditing);
-            console.log('selectedImageBase64 length:', selectedImageBase64 ? selectedImageBase64.length : 0);
+            console.log('selectedImageBase64 length:', selectedImageBase64 ? selectedImageBase64.length :
+                0);
             console.log('Image preview src length:', document.getElementById('image-preview').src.length);
-            
+
             const variantData = collectVariants();
-            
+
             // Validate image before saving
             let productImage = '';
             if (selectedImageBase64) {
@@ -1583,13 +1672,13 @@
                 }
                 productImage = selectedImageBase64;
             }
-            
+
             // For editing: keep original image if nothing selected
             // For new products: use default image if nothing selected
-            const finalImage = isEditing 
-                ? (productImage || undefined)  
-                : (productImage || 'images/logo.png');
-            
+            const finalImage = isEditing ?
+                (productImage || undefined) :
+                (productImage || 'images/logo.png');
+
             const product = {
                 name: document.getElementById('product-name').value,
                 category: normalizeCategory(document.getElementById('product-category').value),
@@ -1597,31 +1686,38 @@
                 stock: parseInt(document.getElementById('product-stock').value) || 10,
                 desc: document.getElementById('product-desc').value,
                 fullDesc: document.getElementById('product-full-desc').value,
-                ...(finalImage !== undefined && { image: finalImage }),
+                ...(finalImage !== undefined && {
+                    image: finalImage
+                }),
                 ...variantData
             };
-            
-            console.log('Product image being sent:', product.image ? product.image.substring(0, 50) + '...' : 'empty/unchanged');
-            
+
+            console.log('Product image being sent:', product.image ? product.image.substring(0, 50) +
+                '...' : 'empty/unchanged');
+
             try {
                 let response;
                 if (isEditing) {
                     const id = document.getElementById('product-id').value;
                     response = await fetch(API_URL + '/products/' + id, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         credentials: "include",
                         body: JSON.stringify(product)
                     });
                 } else {
                     response = await fetch(API_URL + '/products', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         credentials: "include",
                         body: JSON.stringify(product)
                     });
                 }
-                
+
                 if (response.ok) {
                     alert(isEditing ? '✅ Product updated successfully!' : '✅ Product added successfully!');
                     // Reload products directly to ensure fresh data
@@ -1648,13 +1744,13 @@
 
         async function deleteProduct(id) {
             if (!confirm('Are you sure you want to delete this product?')) return;
-            
+
             try {
                 const response = await fetch(API_URL + '/products/' + id, {
                     method: 'DELETE',
                     credentials: "include"
                 });
-                
+
                 if (response.ok) {
                     alert('✅ Product deleted!');
                     loadProducts();
@@ -1674,8 +1770,5 @@
     </script>
     <script src="js/script.js?v=20260312-3" defer></script>
 </body>
+
 </html>
-
-
-
-
