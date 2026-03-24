@@ -3,12 +3,66 @@
 
 const API_URL = '/api';
 let products = [];
+let customers = [];
+let orders = [];
 let editingProductId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[ADMIN] DOM loaded, checking auth...');
   checkAuth();
+  updateAdminDropdown();
+  
+  // Hamburger menu toggle
+  const hamburger = document.getElementById('hamburger');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+  
+  if (hamburger && dropdownMenu) {
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hamburger.classList.toggle('active');
+      dropdownMenu.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!hamburger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        hamburger.classList.remove('active');
+        dropdownMenu.classList.remove('active');
+      }
+    });
+  }
 });
+
+// Update admin dropdown with user info
+function updateAdminDropdown() {
+  const user = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
+  const dropdownUser = document.getElementById('dropdown-user');
+  const dropdownLogout = document.getElementById('dropdown-logout');
+  const dropdownDivider = document.getElementById('dropdown-divider');
+  
+  if (user && user.role === 'admin') {
+    if (dropdownUser) {
+      dropdownUser.textContent = `👤 ${user.name || user.email}`;
+      dropdownUser.style.display = 'block';
+    }
+    if (dropdownLogout) dropdownLogout.style.display = 'block';
+    if (dropdownDivider) dropdownDivider.style.display = 'block';
+  }
+}
+
+// Logout function for hamburger menu
+function logout() {
+  console.log('[ADMIN] 🚪 Logging out...');
+  sessionStorage.removeItem('dondad_currentUser');
+  // Call logout API
+  fetch('/api/logout', { method: 'POST', credentials: 'include' })
+    .then(() => {
+      window.location.href = 'index.html';
+    })
+    .catch(() => {
+      window.location.href = 'index.html';
+    });
+}
 
 async function checkAuth() {
   try {
@@ -36,9 +90,11 @@ async function loadProducts() {
   try {
     console.log('[ADMIN] 🔄 Loading products from', API_URL + '/admin/products?page=1&limit=50');
     
-    const tbody = document.getElementById('products-table-body') || document.querySelector('#products-table tbody');
+    // Fixed: Get the tbody inside #products-table
+    const table = document.getElementById('products-table');
+    const tbody = table ? table.querySelector('tbody') : null;
     if (!tbody) {
-      console.error('[ADMIN] ❌ products-table or tbody not found in DOM');
+      console.error('[ADMIN] ❌ products-table tbody not found in DOM');
       return;
     }
     
@@ -88,7 +144,7 @@ async function loadProducts() {
   } catch (error) {
     console.error('[ADMIN] ❌ loadProducts error:', error);
     
-    const tbody = document.querySelector('#products-table tbody');
+    const tbody = table ? table.querySelector('tbody') : null;
     if (tbody) {
       tbody.innerHTML = `
         <tr>
@@ -183,9 +239,10 @@ async function editProduct(id) {
   document.getElementById('product-category').value = product.category || 'phones';
   document.getElementById('product-full-desc').value = product.fullDesc || '';
   
-  // Toggle sections
-  document.querySelector('.admin-main')?.classList.add('d-none');
-  document.getElementById('product-form-section').classList.remove('d-none');
+  // Toggle sections properly
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('product-form-section').style.display = 'block';
+  document.getElementById('form-title').textContent = 'Edit Product';
 }
 
 // Fixed deleteProduct()
@@ -264,8 +321,8 @@ document.getElementById('product-form')?.addEventListener('submit', async (e) =>
 function resetForm() {
   editingProductId = null;
   document.getElementById('product-form').reset();
-  document.querySelector('.admin-main')?.classList.remove('d-none');
-  document.getElementById('product-form-section')?.classList.add('d-none');
+  document.getElementById('admin-dashboard').style.display = 'block';
+  document.getElementById('product-form-section').style.display = 'none';
 }
 
 // Test API endpoint
@@ -296,13 +353,19 @@ async function seedProducts() {
   }
 }
 
-// Admin login (existing, cookies handled by server)
-async function handleAdminLogin() {
-  const email = document.getElementById('admin-email').value;
-  const password = document.getElementById('admin-password').value;
+// Admin login - use the correct element IDs from admin.html
+async function handleAdminLogin(event) {
+  if (event) event.preventDefault();
+  
+  const email = document.getElementById('admin-login-email').value;
+  const password = document.getElementById('admin-login-password').value;
+  const errorEl = document.getElementById('admin-login-error');
   
   if (!email || !password) {
-    alert('Email/password required');
+    if (errorEl) {
+      errorEl.textContent = 'Email and password required';
+      errorEl.style.display = 'block';
+    }
     return;
   }
   
@@ -315,14 +378,22 @@ async function handleAdminLogin() {
     });
     
     const data = await response.json();
-    if (data.success && data.user.role === 'admin') {
+    if (data.success && data.user && data.user.role === 'admin') {
       sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+      updateAdminDropdown();
       checkAuth();
     } else {
-      alert(data.error || 'Login failed');
+      if (errorEl) {
+        errorEl.textContent = data.error || 'Login failed - Admin access required';
+        errorEl.style.display = 'block';
+      }
     }
   } catch (e) {
-    alert('Login error');
+    console.error('[ADMIN] Login error:', e);
+    if (errorEl) {
+      errorEl.textContent = 'Network error - Please try again';
+      errorEl.style.display = 'block';
+    }
   }
 }
 
@@ -330,5 +401,191 @@ async function handleAdminLogin() {
 function adminLogout() {
   sessionStorage.removeItem('dondad_currentUser');
   document.location.reload();
+}
+
+// Switch admin tabs (Products, Orders, Customers)
+async function switchAdminTab(tabName) {
+  console.log('[ADMIN] Switching to tab:', tabName);
+  
+  // Hide all tab contents
+  document.getElementById('products-tab').style.display = 'none';
+  document.getElementById('orders-tab').style.display = 'none';
+  document.getElementById('customers-tab').style.display = 'none';
+  
+  // Remove active class from all tabs
+  document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Show selected tab
+  const selectedTab = document.querySelector(`.admin-tab[onclick="switchAdminTab('${tabName}')"]`);
+  if (selectedTab) selectedTab.classList.add('active');
+  
+  // Load data for the selected tab
+  if (tabName === 'products') {
+    document.getElementById('products-tab').style.display = 'block';
+    loadProducts();
+  } else if (tabName === 'orders') {
+    document.getElementById('orders-tab').style.display = 'block';
+    loadOrders();
+  } else if (tabName === 'customers') {
+    document.getElementById('customers-tab').style.display = 'block';
+    loadCustomers();
+  }
+}
+
+// Load customers from database
+async function loadCustomers() {
+  try {
+    console.log('[ADMIN] 🔄 Loading customers...');
+    
+    const tbody = document.querySelector('#customers-table');
+    if (!tbody) {
+      console.error('[ADMIN] ❌ customers-table not found');
+      return;
+    }
+    
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Loading customers...</td></tr>';
+    
+    const response = await fetch(`${API_URL}/admin/users?page=1&limit=50`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const data = await response.json();
+    customers = data.users || [];
+    
+    console.log('[ADMIN] ✅ Loaded', customers.length, 'customers');
+    
+    if (customers.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5">No customers found</td></tr>';
+      document.getElementById('no-customers').style.display = 'block';
+      return;
+    }
+    
+    document.getElementById('no-customers').style.display = 'none';
+    
+    // Render customers table
+    tbody.innerHTML = customers.map(c => {
+      const joinedDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A';
+      return `
+        <tr>
+          <td class="align-middle">${c.name || 'N/A'}</td>
+          <td class="align-middle">${c.email || 'N/A'}</td>
+          <td class="align-middle"><span class="badge bg-secondary">${c.role || 'user'}</span></td>
+          <td class="align-middle">${joinedDate}</td>
+          <td class="align-middle">${c.orderCount || 0}</td>
+          <td class="align-middle fw-bold">₦${Number(c.totalSpent || 0).toLocaleString()}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    // Update stats
+    document.getElementById('stat-total-customers').textContent = customers.length;
+    
+  } catch (error) {
+    console.error('[ADMIN] ❌ loadCustomers error:', error);
+    const tbody = document.querySelector('#customers-table');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-danger">Failed to load customers: ${error.message}</td></tr>`;
+    }
+  }
+}
+
+// Load orders from database
+async function loadOrders() {
+  try {
+    console.log('[ADMIN] 🔄 Loading orders...');
+    
+    const loadingEl = document.getElementById('orders-loading');
+    const ordersListEl = document.getElementById('orders-list');
+    const noOrdersEl = document.getElementById('no-orders');
+    
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (ordersListEl) ordersListEl.style.display = 'none';
+    if (noOrdersEl) noOrdersEl.style.display = 'none';
+    
+    const response = await fetch(`${API_URL}/admin/orders?page=1&limit=50`, {
+      credentials: 'include'
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const data = await response.json();
+    orders = data.orders || [];
+    
+    console.log('[ADMIN] ✅ Loaded', orders.length, 'orders');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    
+    if (orders.length === 0) {
+      if (noOrdersEl) noOrdersEl.style.display = 'block';
+      return;
+    }
+    
+    // Render orders list
+    if (ordersListEl) {
+      ordersListEl.style.display = 'block';
+      ordersListEl.innerHTML = orders.map(o => {
+        const statusColors = {
+          'pending': 'warning',
+          'confirmed': 'info',
+          'processing': 'primary',
+          'shipped': 'info',
+          'delivered': 'success',
+          'cancelled': 'danger'
+        };
+        const status = o.status || 'pending';
+        const color = statusColors[status] || 'secondary';
+        const date = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : 'N/A';
+        const total = o.subtotal || o.total || 0;
+        
+        return `
+          <div class="order-card" style="background: var(--card-bg); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong>Order #${o._id?.slice(-8) || 'N/A'}</strong>
+                <span style="color: var(--text-muted); font-size: 0.9rem; margin-left: 0.5rem;">${date}</span>
+              </div>
+              <span class="badge bg-${color}">${status}</span>
+            </div>
+            <div style="margin-top: 0.5rem; display: flex; justify-content: space-between; font-size: 0.9rem;">
+              <span>👤 ${o.userId?.name || o.userName || 'Guest'}</span>
+              <span class="fw-bold">₦${Number(total).toLocaleString()}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    // Update stats
+    const pendingCount = orders.filter(o => o.status === 'pending').length;
+    document.getElementById('stat-pending-orders').textContent = pendingCount;
+    
+  } catch (error) {
+    console.error('[ADMIN] ❌ loadOrders error:', error);
+    const loadingEl = document.getElementById('orders-loading');
+    if (loadingEl) {
+      loadingEl.innerHTML = `<p class="text-danger">Failed to load orders: ${error.message}</p>`;
+    }
+  }
+}
+
+// Show dashboard (back button from product form)
+function showDashboard() {
+  document.getElementById('product-form-section').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = 'block';
+  loadProducts();
+}
+
+// Show add product form
+function showAddProduct() {
+  editingProductId = null;
+  document.getElementById('product-id').value = '';
+  document.getElementById('product-form').reset();
+  document.getElementById('form-title').textContent = 'Add New Product';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('product-form-section').style.display = 'block';
 }
 

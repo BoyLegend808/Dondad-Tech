@@ -2056,10 +2056,10 @@ app.use((req, res, next) => {
 
 // ===== PHASE 3: MOUNT ADMIN ROUTES =====
 console.log('[ROUTES] Mounting admin routes...');
-app.use('/api/admin/products', require('./routes/admin/products'));
-app.use('/api/admin/users', require('./routes/admin/users'));
-app.use('/api/admin/orders', require('./routes/admin/orders'));
-app.use('/api/admin/dashboard', require('./routes/admin/dashboard'));
+app.use('/api/admin/products', require('../routes/admin/products'));
+app.use('/api/admin/users', require('../routes/admin/users'));
+app.use('/api/admin/orders', require('../routes/admin/orders'));
+app.use('/api/admin/dashboard', require('../routes/admin/dashboard'));
 console.log('[ROUTES] ✅ All admin routes mounted');
 app.use(express.static(path.join(__dirname, "../pages")));
 app.use(express.static(path.join(__dirname, "..")));

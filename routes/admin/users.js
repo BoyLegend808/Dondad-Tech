@@ -3,23 +3,35 @@ const router = express.Router();
 const { User, Order } = require('../../models');
 const { requireAdmin, isValidObjectId } = require('../../middleware/auth');
 
-// GET /api/admin/users - List all customers
+// GET /api/admin/users - List all customers with order stats
 router.get('/', requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page || '1', 10);
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 100);
     
+    // Get all non-admin users
     const users = await User.find({ role: { $ne: 'admin' } })
       .select('-password')
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
       .lean();
     
-    const total = await User.countDocuments({ role: { $ne: 'admin' } });
+    // Get order stats for each user
+    const usersWithStats = await Promise.all(users.map(async (user) => {
+      const orders = await Order.find({ userId: user._id }).lean();
+      const orderCount = orders.length;
+      const totalSpent = orders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+      return {
+        ...user,
+        orderCount,
+        totalSpent
+      };
+    }));
+    
+    const total = usersWithStats.length;
+    const paginatedUsers = usersWithStats.slice((page - 1) * limit, page * limit);
     
     res.json({
-      users,
+      users: paginatedUsers,
       pagination: {
         page,
         limit,
