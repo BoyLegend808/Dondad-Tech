@@ -52,6 +52,13 @@ function showLogin() {
     document.getElementById('product-modal').style.display = 'none';
 }
 
+function handleUnauthorized() {
+    console.warn('Unauthorized request. Redirecting to login.');
+    sessionStorage.removeItem('dondad_currentUser');
+    showLogin();
+    showToast('Session expired. Please sign in again.', 'error');
+}
+
 function showDashboard() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('dashboard-layout').style.display = 'flex';
@@ -143,6 +150,14 @@ async function loadProducts() {
 
     try {
         const res = await fetch(`${API_BASE}/admin/products?limit=100`, { credentials: 'include' });
+        
+        if (res.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        
         const data = await res.json();
         products = data.products || [];
 
@@ -272,6 +287,12 @@ async function loadCustomers() {
     try {
         console.log('Fetching customers...');
         const res = await fetch(`${API_BASE}/admin/users?limit=100`, { credentials: 'include' });
+        
+        if (res.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
         customers = data.users || data || [];

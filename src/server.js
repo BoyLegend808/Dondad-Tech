@@ -2028,6 +2028,7 @@ app.use(helmet({
   },
 }));
 
+app.use(cookieParser());
 app.use(bodyParser.json({ limit: "15mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 // Cache control to prevent stale HTML/JS/CSS in production
@@ -2080,7 +2081,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(cookieParser());
+
 app.use("/api", (req, res, next) => {
   // Temporarily disabled for debugging
   /*
