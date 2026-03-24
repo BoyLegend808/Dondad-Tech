@@ -73,7 +73,7 @@ function handleLogout() {
     sessionStorage.removeItem('dondad_currentUser');
     localStorage.removeItem('dondad_currentUser');
     fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
-        window.location.reload();
+        window.location.href = 'index.html';
     });
 }
 
