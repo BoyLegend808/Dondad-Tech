@@ -462,27 +462,34 @@
 
     <script>
         // Admin Panel Logic
+        // API Configuration - Using relative path for reliability on same domain
         const API_URL = (function () {
-            // Dynamic API URL for production compatibility
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Prefer the URL from localStorage if set (useful for troubleshooting)
+            const saved = localStorage.getItem('admin_backend_url');
+            if (saved) return saved;
+
+            const h = window.location.hostname;
+            
+            // If on Render or localhost, use relative path or local port
+            if (h.includes('onrender.com') || h.includes('pajey-gadgets')) {
+                return '/api';
+            }
+
+            if (h === 'localhost' || h === '127.0.0.1') {
                 return 'http://localhost:3000/api';
             }
-            // For production deployments on Render
-            if (window.location.hostname.includes('onrender.com') || window.location.hostname.includes(
-                    'pajey-gadgets')) {
-                return 'https://pajey-gadgets.onrender.com/api';
-            }
-            // Check for custom backend URL in localStorage (for manual configuration)
-            const customBackend = localStorage.getItem('admin_backend_url');
-            if (customBackend) {
-                return customBackend + '/api';
-            }
-            // Fallback for other environments
+
+            // Default to relative /api
             return '/api';
         })();
 
-        // Debug: Log API URL on load
         console.log('Admin API_URL set to:', API_URL);
+
+        function onCategoryChange() {
+            const select = document.getElementById('product-category');
+            if (!select) return;
+            console.log('Category changed to:', select.value);
+        }
 
         // Update debug info
         function updateDebugInfo() {
@@ -909,15 +916,15 @@
 
             if (selectedSalesDateKey) {
                 displayOrders = safeOrders.filter(order =>
-                    getDateKeyLocal(order ? .createdAt) === selectedSalesDateKey &&
-                    String(order ? .status || '').toLowerCase() !== 'cancelled'
+                    getDateKeyLocal(order?.createdAt) === selectedSalesDateKey &&
+                    String(order?.status || '').toLowerCase() !== 'cancelled'
                 );
                 const selectedDate = new Date(selectedSalesDateKey + 'T00:00:00').toLocaleDateString();
                 title = `Showing all sales for ${selectedDate}`;
                 if (filterLabelEl) filterLabelEl.textContent = title;
                 if (clearFilterBtn) clearFilterBtn.style.display = 'inline-block';
             } else {
-                displayOrders = safeOrders.filter(order => String(order ? .status || '').toLowerCase() === 'pending');
+                displayOrders = safeOrders.filter(order => String(order?.status || '').toLowerCase() === 'pending');
                 title = 'Showing pending orders (default)';
                 if (filterLabelEl) filterLabelEl.textContent = title;
                 if (clearFilterBtn) clearFilterBtn.style.display = 'none';
@@ -969,8 +976,8 @@
             const byDay = new Map();
 
             safeOrders.forEach(order => {
-                if (String(order ? .status || '').toLowerCase() === 'cancelled') return;
-                const key = getDateKeyLocal(order ? .createdAt);
+                if (String(order?.status || '').toLowerCase() === 'cancelled') return;
+                const key = getDateKeyLocal(order?.createdAt);
                 if (!key) return;
 
                 if (!byDay.has(key)) {
@@ -984,9 +991,9 @@
                 }
                 const day = byDay.get(key);
                 day.orders += 1;
-                day.revenue += Number(order ? .subtotal || 0);
-                if (String(order ? .status || '').toLowerCase() === 'pending') day.pending += 1;
-                if (String(order ? .status || '').toLowerCase() === 'delivered') day.delivered += 1;
+                day.revenue += Number(order?.subtotal || 0);
+                if (String(order?.status || '').toLowerCase() === 'pending') day.pending += 1;
+                if (String(order?.status || '').toLowerCase() === 'delivered') day.delivered += 1;
             });
 
             const rows = Array.from(byDay.values()).sort((a, b) => b.key.localeCompare(a.key));
@@ -1052,21 +1059,21 @@
                 const orderDate = createdAt && !Number.isNaN(createdAt.getTime()) ?
                     createdAt.toLocaleDateString() :
                     'N/A';
-                const orderItems = Array.isArray(order ? .items) ? order.items : [];
-                const subtotal = Number.isFinite(order ? .subtotal) ? order.subtotal : 0;
-                const status = String(order ? .status || 'pending');
-                const userName = order ? .userName || 'Unknown customer';
-                const userEmail = order ? .userEmail || 'No email';
-                const userPhone = order ? .userPhone || 'No phone';
-                const deliveryMethod = order ? .deliveryInfo ? .method || 'N/A';
-                const paymentMethodRaw = String(order ? .paymentMethod || '').toLowerCase();
+                const orderItems = Array.isArray(order?.items) ? order.items : [];
+                const subtotal = Number.isFinite(order?.subtotal) ? order.subtotal : 0;
+                const status = String(order?.status || 'pending');
+                const userName = order?.userName || 'Unknown customer';
+                const userEmail = order?.userEmail || 'No email';
+                const userPhone = order?.userPhone || 'No phone';
+                const deliveryMethod = order?.deliveryInfo?.method || 'N/A';
+                const paymentMethodRaw = String(order?.paymentMethod || '').toLowerCase();
                 const paymentMethod = paymentMethodRaw === 'cash' ?
                     'Cash on Delivery' :
                     paymentMethodRaw === 'transfer' ?
                     'Bank Transfer' :
                     paymentMethodRaw === 'stripe' ?
                     'Stripe Card' :
-                    (order ? .paymentMethod || 'N/A');
+                    (order?.paymentMethod || 'N/A');
                 const draftStatus = orderStatusDrafts[orderId] || status;
                 const hasDraft = draftStatus !== status;
 
@@ -1152,8 +1159,8 @@
                 if (result.success) {
                     alert('Order status updated to ' + status);
                     if (selectEl) selectEl.setAttribute('data-current', status);
-                    const targetOrder = orders.find(o => String(o ? ._id) === String(orderId));
-                    if (targetOrder) targetOrder.status = status;
+                    const targetOrder = orders.find(o => String(o?._id) === String(orderId));
+                    if (targetOrder) targetOrder?.status = status;
                     delete orderStatusDrafts[orderId];
                     renderDashboardCards();
                     renderDailySalesHistory(orders);
@@ -1312,12 +1319,13 @@
             const filtered = products.filter(p =>
                 p.name.toLowerCase().includes(searchTerm) ||
                 p.category.toLowerCase().includes(searchTerm) ||
-                p.desc ? .toLowerCase().includes(searchTerm)
+                p?.desc?.toLowerCase().includes(searchTerm)
             );
             renderProducts(filtered);
         }
 
         function showAddProduct() {
+            console.log('Opening Add Product form...');
             isEditing = false;
             selectedImageBase64 = '';
             ensureCategorySelectOptions('phones');
