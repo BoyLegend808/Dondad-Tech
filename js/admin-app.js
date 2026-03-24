@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function checkAuth() {
-    const userString = sessionStorage.getItem('dondad_currentUser');
+    const userString = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
     if (!userString) {
         showLogin();
         return;
@@ -39,6 +39,10 @@ function checkAuth() {
 
         // Successfully logged in
         document.getElementById('admin-name').textContent = user.name || 'Administrator';
+        const initials = (user.name || 'AD').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const avatarEl = document.getElementById('admin-avatar');
+        if (avatarEl) avatarEl.textContent = initials;
+        
         showDashboard();
         refreshAllData();
     } catch (e) {
@@ -67,7 +71,8 @@ function showDashboard() {
 
 function handleLogout() {
     sessionStorage.removeItem('dondad_currentUser');
-    fetch(`${API_BASE}/logout`, { method: 'POST' }).finally(() => {
+    localStorage.removeItem('dondad_currentUser');
+    fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
         window.location.reload();
     });
 }
@@ -342,6 +347,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
         if (res.ok && data.success && data.user.role === 'admin') {
             sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
+            localStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
             showToast('Welcome back, Admin!', 'success');
             checkAuth();
         } else {

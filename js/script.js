@@ -2,7 +2,7 @@
 
 // API Configuration - detects if running on Netlify
 const isNetlify = window.location.hostname.includes('netlify.app');
-const API_BASE = isNetlify ? '/.netlify/functions' : '';
+const API_BASE = isNetlify ? '/.netlify/functions' : '/api';
 
 // Debug logging
 console.log('Environment:', isNetlify ? 'Netlify' : 'Local/Vercel');
@@ -130,15 +130,27 @@ function setupAutoLogout() {
 const PRODUCTS_KEY = "dondad_products";
 
 // Load products from localStorage or use default from products.js
+// Load products from API directly to ensure live database data is reflected
+async function getAllProductsLive() {
+  try {
+    const res = await fetch(API_BASE + '/products');
+    const data = await res.json();
+    if (data.products) {
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(data.products));
+      return data.products;
+    }
+  } catch (e) {
+    console.error('Live fetch failed, using fallback:', e);
+  }
+  const stored = localStorage.getItem(PRODUCTS_KEY);
+  if (stored) return JSON.parse(stored);
+  return typeof products !== 'undefined' ? products : [];
+}
+
 function getAllProducts() {
   const stored = localStorage.getItem(PRODUCTS_KEY);
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  if (typeof products !== "undefined") {
-    return products; // Fallback to products.js
-  }
-  return [];
+  if (stored) return JSON.parse(stored);
+  return typeof products !== 'undefined' ? products : [];
 }
 
 // Get products by category
@@ -299,7 +311,7 @@ function addToCart(productId, qty = 1) {
   // Try API first
   const userId = currentUser._id || currentUser.id;
   if (userId) {
-    fetch(`/api/cart/${userId}/${productId}`, {
+    fetch(`${API_BASE}/cart/${userId}/${productId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -361,7 +373,7 @@ function updateCartCount() {
       return;
     }
     // Fetch cart from server only - cart is server-side now
-    fetch(`/api/cart/${userId}`, {
+    fetch(`${API_BASE}/cart/${userId}`, {
       credentials: "include"
     })
       .then(r => safeJsonResponse(r))
@@ -646,17 +658,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Homepage featured products
-  const allProducts = getAllProducts();
-  if (allProducts.length > 0) {
-    renderProducts(allProducts.slice(0, 8), "featured-products");
-  }
+  getAllProductsLive().then(prods => {
+    if (prods.length > 0) {
+      renderProducts(prods.slice(0, 8), "featured-products");
+    }
+  });
 
   // Shop page
   const productGrid = document.getElementById("product-grid");
   if (productGrid) {
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get("category") || "all";
-    renderProducts(getProductsByCategory(category), "product-grid");
+    getAllProductsLive().then(prods => {
+       const filtered = category === "all" ? prods : prods.filter(p => p.category === category);
+       renderProducts(filtered, "product-grid");
+    });
     setupSearch();
     setupCategoryFilter();
   }
@@ -692,6 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch(API_BASE + "/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email, password }),
         });
         const data = await safeJsonResponse(response);
@@ -756,6 +773,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch(API_BASE + "/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ name, email, phone, password }),
         });
         const data = await safeJsonResponse(response);

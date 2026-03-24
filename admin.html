@@ -73,14 +73,13 @@
 
             <div class="sidebar-footer">
                 <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding: 0 0.5rem;">
-                    <div style="width: 32px; height: 32px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">AD</div>
+                    <div id="admin-avatar" style="width: 32px; height: 32px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem;">AD</div>
                     <div style="flex: 1; min-width: 0;">
-                        <p id="admin-name" style="font-size: 0.875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+                        <div id="admin-name" style="font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Admin</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Administrator</div>
                     </div>
                 </div>
-                <button onclick="handleLogout()" class="nav-item" style="color: var(--error);">
-                    <i class="fas fa-right-from-bracket"></i> Sign Out
-                </button>
+                <button class="btn btn-secondary w-full" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </aside>
         
