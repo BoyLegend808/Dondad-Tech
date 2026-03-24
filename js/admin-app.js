@@ -55,6 +55,7 @@ function showLogin() {
 function showDashboard() {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('dashboard-layout').style.display = 'flex';
+    switchTab('dashboard');
 }
 
 function handleLogout() {
@@ -81,15 +82,23 @@ function switchTab(tab) {
     
     // UI Update
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-    document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+    const activeNav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+    if (activeNav) activeNav.classList.add('active');
     
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    document.getElementById(`tab-${tab}`).style.display = 'block';
+    const tabEl = document.getElementById(`tab-${tab}`);
+    if (tabEl) tabEl.style.display = 'block';
 
     // Refresh data if needed
+    if (tab === 'dashboard') refreshAllData();
     if (tab === 'products') loadProducts();
     if (tab === 'orders') loadOrders();
     if (tab === 'customers') loadCustomers();
+
+    // Close sidebar on mobile after clicking
+    if (window.innerWidth <= 1024) {
+        document.getElementById('sidebar').classList.remove('active');
+    }
 }
 
 function toggleSidebar() {
@@ -102,7 +111,8 @@ function toggleSidebar() {
 async function refreshAllData() {
     await Promise.all([
         loadDashboardStats(),
-        loadRecentOrders()
+        loadRecentOrders(),
+        loadRecentProducts()
     ]);
 }
 
@@ -177,17 +187,39 @@ async function loadRecentOrders() {
         const data = await res.json();
         const recent = data.orders || [];
 
-        list.innerHTML = recent.map(o => `
+        list.innerHTML = recent.length ? recent.map(o => `
             <tr>
-                <td>#${o._id?.slice(-8)}</td>
+                <td><strong>#${o._id?.slice(-8)}</strong></td>
                 <td>${o.userName || 'Guest'}</td>
                 <td>${new Date(o.createdAt).toLocaleDateString()}</td>
                 <td style="font-weight: 600;">₦${Number(o.subtotal || 0).toLocaleString()}</td>
                 <td><span class="badge badge-${o.status === 'delivered' ? 'success' : 'warning'}">${o.status}</span></td>
             </tr>
-        `).join('');
+        `).join('') : '<tr><td colspan="5">No recent orders.</td></tr>';
     } catch (e) {
         list.innerHTML = '<tr><td colspan="5">Failed to load recent orders.</td></tr>';
+    }
+}
+
+async function loadRecentProducts() {
+    const list = document.getElementById('recent-products-list');
+    if (!list) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/products?limit=5&sort=createdAt&order=desc`, { credentials: 'include' });
+        const data = await res.json();
+        const recent = data.products || [];
+
+        list.innerHTML = recent.length ? recent.map(p => `
+            <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>₦${Number(p.price || 0).toLocaleString()}</td>
+                <td><span class="badge ${p.stock < 10 ? 'badge-warning' : 'badge-success'}">${p.stock}</span></td>
+                <td><span class="badge" style="background:rgba(255,255,255,0.05);">${p.category}</span></td>
+            </tr>
+        `).join('') : '<tr><td colspan="4">No products yet.</td></tr>';
+    } catch (e) {
+        list.innerHTML = '<tr><td colspan="4">Failed to load recent products.</td></tr>';
     }
 }
 
@@ -235,24 +267,37 @@ async function loadCustomers() {
      const list = document.getElementById('customers-list-tbody');
     if (!list) return;
 
-    list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Loading customers...</td></tr>';
+    list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Loading customer records...</td></tr>';
 
     try {
+        console.log('Fetching customers...');
         const res = await fetch(`${API_BASE}/admin/users?limit=100`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
-        customers = data.users || [];
+        customers = data.users || data || [];
+
+        if (!customers.length) {
+            list.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-muted);">No customer accounts found.</td></tr>';
+            return;
+        }
 
         list.innerHTML = customers.map(c => `
             <tr>
-                <td><strong>${c.name}</strong></td>
-                <td>${c.email}</td>
-                <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <div style="font-weight: 700;">${c.name || c.email?.split('@')[0] || 'Unknown User'}</div>
+                    <span class="badge" style="font-size: 0.65rem; background: ${c.role === 'admin' ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'}; color: ${c.role === 'admin' ? 'var(--primary)' : 'var(--text-muted)'};">
+                        ${(c.role || 'user').toUpperCase()}
+                    </span>
+                </td>
+                <td>${c.email || 'N/A'}</td>
+                <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</td>
                 <td>${c.orderCount || 0}</td>
                 <td style="font-weight: 600;">₦${Number(c.totalSpent || 0).toLocaleString()}</td>
             </tr>
         `).join('');
     } catch (e) {
-        list.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--error);">Failed to load customers.</td></tr>';
+        console.error('Customer fetch failed:', e);
+        list.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--error);">Error: ${e.message}</td></tr>`;
     }
 }
 

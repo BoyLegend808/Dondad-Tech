@@ -74,6 +74,9 @@
                 </button>
             </div>
         </aside>
+        
+        <!-- Sidebar overlay for mobile -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <!-- Main Content Area -->
         <main class="main-content">
@@ -107,6 +110,26 @@
                     <div class="card stat-card">
                         <span class="stat-label">Total Customers</span>
                         <span class="stat-value" id="stat-customers">0</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem;">Recent Products</h3>
+                    <div class="table-container">
+                        <table id="recent-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-products-list"></tbody>
+                        </table>
+                    </div>
+                    <div style="text-align: right; margin-top: 1rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="switchTab('products')">View All Products →</button>
                     </div>
                 </div>
 

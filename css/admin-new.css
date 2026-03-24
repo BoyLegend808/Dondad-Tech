@@ -104,13 +104,28 @@ body {
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
-        z-index: 100;
+        z-index: 1000;
+        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
     }
     .sidebar.active {
         transform: translateX(0);
     }
     .main-content {
         margin-left: 0;
+        padding: 1.5rem;
+    }
+    #mobile-header {
+        display: flex !important;
+    }
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+    .sidebar.active + .sidebar-overlay {
+        display: block;
     }
 }
 
