@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'dondad-tech',
-    script: './server.js',
+    script: './src/server.js',
     instances: 'max', // Use all available CPU cores
     exec_mode: 'cluster',
     watch: false,

@@ -2061,9 +2061,9 @@ app.use('/api/admin/users', require('./routes/admin/users'));
 app.use('/api/admin/orders', require('./routes/admin/orders'));
 app.use('/api/admin/dashboard', require('./routes/admin/dashboard'));
 console.log('[ROUTES] ✅ All admin routes mounted');
-app.use(express.static(path.join(__dirname, "pages")));
-app.use(express.static(__dirname));
-app.use(express.static(path.join(__dirname, "images")));
+app.use(express.static(path.join(__dirname, "../pages")));
+app.use(express.static(path.join(__dirname, "..")));
+app.use(express.static(path.join(__dirname, "../images")));
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {

@@ -2,9 +2,9 @@
   "name": "dondad-tech",
   "version": "1.0.0",
   "description": "E-commerce website for premium devices - Phones, Laptops, Tablets & Accessories",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node server.js",
     "dev": "node server.js",
     "prod": "NODE_ENV=production node server.js",
     "build": "exit 0",
