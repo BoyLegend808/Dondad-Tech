@@ -16,6 +16,9 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Eliminate 300ms tap delay on mobile browsers */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -101,31 +104,70 @@ body {
     max-width: 1400px;
 }
 
+/* Mobile header - hidden on desktop */
+#mobile-header {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+/* Sidebar overlay - always in DOM, hidden by default */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    -webkit-tap-highlight-color: transparent;
+}
+.sidebar-overlay.active {
+    display: block;
+}
+
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
         z-index: 1000;
         box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        width: 280px;
     }
     .sidebar.active {
         transform: translateX(0);
     }
     .main-content {
         margin-left: 0;
-        padding: 1.5rem;
+        padding: 1rem;
     }
     #mobile-header {
-        display: flex !important;
+        display: flex;
     }
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 999;
+
+    /* Bigger touch targets on mobile */
+    .nav-item {
+        padding: 1rem 1rem;
+        min-height: 48px;
     }
-    .sidebar.active + .sidebar-overlay {
-        display: block;
+    .btn {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 0.75rem 1.25rem;
+    }
+    .btn-sm {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .section-header > div {
+        width: 100%;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
     }
 }
 

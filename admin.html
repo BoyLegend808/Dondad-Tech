@@ -84,15 +84,15 @@
         </aside>
         
         <!-- Sidebar overlay for mobile -->
-        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
         <!-- Main Content Area -->
         <main class="main-content">
             
             <!-- MOBILE HEADER (HIDDEN ON DESKTOP) -->
-            <header style="display: none; justify-content: space-between; align-items: center; margin-bottom: 2rem;" id="mobile-header">
+            <header id="mobile-header">
                 <div class="sidebar-logo" style="margin-bottom: 0;">DONDAD</div>
-                <button class="btn btn-secondary" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <button class="btn btn-secondary" id="mobile-menu-btn" type="button" aria-label="Open menu" style="min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-bars"></i></button>
             </header>
 
             <!-- DASHBOARD TAB -->
@@ -353,7 +353,11 @@
     <!-- Toast UI -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="js/script.js?v=20260325-2"></script>
-    <script src="js/admin-app.js?v=20260325-2"></script>
+    <!-- Admin-only: define API_BASE inline so we do NOT load script.js (storefront) -->
+    <script>
+        const isNetlify = window.location.hostname.includes('netlify.app');
+        const API_BASE = isNetlify ? '/.netlify/functions' : '/api';
+    </script>
+    <script src="js/admin-app.js?v=20260325-3"></script>
 </body>
 </html>

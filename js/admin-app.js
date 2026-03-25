@@ -79,13 +79,52 @@ function handleLogout() {
 // --- Navigation ---
 
 function setupNavigation() {
+    // Debounce guard to prevent double-fire from touch + click on Android
+    let lastAction = 0;
+    function debounceGuard() {
+        const now = Date.now();
+        if (now - lastAction < 300) return false;
+        lastAction = now;
+        return true;
+    }
+
+    // Tab navigation buttons
     const navItems = document.querySelectorAll('.nav-item[data-tab]');
     navItems.forEach(item => {
-        item.addEventListener('click', () => {
+        const handler = (e) => {
+            e.preventDefault();
+            if (!debounceGuard()) return;
             const tab = item.getAttribute('data-tab');
             switchTab(tab);
-        });
+        };
+        item.addEventListener('click', handler);
+        item.addEventListener('touchend', handler);
     });
+
+    // Mobile hamburger menu button
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    if (mobileMenuBtn) {
+        const menuHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!debounceGuard()) return;
+            toggleSidebar();
+        };
+        mobileMenuBtn.addEventListener('click', menuHandler);
+        mobileMenuBtn.addEventListener('touchend', menuHandler);
+    }
+
+    // Sidebar overlay (tap to close)
+    const overlay = document.getElementById('sidebar-overlay');
+    if (overlay) {
+        const overlayHandler = (e) => {
+            e.preventDefault();
+            if (!debounceGuard()) return;
+            closeSidebar();
+        };
+        overlay.addEventListener('click', overlayHandler);
+        overlay.addEventListener('touchend', overlayHandler);
+    }
 }
 
 function switchTab(tab) {
@@ -108,13 +147,30 @@ function switchTab(tab) {
 
     // Close sidebar on mobile after clicking
     if (window.innerWidth <= 1024) {
-        document.getElementById('sidebar').classList.remove('active');
+        closeSidebar();
     }
 }
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('active');
+    const overlay = document.getElementById('sidebar-overlay');
+    const isActive = sidebar.classList.contains('active');
+    if (isActive) {
+        closeSidebar();
+    } else {
+        sidebar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        // Prevent body scroll when sidebar is open
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 // --- API Calls ---
@@ -633,4 +689,46 @@ function showToast(message, type = 'info') {
         toast.style.transform = 'translateY(20px)';
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+// --- Order Details ---
+function viewOrderDetails(orderId) {
+    const order = orders.find(o => o._id === orderId);
+    if (!order) {
+        showToast('Order not found', 'error');
+        return;
+    }
+
+    const items = (order.items || []).map(i =>
+        `<div style="display:flex;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid var(--border);">
+            <span>${i.name || 'Item'} x${i.qty || 1}</span>
+            <span>₦${Number(i.price || 0).toLocaleString()}</span>
+        </div>`
+    ).join('') || '<p class="text-muted">No item details available.</p>';
+
+    const modal = document.getElementById('product-modal');
+    modal.innerHTML = `
+        <div class="card" style="max-width:600px;margin:0 auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                <h2>Order #${orderId.slice(-8)}</h2>
+                <button class="btn btn-secondary" id="close-order-detail" type="button"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <p><strong>Customer:</strong> ${order.userName || 'Guest'}</p>
+                <p><strong>Email:</strong> ${order.userEmail || 'N/A'}</p>
+                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                <p><strong>Status:</strong> <span class="badge badge-${order.status === 'delivered' ? 'success' : 'warning'}">${order.status}</span></p>
+            </div>
+            <h3 style="margin-bottom:0.75rem;">Items</h3>
+            ${items}
+            <div style="text-align:right;margin-top:1rem;font-size:1.25rem;font-weight:700;">
+                Total: ₦${Number(order.subtotal || 0).toLocaleString()}
+            </div>
+        </div>
+    `;
+    modal.style.display = 'block';
+    document.getElementById('close-order-detail').addEventListener('click', () => {
+        modal.style.display = 'none';
+        // Restore the original product form modal content on next use
+    });
 }
