@@ -3,9 +3,9 @@
  * Modularized, clean, and robust for a better developer/user experience.
  */
 
-// API Configuration
-const isNetlify = window.location.hostname.includes("netlify.app");
-const API_BASE = isNetlify ? "/.netlify/functions" : "/api";
+// API Configuration (use unique names to avoid global const collisions)
+const adminIsNetlify = window.location.hostname.includes("netlify.app");
+const ADMIN_API_BASE = adminIsNetlify ? "/.netlify/functions" : "/api";
 
 // Global State
 let products = [];
@@ -75,7 +75,7 @@ function showDashboard() {
 function handleLogout() {
     sessionStorage.removeItem('dondad_currentUser');
     localStorage.removeItem('dondad_currentUser');
-    fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
+    fetch(`${ADMIN_API_BASE}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
         window.location.href = 'index.html';
     });
 }
@@ -217,7 +217,7 @@ async function refreshAllData() {
 
 async function loadDashboardStats() {
     try {
-        const res = await fetch(`${API_BASE}/admin/dashboard`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/dashboard`, { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
         
@@ -241,7 +241,7 @@ async function loadProducts() {
     list.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading products...</td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE}/admin/products?limit=100`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/products?limit=100`, { credentials: 'include' });
         
         if (res.status === 401) {
             handleUnauthorized();
@@ -312,7 +312,7 @@ async function loadRecentOrders() {
     if (!list) return;
 
     try {
-        const res = await fetch(`${API_BASE}/admin/orders?limit=5`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/orders?limit=5`, { credentials: 'include' });
         const data = await res.json();
         const recent = data.orders || [];
 
@@ -335,7 +335,7 @@ async function loadRecentProducts() {
     if (!list) return;
 
     try {
-        const res = await fetch(`${API_BASE}/admin/products?limit=5&sort=createdAt&order=desc`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/products?limit=5&sort=createdAt&order=desc`, { credentials: 'include' });
         const data = await res.json();
         const recent = data.products || [];
 
@@ -359,7 +359,7 @@ async function loadOrders() {
     list.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading history...</td></tr>';
 
     try {
-        const res = await fetch(`${API_BASE}/admin/orders?limit=50`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/orders?limit=50`, { credentials: 'include' });
         const data = await res.json();
         orders = data.orders || [];
 
@@ -400,7 +400,7 @@ async function loadCustomers() {
 
     try {
         console.log('Fetching customers...');
-        const res = await fetch(`${API_BASE}/admin/users?limit=100`, { credentials: 'include' });
+        const res = await fetch(`${ADMIN_API_BASE}/admin/users?limit=100`, { credentials: 'include' });
         
         if (res.status === 401) {
             handleUnauthorized();
@@ -448,7 +448,7 @@ if (adminLoginForm) {
     errorEl.style.display = 'none';
 
     try {
-        const res = await fetch(`${API_BASE}/login`, {
+        const res = await fetch(`${ADMIN_API_BASE}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -495,7 +495,7 @@ function setupForms() {
         };
 
         try {
-            const url = id ? `${API_BASE}/admin/products/${id}` : `${API_BASE}/admin/products`;
+            const url = id ? `${ADMIN_API_BASE}/admin/products/${id}` : `${ADMIN_API_BASE}/admin/products`;
             const method = id ? 'PUT' : 'POST';
 
             const res = await fetch(url, {
@@ -641,7 +641,7 @@ async function deleteProduct(id) {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
 
     try {
-        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
+        const res = await fetch(`${ADMIN_API_BASE}/admin/products/${id}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -660,7 +660,7 @@ async function deleteProduct(id) {
 
 async function updateOrderStatus(orderId, status) {
     try {
-        const res = await fetch(`${API_BASE}/admin/orders/${orderId}`, {
+        const res = await fetch(`${ADMIN_API_BASE}/admin/orders/${orderId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
