@@ -26,7 +26,8 @@ body {
     background-color: var(--bg-dark);
     color: var(--text);
     overflow-x: auto;
-    overflow-y: hidden; /* Disable vertical scroll completely */
+    overflow-y: hidden;
+    /* Disable vertical scroll completely */
     line-height: 1.5;
     min-width: fit-content;
     height: 100vh;
@@ -43,7 +44,8 @@ body {
 
 /* Ensure tables can scroll horizontally */
 table {
-    min-width: 800px; /* Force minimum width to enable horizontal scroll */
+    min-width: 800px;
+    /* Force minimum width to enable horizontal scroll */
     width: 100%;
     border-collapse: collapse;
     text-align: left;
@@ -129,7 +131,8 @@ table {
 
 /* Ensure all content areas prevent vertical overflow */
 .tab-content {
-    height: calc(100vh - 4rem); /* Account for padding */
+    height: calc(100vh - 4rem);
+    /* Account for padding */
     overflow-x: auto;
     overflow-y: hidden;
 }
@@ -151,10 +154,11 @@ table {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 999;
     -webkit-tap-highlight-color: transparent;
 }
+
 .sidebar-overlay.active {
     display: block;
 }
@@ -163,21 +167,25 @@ table {
     .sidebar {
         transform: translateX(-100%);
         z-index: 1000;
-        box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
         width: 280px;
         will-change: transform;
-        overflow-y: hidden; /* Remove vertical scroll from sidebar */
+        overflow-y: hidden;
+        /* Remove vertical scroll from sidebar */
         max-height: 100vh;
     }
+
     .sidebar.active {
         transform: translateX(0);
     }
+
     .main-content {
         margin-left: 0;
         padding: 1rem;
         overflow-x: auto;
         overflow-y: hidden;
     }
+
     #mobile-header {
         display: flex;
     }
@@ -187,23 +195,28 @@ table {
         padding: 1rem 1rem;
         min-height: 48px;
     }
+
     .btn {
         min-height: 48px;
         min-width: 48px;
         padding: 0.75rem 1.25rem;
     }
+
     .btn-sm {
         min-height: 44px;
         min-width: 44px;
     }
+
     .section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    .section-header > div {
+
+    .section-header>div {
         width: 100%;
     }
+
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
@@ -317,9 +330,20 @@ tr:hover td {
     font-weight: 600;
 }
 
-.badge-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.badge-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.badge-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
 
 /* Stats Grid */
 .stats-grid {
@@ -358,7 +382,9 @@ label {
     color: var(--text-muted);
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
     width: 100%;
     background-color: var(--sidebar-bg);
     border: 1px solid var(--border);
@@ -369,7 +395,9 @@ input, select, textarea {
     transition: border-color 0.2s;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
     border-color: var(--primary);
 }
 
@@ -408,6 +436,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
