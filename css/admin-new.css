@@ -131,6 +131,9 @@ body {
         z-index: 1000;
         box-shadow: 20px 0 50px rgba(0,0,0,0.5);
         width: 280px;
+        will-change: transform;
+        overflow-y: auto;
+        max-height: 100vh;
     }
     .sidebar.active {
         transform: translateX(0);

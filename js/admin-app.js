@@ -114,16 +114,31 @@ function setupNavigation() {
         mobileMenuBtn.addEventListener('touchend', menuHandler);
     }
 
-    // Sidebar overlay (tap to close)
+    // Sidebar overlay (tap to close, but not when clicking sidebar itself)
     const overlay = document.getElementById('sidebar-overlay');
+    const sidebar = document.getElementById('sidebar');
     if (overlay) {
         const overlayHandler = (e) => {
             e.preventDefault();
-            if (!debounceGuard()) return;
-            closeSidebar();
+            // Only close if clicking directly on overlay, not on sidebar
+            if (e.target === overlay && !debounceGuard()) return;
+            if (e.target === overlay) {
+                closeSidebar();
+            }
         };
         overlay.addEventListener('click', overlayHandler);
         overlay.addEventListener('touchend', overlayHandler);
+    }
+    
+    // Ensure sidebar is fully visible by forcing a reflow after adding active class
+    if (sidebar) {
+        const observer = new MutationObserver(() => {
+            if (sidebar.classList.contains('active')) {
+                // Force reflow to ensure transition works properly
+                void sidebar.offsetHeight;
+            }
+        });
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
     }
 }
 
