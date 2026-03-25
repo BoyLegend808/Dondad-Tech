@@ -25,21 +25,25 @@ body {
     font-family: 'Inter', -apple-system, sans-serif;
     background-color: var(--bg-dark);
     color: var(--text);
-    overflow-x: auto;
-    overflow-y: hidden;
-    /* Disable vertical scroll completely */
     line-height: 1.5;
-    min-width: fit-content;
-    height: 100vh;
 }
 
 /* Force horizontal scroll for all content */
-.admin-layout,
-.main-content,
+.admin-layout {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100vh;
+}
+
+.main-content {
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100vh;
+}
+
 .card,
 .table-container {
     overflow-x: auto;
-    overflow-y: hidden;
 }
 
 /* Ensure tables can scroll horizontally */
@@ -395,10 +399,13 @@ textarea {
     transition: border-color 0.2s;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: var(--primary);
+inpuflex-direction: column;
+align-items: center;
+justify-content: center;
+min-height: 100vh;
+padding: 2rem 1rem;
+overflow-y: auto;
+-webkit-overflow-scrolling: touc border-color: var(--primary);
 }
 
 /* Login */
