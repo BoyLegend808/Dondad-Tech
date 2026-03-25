@@ -25,17 +25,28 @@ body {
     font-family: 'Inter', -apple-system, sans-serif;
     background-color: var(--bg-dark);
     color: var(--text);
-    overflow-x: hidden;
-    overflow-y: hidden; /* Disable vertical scroll, use horizontal instead */
+    overflow-x: auto;
+    overflow-y: hidden; /* Disable vertical scroll completely */
     line-height: 1.5;
     min-width: fit-content;
+    height: 100vh;
 }
 
-/* Allow horizontal scroll for content that doesn't fit */
+/* Force horizontal scroll for all content */
 .admin-layout,
-.main-content {
+.main-content,
+.card,
+.table-container {
     overflow-x: auto;
     overflow-y: hidden;
+}
+
+/* Ensure tables can scroll horizontally */
+table {
+    min-width: 800px; /* Force minimum width to enable horizontal scroll */
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
 }
 
 /* Sidebar */
@@ -111,14 +122,28 @@ body {
     margin-left: 260px;
     padding: 2rem;
     max-width: 1400px;
+    height: 100vh;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-/* Mobile header - hidden on desktop */
-#mobile-header {
-    display: none;
-    justify-content: space-between;
-    align-items: center;
+/* Ensure all content areas prevent vertical overflow */
+.tab-content {
+    height: calc(100vh - 4rem); /* Account for padding */
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
     margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    min-width: fit-content;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 /* Sidebar overlay - always in DOM, hidden by default */
@@ -141,7 +166,7 @@ body {
         box-shadow: 20px 0 50px rgba(0,0,0,0.5);
         width: 280px;
         will-change: transform;
-        overflow-y: auto;
+        overflow-y: hidden; /* Remove vertical scroll from sidebar */
         max-height: 100vh;
     }
     .sidebar.active {
@@ -150,6 +175,8 @@ body {
     .main-content {
         margin-left: 0;
         padding: 1rem;
+        overflow-x: auto;
+        overflow-y: hidden;
     }
     #mobile-header {
         display: flex;
@@ -180,6 +207,26 @@ body {
     .stats-grid {
         grid-template-columns: 1fr 1fr;
         gap: 1rem;
+    }
+
+    /* Ensure cards can scroll horizontally on mobile */
+    .card {
+        min-width: 320px;
+        overflow-x: auto;
+    }
+
+    /* Force horizontal layout for stats grid */
+    .stats-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .stat-card {
+        flex: 0 0 240px;
+        min-width: 240px;
     }
 }
 
