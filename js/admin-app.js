@@ -24,8 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setupVariantToggles();
 });
 
-// Auth check logic
+// Auth check logic - prevent multiple calls
+let authChecked = false;
 function checkAuth() {
+    if (authChecked) return; // Prevent multiple auth checks
+    authChecked = true;
+    
     const userString = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
     if (!userString) {
         showLogin();
@@ -75,6 +79,8 @@ function showDashboard() {
 function handleLogout() {
     sessionStorage.removeItem('dondad_currentUser');
     localStorage.removeItem('dondad_currentUser');
+    // Reset auth check flag so they can log in again
+    authChecked = false;
     fetch(`${ADMIN_API_BASE}/logout`, { method: 'POST', credentials: 'include' }).finally(() => {
         window.location.href = 'index.html';
     });
@@ -474,6 +480,19 @@ if (adminLoginForm) {
 // --- Product Management ---
 
 function setupForms() {
+    // Close modal button (Android touch fix)
+    const closeBtn = document.querySelector('.btn-close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            hideProductForm();
+        });
+        closeBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            hideProductForm();
+        });
+    }
+
     document.getElementById('product-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
