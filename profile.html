@@ -28,7 +28,7 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
+                    <div class="user-menu">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -45,7 +45,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -104,7 +104,6 @@
     <script>
         let currentUser = null;
 
-        // Check auth
         document.addEventListener('DOMContentLoaded', async function() {
             const userStr = sessionStorage.getItem('dondad_currentUser');
             if (!userStr) {
@@ -113,61 +112,20 @@
             }
             
             currentUser = JSON.parse(userStr);
-            currentUser = JSON.parse(userStr);
             
-            // Show user menu directly
-            const authLinks = document.getElementById('auth-links');
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-            
-            if (authLinks) authLinks.style.display = 'none';
-            if (userMenu) userMenu.style.display = 'flex';
-            if (userName) userName.textContent = currentUser.name;
-            if (userAvatar) {
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || currentUser.name.charAt(0);
-            }
-            
-            updateAuthUI();
-            loadOrders();
-        });
-
-        function logout() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'index.html';
-        }
-
-
-        function updateAuthUI() {
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-            const authLinks = document.getElementById('auth-links');
-            
-            if (currentUser) {
-                authLinks.style.display = 'none';
-                userMenu.style.display = 'flex';
-                
-                // Get initials for avatar
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || currentUser.name.charAt(0);
-                userName.textContent = currentUser.name;
-                
-                // Update profile info
+            // Additional profile info display
+            if (document.getElementById('profile-name')) {
                 document.getElementById('profile-name').textContent = currentUser.name;
                 document.getElementById('profile-email').textContent = currentUser.email;
                 document.getElementById('profile-phone').textContent = currentUser.phone || 'Not provided';
-                
-                // Show admin link only for admin users
-                if (currentUser.role === 'admin') {
-                    document.getElementById('admin-nav-link').style.display = 'block';
-                }
-            } else {
-                // User not logged in - the first check will handle this
             }
-        }
+            
+            loadOrders();
+        });
+
+
+
+
 
         async function loadOrders() {
             try {
@@ -233,7 +191,7 @@
         }
 
         function logoutUser() {
-            logout();
+            window.location.href = 'index.html';
         }
     </script>
     

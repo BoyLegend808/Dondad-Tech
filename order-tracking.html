@@ -27,7 +27,7 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
+                    <div class="user-menu">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -44,7 +44,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -101,32 +101,15 @@
     </footer>
 
     <script>
-        function getCurrentUser() {
-            try {
-                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
-                if (sessionUser) return sessionUser;
-                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
-            } catch {
-                return null;
+        // Check login state
+        document.addEventListener('DOMContentLoaded', function() {
+            const userStr = sessionStorage.getItem('dondad_currentUser');
+            if (!userStr) {
+                window.location.href = 'login.html';
+                return;
             }
-        }
+        });
 
-        // Check login
-        const currentUser = getCurrentUser();
-        if (!currentUser) {
-            window.location.href = 'login.html';
-        }
-
-        // Update UI
-        function updateAuthUI() {
-            const user = getCurrentUser();
-            if (user) {
-                document.getElementById('auth-buttons').style.display = 'none';
-                document.getElementById('user-menu').style.display = 'flex';
-                document.getElementById('user-name').textContent = user.name;
-            }
-        }
-        updateAuthUI();
 
         async function trackOrder() {
             const orderId = document.getElementById('order-id').value.trim();

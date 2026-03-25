@@ -25,7 +25,7 @@
             </ul>
             <div class="nav-right">
                 <a href="register.html" class="auth-btn register">Register</a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -96,99 +96,8 @@
 
     <script src="js/script.js?v=20260312-3" defer></script>
     <script>
-    // MVP Fix: Inline login handler that works on all devices
-    function handleLoginSubmit(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        var email = document.getElementById('email').value.trim();
-        var password = document.getElementById('password').value;
-        var errorEl = document.getElementById('error');
-        var btn = document.getElementById('login-btn');
-        
-        console.log('Login attempt:', email);
-        
-        if (!email || !password) {
-            if (errorEl) {
-                errorEl.textContent = 'Please enter email and password';
-                errorEl.style.display = 'block';
-            }
-            return false;
-        }
-        
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-        }
-        
-        fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ email: email, password: password })
-        })
-        .then(function(response) { 
-            console.log('Response status:', response.status); 
-            return response.json(); 
-        })
-        .then(function(data) {
-            console.log('Response data:', data);
-            if (data.success) {
-                console.log('Login successful');
-                try {
-                    sessionStorage.setItem('dondad_currentUser', JSON.stringify(data.user));
-                } catch(err) {
-                    console.error('Storage error:', err);
-                }
-                if (data.user.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
-            } else {
-                if (errorEl) {
-                    errorEl.textContent = data.error || 'Invalid email or password';
-                    errorEl.style.display = 'block';
-                }
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-                }
-            }
-        })
-        .catch(function(error) {
-            console.error('Login error:', error);
-            if (errorEl) {
-                errorEl.textContent = 'Connection error. Please check your internet and try again.';
-                errorEl.style.display = 'block';
-            }
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-            }
-        });
-        
-        return false;
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Page loaded, setting up handlers');
-        
-        // Note: hamburger click is handled by onclick attribute in HTML
-        
-        // Close menu when clicking outside
-        document.addEventListener('click', function(e) {
-            var hamburger = document.querySelector('.hamburger');
-            var navLinks = document.getElementById('navLinks');
-            if (hamburger && navLinks && navLinks.classList.contains('active')) {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                    hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
-                }
-            }
-        });
-    });
+        // Custom logic for login page can go here if needed, 
+        // but core submission is handled by script.js via the form id="login-form".
     </script>
 </body>
 </html>

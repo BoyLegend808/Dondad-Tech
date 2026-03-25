@@ -598,7 +598,6 @@ function setupHamburger() {
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
     if (!hasInlineHandler && !hamburger.dataset.bound) {
       hamburger.addEventListener("click", window.toggleMenu);
-      hamburger.addEventListener("touchstart", window.toggleMenu, { passive: false });
       hamburger.dataset.bound = "true";
     }
 
@@ -665,6 +664,7 @@ function setupPasswordToggles() {
 document.addEventListener("DOMContentLoaded", () => {
   updateCartCount();
   setupHamburger();
+  setupUserMenu();
   setupPasswordToggles();
   updateAuthUI();
   setupAutoLogout();
@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const category = urlParams.get("category") || "all";
     getAllProductsLive()
       .then(prods => {
-        const productList = prods || [];
+        const productList = Array.isArray(prods) ? prods : [];
         const filtered = category === "all" ? productList : productList.filter(p => p && p.category === category);
         renderProducts(filtered, "product-grid");
       })

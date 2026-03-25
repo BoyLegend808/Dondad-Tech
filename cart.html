@@ -15,41 +15,8 @@
 </head>
 
 <body>
-    <script>
-        // Immediate check - show user menu if logged in
-        document.addEventListener('DOMContentLoaded', function() {
-            const userStr = sessionStorage.getItem('dondad_currentUser');
-            console.log('Cart page - User check:', userStr ? 'Found user' : 'No user');
-            if (userStr) {
-                try {
-                    const user = JSON.parse(userStr);
-                    const authLinks = document.getElementById('auth-links');
-                    const userMenu = document.getElementById('user-menu');
-                    const userName = document.getElementById('user-name');
-                    const userAvatar = document.getElementById('user-avatar');
-                    const cartLink = document.getElementById('cart-link');
-                    
-                    console.log('Elements found - authLinks:', !!authLinks, 'userMenu:', !!userMenu);
-                    
-                    if (authLinks) {
-                        authLinks.style.display = 'none';
-                        console.log('Set auth-links to none');
-                    }
-                    if (userMenu) {
-                        userMenu.style.display = 'flex';
-                        console.log('Set user-menu to flex');
-                    }
-                    if (userName) userName.textContent = user.name;
-                    if (userAvatar) {
-                        const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                        userAvatar.textContent = initials || user.name.charAt(0);
-                    }
-                    if (cartLink) cartLink.style.display = 'flex';
-                } catch(e) { console.error('Error:', e); }
-            }
-        });
-    </script>
-    <header>
+<body>
+<header>
         <nav class="navbar">
             <a href="index.html" class="logo">Pajay Gadgets</a>
             <ul class="nav-links">
@@ -66,8 +33,8 @@
                     <a href="login.html" class="auth-link">Login</a>
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
-                <div id="user-menu">
-                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
                         <div class="user-avatar" id="user-avatar"></div>
                         <div class="user-info">
                             <span class="user-greeting">Welcome back</span>
@@ -84,7 +51,7 @@
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" id="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -144,54 +111,17 @@
     <script>
         let currentUser = null;
 
-        // Check auth
         document.addEventListener('DOMContentLoaded', async function () {
             const userStr = sessionStorage.getItem('dondad_currentUser');
-            console.log('Cart page loaded, userStr:', userStr);
             if (!userStr) {
-                console.log('No user found in session, redirecting to login');
                 window.location.href = 'login.html';
                 return;
             }
 
             currentUser = JSON.parse(userStr);
-            console.log('User logged in:', currentUser.name);
-            
-            // Show user menu directly
-            const authLinks = document.getElementById('auth-links');
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-            const cartLink = document.getElementById('cart-link');
-            
-            console.log('authLinks:', authLinks);
-            console.log('userMenu:', userMenu);
-            
-            if (authLinks) {
-                authLinks.style.display = 'none';
-                console.log('Hid auth-links');
-            }
-            if (userMenu) {
-                userMenu.style.display = 'flex';
-                userMenu.style.visibility = 'visible';
-                console.log('Showed user-menu');
-            }
-            if (userName) userName.textContent = currentUser.name;
-            if (userAvatar) {
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || currentUser.name.charAt(0);
-            }
-            if (cartLink) cartLink.style.display = 'flex';
-            
             await loadCart();
-            console.log('Auth UI updated');
         });
 
-        function logout() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'index.html';
-        }
 
 
         async function loadCart() {
@@ -324,58 +254,6 @@
             }
         }
 
-        function updateAuthUI() {
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-
-            document.getElementById('auth-links').style.display = currentUser ? 'none' : 'flex';
-            document.getElementById('cart-link').style.display = currentUser ? 'flex' : 'none';
-            userMenu.style.display = currentUser ? 'flex' : 'none';
-
-            if (currentUser) {
-                // Get initials for avatar
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || currentUser.name.charAt(0);
-                userName.textContent = currentUser.name;
-            }
-
-            if (currentUser?.role === 'admin') {
-                document.getElementById('admin-link').style.display = 'block';
-            }
-        }
-
-        function updateCartCount() {
-            fetch(`/api/cart/${currentUser?._id || currentUser?.id}`, {
-                credentials: "include"
-            })
-                .then(r => r.json())
-                .then(cart => {
-                    const count = cart.reduce((sum, item) => sum + item.qty, 0);
-                    document.getElementById('cart-count').textContent = count;
-                });
-        }
-
-        function logoutUser() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'index.html';
-        }
-
-        function toggleHamburger(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            document.querySelector('.nav-links')?.classList.toggle('active');
-            document.querySelector('.hamburger')?.classList.toggle('active');
-            console.log('Menu toggled');
-        }
-        
-        // Attach hamburger handler on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Cart page logic running');
-        });
     </script>
 
     <style>

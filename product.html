@@ -38,25 +38,12 @@
                     <a href="register.html" class="auth-link">Register</a>
                 </div>
                 <div id="user-menu" style="display:none;">
-                    <div class="user-menu" onclick="window.toggleUserMenu && window.toggleUserMenu(event)">
-                        <div class="user-avatar" id="user-avatar"></div>
-                        <div class="user-info">
-                            <span class="user-greeting">Welcome back</span>
-                            <span class="user-name" id="user-name"></span>
-                        </div>
-                        <div class="user-dropdown">
-                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
-                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
-                                    class="dropdown-icon">🚪</span> Logout</a>
-                        </div>
-                    </div>
-                </div>
+                    <div class="user-menu">   </div>
                 <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
                     <span>Cart</span>
                     <span class="cart-count">(<span id="cart-count">0</span>)</span>
                 </a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -102,58 +89,18 @@
     </footer>
 
     <script>
-        function getCurrentUser() {
+        // Use global getCurrentUser from script.js logic or local if needed
+        function getLocalUser() {
             try {
-                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
-                if (sessionUser) return sessionUser;
-                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
-            } catch {
-                return null;
-            }
+                return JSON.parse(sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser') || 'null');
+            } catch { return null; }
         }
-
-        // Check if user is logged in and update UI
-        document.addEventListener('DOMContentLoaded', function () {
-            const currentUser = getCurrentUser();
-            
-            const adminLink = document.getElementById('admin-nav-link');
-            const authLinks = document.getElementById('auth-links');
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-
-            if (currentUser) {
-                authLinks.style.display = 'none';
-                userMenu.style.display = 'flex';
-
-                // Get initials for avatar
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                userAvatar.textContent = initials || currentUser.name.charAt(0);
-                userName.textContent = currentUser.name;
-
-                document.getElementById('cart-link').style.display = 'flex';
-
-                // Show admin link only for admin users
-                if (currentUser.role === 'admin' && adminLink) {
-                    adminLink.style.display = 'block';
-                }
-            } else {
-                if (adminLink) adminLink.style.display = 'none';
-            }
-            updateCartCount();
-        });
-
-        function logout() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            location.reload();
-        }
-
 
         // Product detail page logic - Fetch from API
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let currentProduct = null;
+
 
         async function loadProduct() {
             const container = document.getElementById('product-container');

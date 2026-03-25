@@ -20,7 +20,7 @@
             <a href="index.html" class="logo">Pajay Gadgets</a>
             <div class="nav-right">
                 <a href="login.html" class="auth-btn">Login</a>
-                <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -38,7 +38,7 @@
                     <p>Join Pajay Gadgets today</p>
                 </div>
                 
-                <div id="register-form">
+                <form id="register-form">
                     <div class="form-group">
                         <label for="name">
                             <i class="fas fa-user"></i> Full Name
@@ -92,10 +92,10 @@
                     
                     <p id="error" class="error-message"></p>
                     
-                    <button type="button" class="btn btn-primary btn-block" onclick="doRegister()">
+                    <button type="submit" class="btn btn-primary btn-block">
                         <i class="fas fa-user-plus"></i> Create Account
                     </button>
-                </div>
+                </form>
                 
                 <div class="auth-footer">
                     <p>Already have an account? <a href="login.html">Login</a></p>
@@ -116,87 +116,8 @@
 
     <script src="js/script.js?v=20260312-3" defer></script>
     <script>
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Register page loaded');
-            // Note: hamburger click is handled by onclick attribute in HTML
-        });
-        
-        function doRegister() {
-            console.log('doRegister called');
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim().toLowerCase();
-            const phone = document.getElementById('phone').value.trim();
-            const password = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm').value;
-            const error = document.getElementById('error');
-            const btn = document.querySelector('#register-form button');
-
-            if (!name || !email || !password || !confirm) {
-                if (error) {
-                    error.textContent = 'Please fill in all required fields';
-                    error.style.display = 'block';
-                }
-                return;
-            }
-
-            if (password !== confirm) {
-                if (error) {
-                    error.textContent = 'Passwords do not match';
-                    error.style.display = 'block';
-                }
-                return;
-            }
-
-            if (password.length < 6) {
-                if (error) {
-                    error.textContent = 'Password must be at least 6 characters';
-                    error.style.display = 'block';
-                }
-                return;
-            }
-
-            console.log('Attempting registration...');
-            if (error) error.style.display = 'none';
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-
-            fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ name, email, phone, password })
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                console.log('Registration response:', data);
-                if (data.success) {
-                    console.log('Registration successful');
-                    if (error) {
-                        error.textContent = 'Registration successful! Please login.';
-                        error.style.display = 'block';
-                        error.style.color = 'green';
-                    }
-                    setTimeout(function() {
-                        window.location.href = 'login.html';
-                    }, 1500);
-                } else {
-                    throw new Error(data.error || 'Registration failed');
-                }
-            })
-            .catch(function(err) {
-                console.error('Registration error:', err);
-                if (error) {
-                    error.textContent = err.message || 'Registration failed. Please try again.';
-                    error.style.display = 'block';
-                }
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-                }
-            });
-        }
+        // Custom logic for register page can go here if needed,
+        // but core submission is handled by script.js via form id="register-form".
     </script>
 </body>
 </html>
