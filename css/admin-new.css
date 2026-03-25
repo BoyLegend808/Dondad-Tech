@@ -26,7 +26,16 @@ body {
     background-color: var(--bg-dark);
     color: var(--text);
     overflow-x: hidden;
+    overflow-y: hidden; /* Disable vertical scroll, use horizontal instead */
     line-height: 1.5;
+    min-width: fit-content;
+}
+
+/* Allow horizontal scroll for content that doesn't fit */
+.admin-layout,
+.main-content {
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 /* Sidebar */
