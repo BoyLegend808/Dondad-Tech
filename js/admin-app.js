@@ -10,8 +10,6 @@ let customers = [];
 let activeTab = 'dashboard';
 let isEditing = false;
 
-const API_BASE = '/api';
-
 // --- Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupVariantToggles();
 });
 
+// Auth check logic
 function checkAuth() {
     const userString = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
     if (!userString) {
