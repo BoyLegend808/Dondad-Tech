@@ -82,6 +82,19 @@ try {
 }
 
 const app = express();
+app.set('trust proxy', 1);
+
+// Force HTTPS in production
+if (process.env.NODE_ENV === "production" || process.env.RENDER) {
+  app.use((req, res, next) => {
+    const proto = req.get('x-forwarded-proto') || req.protocol;
+    if (proto !== "https" && !req.hostname.includes('localhost') && !req.hostname.includes('127.0.0.1')) {
+      return res.redirect("https://" + req.get("host") + req.url);
+    }
+    next();
+  });
+}
+
 const PORT = process.env.PORT || 3000;
 let dbReady = false;
 
@@ -4013,15 +4026,6 @@ app.get(
   },
 );
 
-// Force HTTPS in production
-if (process.env.NODE_ENV === "production") {
-  app.use((req, res, next) => {
-    if (req.protocol !== "https") {
-      return res.redirect("https://" + req.get("host") + req.url);
-    }
-    next();
-  });
-}
 
 // Global error handler - returns generic messages to users, logs details server-side
 app.use((err, req, res, next) => {
