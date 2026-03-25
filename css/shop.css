@@ -400,6 +400,41 @@
     color: white;
 }
 
+/* Redesigned Add to Cart Button */
+.add-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), #9333ea);
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.add-btn::before {
+    content: '🛒';
+    font-size: 1.1rem;
+}
+
+.add-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+    filter: brightness(1.1);
+}
+
+.add-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
 /* ========================================
    Pagination
    ======================================== */

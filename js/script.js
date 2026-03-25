@@ -118,6 +118,13 @@ function setupAutoLogout() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
     
+    // Auto-logout across tabs if one tab logs out
+    window.addEventListener('storage', (e) => {
+        if (e.key === CURRENT_USER_KEY && !e.newValue) {
+            logoutUser('Log out detected in another tab.');
+        }
+    });
+    
     // Handle visibility change (mobile) - but don't logout on tab close anymore
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
@@ -275,6 +282,12 @@ function updateAuthUI() {
         userName.textContent = user.name;
       }
 
+      // Show/Hide admin link
+      const adminLink = document.getElementById("admin-nav-link");
+      if (adminLink) {
+        adminLink.style.display = user.role === "admin" ? "block" : "none";
+      }
+
       // Legacy support
       if (userGreeting) {
         userGreeting.style.display = "inline";
@@ -286,6 +299,8 @@ function updateAuthUI() {
     } else {
       authLinks.style.display = "flex";
       if (userMenu) userMenu.style.display = "none";
+      const adminLink = document.getElementById("admin-nav-link");
+      if (adminLink) adminLink.style.display = "none";
       if (userGreeting) {
         userGreeting.style.display = "none";
       }
@@ -439,7 +454,7 @@ function renderProducts(products, containerId) {
             <h3>${product.name}</h3>
             <p>${product.desc}</p>
             <p class="price">₦${product.price.toLocaleString()}</p>
-            <button class="add-btn" onclick="event.stopPropagation(); addToCart(${product.id})">Add to Cart</button>
+            <button class="add-btn" onclick="event.stopPropagation(); addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Add to Cart</button>
         </div>
     `,
     )

@@ -34,7 +34,7 @@
                 <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
-                <div id="auth-buttons">
+                <div id="auth-links" class="auth-links">
                     <a href="login.html" class="auth-btn">Login</a>
                     <a href="register.html" class="auth-btn register">Register</a>
                 </div>
@@ -46,12 +46,12 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
-                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
-                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="profile.html">👤 My Profile</a>
+                            <a href="cart.html">🛒 My Cart</a>
+                            <a href="#" id="logout-btn" class="logout-btn">🚪 Logout</a>
                         </div>
                     </div>
-                    <a href="cart.html" class="cart-btn"><span>🛒</span> Cart (<span id="cart-count">0</span>)</a>
+                    <a href="cart.html" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</a>
                 </div>
                 <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
                     <span></span><span></span><span></span>
@@ -78,10 +78,10 @@
         <!-- Spotlight/Hero Section -->
         <section class="home-spotlight panel-card">
             <div class="spotlight-main">
-                <p class="spotlight-kicker animate-fade-in">Deal Zone</p>
-                <h1 class="animate-fade-in animate-delay-1">Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
-                <p class="animate-fade-in animate-delay-2">Daily deals on top devices with clean pricing and fast delivery support.</p>
-                <a href="shop.html" class="btn animate-fade-in animate-delay-3">Shop Now</a>
+                <p class="spotlight-kicker">Deal Zone</p>
+                <h1>Premium Gadgets<br><span>Dark. Sharp. Fast.</span></h1>
+                <p>Daily deals on top devices with clean pricing and fast delivery support.</p>
+                <a href="shop.html" class="btn">Shop Now</a>
             </div>
             <div class="spotlight-side">
                 <article class="side-tile">
@@ -206,227 +206,6 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- Notification Modal -->
-    <div class="modal-overlay" id="notification-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modal-title">Notification</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="modal-message">Message goes here</p>
-                <button class="btn" onclick="closeModal()">Got it</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Toast notification system
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            let icon = 'info-circle';
-            if (type === 'success') icon = 'check-circle';
-            if (type === 'error') icon = 'exclamation-circle';
-            
-            toast.innerHTML = `
-                <i class="fas fa-${icon} toast-icon"></i>
-                <span class="toast-message">${message}</span>
-                <button class="toast-close" onclick="this.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('removing');
-                setTimeout(() => {
-                    if (toast.parentElement) toast.remove();
-                }, 300);
-            }, 4000);
-        }
-
-        // Modal functions
-        function openModal(title, message) {
-            const modal = document.getElementById('notification-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalMessage = document.getElementById('modal-message');
-            
-            if (modal && modalTitle && modalMessage) {
-                modalTitle.textContent = title;
-                modalMessage.textContent = message;
-                modal.classList.add('active');
-            }
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('notification-modal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        }
-
-        // Close modal on overlay click
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('notification-modal');
-            if (modal && e.target === modal) {
-                closeModal();
-            }
-        });
-
-        // Auth functions
-        function getCurrentUser() {
-            try {
-                const sessionUser = JSON.parse(sessionStorage.getItem('dondad_currentUser') || 'null');
-                if (sessionUser) return sessionUser;
-                return JSON.parse(localStorage.getItem('dondad_currentUser') || 'null');
-            } catch {
-                return null;
-            }
-        }
-
-        function checkAuth() {
-            const user = getCurrentUser();
-            const authButtons = document.getElementById('auth-buttons');
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userAvatar = document.getElementById('user-avatar');
-            const adminLink = document.getElementById('admin-nav-link');
-
-            if (!authButtons || !userMenu) return;
-
-            if (user) {
-                authButtons.style.display = 'none';
-                userMenu.style.display = 'flex';
-                const initials = (user.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2);
-                if (userAvatar) userAvatar.textContent = initials || 'U';
-                if (userName) userName.textContent = user.name || 'User';
-                if (adminLink) adminLink.style.display = user.role === 'admin' ? 'block' : 'none';
-            } else {
-                authButtons.style.display = 'flex';
-                userMenu.style.display = 'none';
-                if (adminLink) adminLink.style.display = 'none';
-            }
-        }
-
-        function logout() {
-            sessionStorage.removeItem('dondad_currentUser');
-            localStorage.removeItem('dondad_currentUser');
-            window.location.href = 'index.html';
-        }
-
-        function toggleUserMenu(e) {
-            e.stopPropagation();
-            const menu = document.querySelector('.user-menu');
-            const dropdown = document.querySelector('.user-dropdown');
-            if (!menu) return;
-            if (dropdown && dropdown.contains(e.target)) return;
-            menu.classList.toggle('active');
-        }
-
-        function updateCartCount() {
-            const cartCountEl = document.getElementById('cart-count');
-            if (!cartCountEl) return;
-
-            const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
-            cartCountEl.textContent = localCart.reduce((sum, item) => sum + (item.qty || 0), 0);
-
-            const user = getCurrentUser();
-            if (!user) return;
-            const userId = user._id || user.id;
-            if (!userId) return;
-
-            fetch(`/api/cart/${userId}`, {
-                credentials: "include"
-            })
-                .then(r => (r.ok ? r.json() : []))
-                .then(cart => {
-                    if (Array.isArray(cart)) {
-                        const count = cart.reduce((sum, item) => sum + (item.qty || 0), 0);
-                        cartCountEl.textContent = count;
-                    }
-                })
-                .catch(() => {});
-        }
-
-         // Load featured products - fetch from API first, fallback to local
-         function loadFeaturedProducts() {
-             const container = document.getElementById('featured-products');
-             if (!container) return;
-             
-             // Show loading state
-             container.innerHTML = '<p style="text-align:center; padding: 2rem;">Loading products...</p>';
-             
-             // Try to fetch from API first
-             fetchWithTimeout('/api/products?limit=8', {}, 3000)
-                 .then(r => r.ok ? r.json() : { products: [] })
-                 .then(data => {
-                     const products = data.products || [];
-                     if (Array.isArray(products) && products.length > 0) {
-                         container.innerHTML = products.map((p, index) => `
-                             <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                                 <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
-                                 <h3>${p.name}</h3>
-                                 <p>${p.desc || 'Premium gadget'}</p>
-                                 <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                                 <a href="product.html?id=${p._id || p.id}" class="btn">View</a>
-                             </div>
-                         `).join('');
-                     } else {
-                         // Fallback to local products if API returns empty
-                         if (typeof products !== 'undefined') {
-                             const featured = products.slice(0, 8);
-                             container.innerHTML = featured.map((p, index) => `
-                                 <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                                     <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
-                                     <h3>${p.name}</h3>
-                                     <p>${p.desc || 'Premium gadget'}</p>
-                                     <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                                     <a href="product.html?id=${p.id}" class="btn">View</a>
-                                 </div>
-                             `).join('');
-                         }
-                     }
-                 })
-                 .catch(() => {
-                     // Fallback to local products on API error
-                     if (typeof products !== 'undefined') {
-                         const featured = products.slice(0, 8);
-                         container.innerHTML = featured.map((p, index) => `
-                             <div class="product-card" style="animation-delay: ${index * 0.1}s">
-                                 <img src="${p.image || 'images/logo.png'}" alt="${p.name}" onerror="this.src='images/logo.png'">
-                                 <h3>${p.name}</h3>
-                                 <p>${p.desc || 'Premium gadget'}</p>
-                                 <p class="price">₦${Number(p.price || 0).toLocaleString()}</p>
-                                 <a href="product.html?id=${p.id}" class="btn">View</a>
-                             </div>
-                         `).join('');
-                     }
-                 });
-         }
-
-        // Search functionality
-        document.getElementById('home-search')?.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const searchTerm = this.value.trim();
-                if (searchTerm) {
-                    window.location.href = `shop.html?search=${encodeURIComponent(searchTerm)}`;
-                }
-            }
-        });
-
-
-        document.addEventListener('DOMContentLoaded', function () {
-            checkAuth();
-            updateCartCount();
-            loadFeaturedProducts();
-        });
-    </script>
+    <script src="js/auth.js"></script>
 </body>
-
 </html>
