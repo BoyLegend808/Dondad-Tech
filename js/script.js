@@ -628,6 +628,21 @@ function setupHamburger() {
   });
 }
 
+// User menu setup
+function setupUserMenu() {
+  const userMenu = document.querySelector(".user-menu");
+  if (!userMenu) return;
+  // Use existing global toggle
+  if (!userMenu.dataset.bound) {
+    userMenu.addEventListener("click", (e) => {
+        if (typeof window.toggleUserMenu === 'function') {
+            window.toggleUserMenu(e);
+        }
+    });
+    userMenu.dataset.bound = "true";
+  }
+}
+
 function setupPasswordToggles() {
   const toggleButtons = document.querySelectorAll(".toggle-password");
   if (!toggleButtons.length) return;
