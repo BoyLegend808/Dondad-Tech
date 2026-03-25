@@ -1,13 +1,13 @@
 :root {
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --bg-dark: #0f172a;
-    --card-bg: #1e293b;
-    --sidebar-bg: #111827;
-    --border: #334155;
-    --text: #f8fafc;
-    --text-muted: #94a3b8;
-    --accent: #f59e0b;
+    --primary: #a855f7;
+    --primary-hover: #9333ea;
+    --bg-dark: #0f0518;
+    --card-bg: #1a0f2e;
+    --sidebar-bg: #150826;
+    --border: #2d1f4e;
+    --text: #ffffff;
+    --text-muted: #a78bfa;
+    --accent: #ec4899;
     --success: #10b981;
     --error: #ef4444;
 }

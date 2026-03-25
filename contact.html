@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - Pajay Gadgets</title>
-    <meta name="description" content="Contact Pajay Gadgets for sales support, order help, and product inquiries.">
-    <meta property="og:title" content="Contact - Pajay Gadgets">
-    <meta property="og:description" content="Reach out to Pajay Gadgets support.">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="images/logo.png">
-    <link rel="canonical" href="contact.html">
+    <title>Contact Us - Pajay Gadgets</title>
+    <meta name="description" content="Get in touch with Pajay Gadgets for support, inquiries, or business opportunities.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/simple-page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
@@ -20,50 +16,118 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
-                <li><a href="index.html#about">About</a></li>
+                <li><a href="about.html">About</a></li>
                 <li><a href="contact.html" class="active">Contact</a></li>
             </ul>
-            <button class="hamburger" aria-label="Toggle menu" onclick="window.toggleMenu && window.toggleMenu(event)">
-                <span></span><span></span><span></span>
-            </button>
+            <div class="nav-right">
+                <div id="auth-buttons">
+                    <a href="login.html" class="auth-btn">Login</a>
+                    <a href="register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" style="display:none;">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="profile.html">👤 My Profile</a>
+                            <a href="cart.html">🛒 My Cart</a>
+                            <a href="#" class="logout-btn">🚪 Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
         </nav>
     </header>
 
     <main>
-        <section class="contact-section" style="padding-top: 8rem;">
-            <a href="index.html" class="btn" style="margin-bottom: 1rem; display: inline-block;">Back to Home</a>
-            <h2>Contact Us</h2>
-            <div class="contact-grid">
-                <div class="contact-card">
-                    <h3>Phone</h3>
-                    <p><a href="tel:+2348012345678">+234 801 234 5678</a></p>
+        <section class="contact-page-section" style="padding-top: 8rem; max-width: 1200px; margin: 0 auto; padding-inline: 1rem;">
+            <div class="contact-hero" style="text-align: center; margin-bottom: 4rem;">
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">Get In Touch</h1>
+                <p style="font-size: 1.25rem; color: var(--muted);">Have a question? We're here to help you with your tech needs.</p>
+            </div>
+
+            <div class="contact-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
+                <!-- Contact Form -->
+                <div class="contact-form-card" style="background: var(--card); padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border);">
+                    <h2 style="margin-bottom: 2rem;">Send us a Message</h2>
+                    <form id="contact-form" style="display: grid; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Name</label>
+                            <input type="text" placeholder="Your Name" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);" required>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Email</label>
+                            <input type="email" placeholder="Your Email" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);" required>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Message</label>
+                            <textarea rows="5" placeholder="How can we help?" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); resize: none;" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Send Message</button>
+                    </form>
                 </div>
-                <div class="contact-card">
-                    <h3>Email</h3>
-                    <p><a href="mailto:support@pajaygadgets.com">support@pajaygadgets.com</a></p>
-                </div>
-                <div class="contact-card">
-                    <h3>Location</h3>
-                    <p>Lagos, Nigeria</p>
+
+                <!-- Contact Info -->
+                <div class="contact-info-wrap" style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                            <i class="fas fa-location-dot"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 0.5rem;">Visit Us</h3>
+                            <p style="color: var(--muted);">Pajay Gadgets Plaza, Alaba International Market, Ojo, Lagos, Nigeria.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 0.5rem;">Call Us</h3>
+                            <p style="color: var(--muted);">+234 800 PAJAY GADGETS<br>Available Mon-Sat, 9AM-6PM</p>
+                        </div>
+                    </div>
+
+                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin-bottom: 0.5rem;">Email Us</h3>
+                            <p style="color: var(--muted);">support@pajaygadgets.com<br>info@pajaygadgets.com</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <p class="contact-cta">Edit this page with your exact store address, WhatsApp line, and operating hours.</p>
         </section>
     </main>
 
-    <footer>
-        <div class="footer-links">
-            <a href="contact.html">Contact</a>
+    <footer style="margin-top: 5rem;">
+        <div class="footer-links" style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem;">
+            <a href="about.html">About</a>
             <a href="privacy.html">Privacy Policy</a>
             <a href="terms.html">Terms</a>
-            <a href="returns.html">Returns</a>
         </div>
-        <p>&copy; 2024 Pajay Gadgets. All rights reserved.</p>
+        <p style="text-align: center; color: var(--muted);">&copy; 2024 Pajay Gadgets. All rights reserved.</p>
     </footer>
-    <script src="js/script.js?v=20260312-3" defer></script>
+
+    <script src="js/auth.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('contact-form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Thank you for your message! We will get back to you shortly.');
+                form.reset();
+            });
+        });
+    </script>
 </body>
 </html>
-
-
-
-

@@ -99,13 +99,13 @@
 }
 
 .admin-tab:hover {
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(168, 85, 247, 0.1);
     color: var(--text);
 }
 
 .admin-tab.active {
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--primary);
     font-weight: 600;
 }
 
@@ -320,7 +320,7 @@
 }
 
 .admin-table th {
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(168, 85, 247, 0.1);
     padding: 15px 20px;
     text-align: left;
     color: var(--primary);
@@ -336,15 +336,15 @@
 }
 
 .admin-table tr:hover {
-    background: rgba(56, 189, 248, 0.05);
+    background: rgba(168, 85, 247, 0.05);
 }
 
 .sales-history-row:hover {
-    background: rgba(56, 189, 248, 0.08) !important;
+    background: rgba(168, 85, 247, 0.08) !important;
 }
 
 .sales-history-row.active {
-    background: rgba(56, 189, 248, 0.16) !important;
+    background: rgba(168, 85, 247, 0.16) !important;
 }
 
 .admin-table tr:last-child td {

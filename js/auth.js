@@ -247,15 +247,7 @@ function initCommon() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
 
-    // Handle tab close - immediately clear session
-    window.addEventListener('beforeunload', handleTabClose);
-    
-    // Also handle visibility change (more reliable for mobile)
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            handleTabClose();
-        }
-    });
+    // Removed auto-clear session on tab close to allow persistence across tabs
 }
 
 // Login function
@@ -294,6 +286,9 @@ async function handleLogin(e) {
                 sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
                 sessionStorage.setItem(SESSION_KEY, 'true');
                 sessionStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
+                
+                // Also persist in localStorage so session survives across tab closes/refresh
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
                 localStorage.setItem(SESSION_KEY, 'true');
                 localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
             } catch (err) {
