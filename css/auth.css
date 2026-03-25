@@ -184,34 +184,32 @@
 
 .toggle-password {
     position: absolute;
-    right: 14px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    background: none;
+    background: rgba(167, 139, 250, 0.15);
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 10px;
     font-size: 1.25rem;
-    transition: all 0.3s;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
-    background: rgba(167, 139, 250, 0.15);
     color: #a78bfa;
     z-index: 10;
+    -webkit-tap-highlight-color: rgba(167, 139, 250, 0.3);
 }
 
-.toggle-password:hover {
-    color: #c4b5fd;
-    background: rgba(167, 139, 250, 0.25);
-    transform: translateY(-50%) scale(1.1);
-}
-
+.toggle-password:hover,
 .toggle-password:active {
-    transform: translateY(-50%) scale(0.95);
+    color: #c4b5fd;
+    background: rgba(167, 139, 250, 0.3);
 }
 
 /* SVG fallback for when Font Awesome doesn't load */
@@ -221,24 +219,9 @@
     -webkit-font-smoothing: antialiased;
 }
 
-/* Ensure icon is visible on mobile */
-@media (max-width: 480px) {
-    .toggle-password {
-        width: 40px;
-        height: 40px;
-        right: 8px;
-        padding: 10px;
-        font-size: 1.1rem;
-    }
-    
-    .input-wrapper input {
-        padding-right: 55px;
-    }
-}
-
 /* Ensure input has enough right padding for the toggle button */
 .input-wrapper input {
-    padding-right: 50px;
+    padding-right: 58px;
 }
 
 .form-options {
@@ -376,9 +359,17 @@
     color: var(--muted);
 }
 
-.strength-text.weak { color: #ef4444; }
-.strength-text.medium { color: #f59e0b; }
-.strength-text.strong { color: #10b981; }
+.strength-text.weak {
+    color: #ef4444;
+}
+
+.strength-text.medium {
+    color: #f59e0b;
+}
+
+.strength-text.strong {
+    color: #10b981;
+}
 
 /* ========================================
    Password Requirements
@@ -455,22 +446,99 @@
 /* ========================================
    Responsive Styles
    ======================================== */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    .auth-page {
+        padding-top: 5rem;
+    }
+
+    .auth-container {
+        padding: 0 1rem;
+    }
+
     .auth-card {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 1rem;
+        margin: 1rem;
+        border-radius: 15px;
     }
 
     .auth-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+    }
+
+    .auth-header p {
+        font-size: 0.9rem;
+    }
+
+    .form-group input {
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+        padding: 12px 50px 12px 14px;
+    }
+
+    .toggle-password {
+        width: 48px;
+        height: 48px;
+        right: 6px;
+        font-size: 1.2rem;
+        -webkit-tap-highlight-color: rgba(167, 139, 250, 0.5);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .input-wrapper input {
+        padding-right: 60px;
     }
 
     .social-buttons {
         grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .social-btn {
+        padding: 0.75rem;
+        font-size: 0.9rem;
     }
 
     .form-options {
         flex-direction: column;
         gap: 0.75rem;
         align-items: flex-start;
+    }
+
+    .btn-primary {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 1.25rem 0.75rem;
+        margin: 0.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .auth-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+    .auth-icon i {
+        font-size: 2rem;
+    }
+
+    .toggle-password {
+        width: 44px;
+        height: 44px;
+        right: 4px;
+        font-size: 1.1rem;
+    }
+
+    .input-wrapper input {
+        padding-right: 52px;
     }
 }

@@ -36,9 +36,12 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
-                            <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
-                            <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
+                            <a href="profile.html"><span class="dropdown-icon"><i class="fas fa-user"></i></span> My
+                                Profile</a>
+                            <a href="cart.html"><span class="dropdown-icon"><i class="fas fa-shopping-cart"></i></span>
+                                My Cart</a>
+                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span
+                                    class="dropdown-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a>
                         </div>
                     </div>
                 </div>
@@ -179,13 +182,13 @@
                 window.location.href = 'login.html';
                 return;
             }
-            
+
             const userId = currentUser._id || currentUser.id;
-            
+
             // Fetch cart from API
             fetch(`/api/cart/${userId}`, {
-                credentials: "include"
-            })
+                    credentials: "include"
+                })
                 .then(r => r.json())
                 .then(cartItems => {
                     const itemsContainer = document.getElementById('checkout-items');
@@ -204,7 +207,8 @@
                         </div>
                     `).join('');
 
-                    const total = cartItems.reduce((sum, item) => sum + ((item.unitPrice || item.productId?.price || 0) * item.qty), 0);
+                    const total = cartItems.reduce((sum, item) => sum + ((item.unitPrice || item.productId ?
+                        .price || 0) * item.qty), 0);
                     totalEl.textContent = '₦' + total.toLocaleString();
                     subtotalEl.textContent = '₦' + total.toLocaleString();
                 })
@@ -214,7 +218,7 @@
 
             document.getElementById('checkout-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 const currentUser = JSON.parse(sessionStorage.getItem('dondad_currentUser'));
                 if (!currentUser) {
                     alert('Please login to place an order');
@@ -227,22 +231,22 @@
                     window.location.href = 'login.html';
                     return;
                 }
-                
+
                 // Get cart items
                 const cartResponse = await fetch(`/api/cart/${currentUser._id || currentUser.id}`, {
                     credentials: "include"
                 });
                 const cartItems = await cartResponse.json();
-                
+
                 if (cartItems.length === 0) {
                     alert('Your cart is empty');
                     return;
                 }
-                
+
                 // Prepare order data
                 const paymentMethod = document.getElementById('payment').value;
                 const calculatedSubtotal = cartItems.reduce((sum, item) => {
-                    const unitPrice = item.unitPrice || item.productId?.price || 0;
+                    const unitPrice = item.unitPrice || item.productId ? .price || 0;
                     return sum + (unitPrice * item.qty);
                 }, 0);
                 const orderData = {
@@ -251,9 +255,10 @@
                     userEmail: document.getElementById('email').value,
                     userPhone: document.getElementById('phone').value,
                     items: cartItems.map(item => ({
-                        productId: item.productId?._id || item.productId,
-                        productName: item.productName || item.productId?.name || 'Product',
-                        productImage: item.productId?.image || '',
+                        productId: item.productId ? ._id || item.productId,
+                        productName: item.productName || item.productId ? .name ||
+                            'Product',
+                        productImage: item.productId ? .image || '',
                         qty: item.qty,
                         unitPrice: item.unitPrice,
                         selectedVariant: item.selectedVariant
@@ -266,11 +271,13 @@
                     paymentMethod,
                     subtotal: calculatedSubtotal
                 };
-                
+
                 try {
                     const response = await fetch('/api/orders', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         credentials: "include",
                         body: JSON.stringify(orderData)
                     });
@@ -281,7 +288,9 @@
                         if (paymentMethod === 'stripe') {
                             const stripeResp = await fetch('/api/payment/stripe/checkout', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
                                 body: JSON.stringify({
                                     email: orderData.userEmail,
                                     amount: orderData.subtotal,
@@ -308,7 +317,8 @@
                         localStorage.removeItem('cart');
                         if (typeof updateCartCount === 'function') updateCartCount();
 
-                        alert('Thank you for your order! Order ID: ' + result.order._id + '\nWe will contact you shortly to confirm.');
+                        alert('Thank you for your order! Order ID: ' + result.order._id +
+                            '\nWe will contact you shortly to confirm.');
                         window.location.href = 'index.html';
                     } else {
                         alert(result.error || 'Failed to place order. Please try again.');

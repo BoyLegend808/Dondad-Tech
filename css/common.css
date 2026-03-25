@@ -926,6 +926,27 @@ section h2 {
         font-size: 0.85rem;
     }
 
+    /* Better touch feedback for mobile */
+    .btn, .auth-btn, .cart-btn, .user-btn {
+        -webkit-tap-highlight-color: rgba(168, 85, 247, 0.3);
+        touch-action: manipulation;
+    }
+
+    .user-menu {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(168, 85, 247, 0.2);
+    }
+
+    .user-dropdown {
+        min-width: 160px;
+        right: -10px;
+    }
+
+    .user-dropdown a {
+        padding: 0.8rem 1rem;
+        font-size: 0.9rem;
+    }
+
     section {
         padding: 2.5rem 1rem;
     }

@@ -1,52 +1,58 @@
 // Pajay Gadgets - Main JavaScript
 
 // API Configuration - detects if running on Netlify
-const isNetlify = window.location.hostname.includes('netlify.app');
-const API_BASE = isNetlify ? '/.netlify/functions' : '/api';
+const isNetlify = window.location.hostname.includes("netlify.app");
+const API_BASE = isNetlify ? "/.netlify/functions" : "/api";
 
 // Debug logging
-console.log('Environment:', isNetlify ? 'Netlify' : 'Local/Vercel');
-console.log('API Base URL:', API_BASE);
+console.log("Environment:", isNetlify ? "Netlify" : "Local/Vercel");
+console.log("API Base URL:", API_BASE);
 
 // Test API endpoint on load if on Netlify
 if (isNetlify) {
-  fetch(API_BASE + '/test')
-    .then(r => r.json())
-    .then(data => {
-      console.log('API Test:', data);
+  fetch(API_BASE + "/test")
+    .then((r) => r.json())
+    .then((data) => {
+      console.log("API Test:", data);
       if (!data.environment.NETLIFY_DATABASE_URL) {
-        console.error('NETLIFY_DATABASE_URL is not set in Netlify environment variables!');
+        console.error(
+          "NETLIFY_DATABASE_URL is not set in Netlify environment variables!",
+        );
       }
     })
-    .catch(err => console.error('API Test failed:', err));
+    .catch((err) => console.error("API Test failed:", err));
 }
 
 // Helper function to safely parse JSON response
 async function safeJsonResponse(response) {
-  const contentType = response.headers.get('content-type');
-  
+  const contentType = response.headers.get("content-type");
+
   if (!response.ok) {
     // Try to get error message from response
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType && contentType.includes("application/json")) {
       const errorData = await response.json();
       throw new Error(errorData.error || `HTTP error ${response.status}`);
     }
-    throw new Error(`HTTP error ${response.status}: Server returned ${response.statusText}`);
+    throw new Error(
+      `HTTP error ${response.status}: Server returned ${response.statusText}`,
+    );
   }
-  
-  if (contentType && contentType.includes('application/json')) {
+
+  if (contentType && contentType.includes("application/json")) {
     return response.json();
   }
-  
+
   // If not JSON, get text and throw meaningful error
   const text = await response.text();
-  if (text.startsWith('<') || text.includes('<!DOCTYPE')) {
-    throw new Error('Server returned HTML instead of JSON. The API endpoint may be unreachable.');
+  if (text.startsWith("<") || text.includes("<!DOCTYPE")) {
+    throw new Error(
+      "Server returned HTML instead of JSON. The API endpoint may be unreachable.",
+    );
   }
   try {
     return JSON.parse(text);
   } catch (e) {
-    throw new Error('Failed to parse server response');
+    throw new Error("Failed to parse server response");
   }
 }
 
@@ -65,72 +71,72 @@ let offlineTimer = null;
 
 // Reset session timer on user activity
 function resetSessionTimer() {
-    if (sessionTimer) {
-        clearTimeout(sessionTimer);
-    }
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        sessionTimer = setTimeout(() => {
-            logoutUser('Session expired due to inactivity. Please login again.');
-        }, SESSION_TIMEOUT);
-    }
+  if (sessionTimer) {
+    clearTimeout(sessionTimer);
+  }
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    sessionTimer = setTimeout(() => {
+      logoutUser("Session expired due to inactivity. Please login again.");
+    }, SESSION_TIMEOUT);
+  }
 }
 
 // Handle offline detection
 function handleOffline() {
-    isOffline = true;
-    offlineTimer = setTimeout(() => {
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-            logoutUser('You have been logged out due to being offline for too long.');
-        }
-    }, 60000); // 60 seconds offline = logout
+  isOffline = true;
+  offlineTimer = setTimeout(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      logoutUser("You have been logged out due to being offline for too long.");
+    }
+  }, 60000); // 60 seconds offline = logout
 }
 
 // Handle online detection
 function handleOnline() {
-    isOffline = false;
-    if (offlineTimer) {
-        clearTimeout(offlineTimer);
-        offlineTimer = null;
-    }
-    resetSessionTimer();
+  isOffline = false;
+  if (offlineTimer) {
+    clearTimeout(offlineTimer);
+    offlineTimer = null;
+  }
+  resetSessionTimer();
 }
 
 // Handle tab close - persist session (no longer clear on tab close)
 function handleTabClose() {
-    // Session now persists across tab closes
+  // Session now persists across tab closes
 }
 
 // Setup auto-logout listeners
 function setupAutoLogout() {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        resetSessionTimer();
-        
-        // Listen for user activity to reset timer
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetSessionTimer, { passive: true });
-        });
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    resetSessionTimer();
+
+    // Listen for user activity to reset timer
+    ["mousedown", "keydown", "scroll", "touchstart"].forEach((event) => {
+      document.addEventListener(event, resetSessionTimer, { passive: true });
+    });
+  }
+
+  // Listen for online/offline status
+  window.addEventListener("offline", handleOffline);
+  window.addEventListener("online", handleOnline);
+
+  // Auto-logout across tabs if one tab logs out
+  window.addEventListener("storage", (e) => {
+    if (e.key === CURRENT_USER_KEY && !e.newValue) {
+      logoutUser("Log out detected in another tab.");
     }
-    
-    // Listen for online/offline status
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('online', handleOnline);
-    
-    // Auto-logout across tabs if one tab logs out
-    window.addEventListener('storage', (e) => {
-        if (e.key === CURRENT_USER_KEY && !e.newValue) {
-            logoutUser('Log out detected in another tab.');
-        }
-    });
-    
-    // Handle visibility change (mobile) - but don't logout on tab close anymore
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-            // Just update timestamp, don't logout
-        }
-    });
+  });
+
+  // Handle visibility change (mobile) - but don't logout on tab close anymore
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      // Just update timestamp, don't logout
+    }
+  });
 }
 
 // Product persistence key
@@ -139,32 +145,34 @@ const PRODUCTS_KEY = "dondad_products";
 // Load products from localStorage or use default from products.js
 async function getAllProductsLive() {
   try {
-    const res = await fetch(API_BASE + '/products');
+    const res = await fetch(API_BASE + "/products");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    
+
     // Server returns { products: [...], pagination: {...} } or [...]
     const productsList = data.products || (Array.isArray(data) ? data : []);
-    
+
     if (productsList && productsList.length > 0) {
       // Background cache the products for offline use
       localStorage.setItem(PRODUCTS_KEY, JSON.stringify(productsList));
       return productsList;
     }
   } catch (e) {
-    console.error('Live fetch failed, using fallback:', e);
+    console.error("Live fetch failed, using fallback:", e);
   }
-  
+
   // Fallback chain: 1. localStorage, 2. products.js
   const stored = localStorage.getItem(PRODUCTS_KEY);
   if (stored) return JSON.parse(stored);
-  return (typeof products !== 'undefined' && Array.isArray(products)) ? products : [];
+  return typeof products !== "undefined" && Array.isArray(products)
+    ? products
+    : [];
 }
 
 function getAllProducts() {
   const stored = localStorage.getItem(PRODUCTS_KEY);
   if (stored) return JSON.parse(stored);
-  return typeof products !== 'undefined' ? products : [];
+  return typeof products !== "undefined" ? products : [];
 }
 
 // Get products by category
@@ -386,20 +394,20 @@ function updateCartCount() {
   if (cartCount) {
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      cartCount.textContent = '0';
+      cartCount.textContent = "0";
       return;
     }
     const userId = currentUser._id || currentUser.id;
     if (!userId) {
-      cartCount.textContent = '0';
+      cartCount.textContent = "0";
       return;
     }
     // Fetch cart from server only - cart is server-side now
     fetch(`${API_BASE}/cart/${userId}`, {
-      credentials: "include"
+      credentials: "include",
     })
-      .then(r => safeJsonResponse(r))
-      .then(cart => {
+      .then((r) => safeJsonResponse(r))
+      .then((cart) => {
         let totalItems = 0;
         if (Array.isArray(cart) && cart.length > 0) {
           totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -408,7 +416,7 @@ function updateCartCount() {
       })
       .catch(() => {
         // If server fails, show 0
-        cartCount.textContent = '0';
+        cartCount.textContent = "0";
       });
   }
 }
@@ -581,10 +589,15 @@ function setupHamburger() {
         e.preventDefault();
         e.stopPropagation();
       }
-      const userMenu = e?.currentTarget?.closest(".user-menu") || document.querySelector(".user-menu");
+      const userMenu =
+        e?.currentTarget?.closest(".user-menu") ||
+        document.querySelector(".user-menu");
       if (userMenu) {
         userMenu.classList.toggle("active");
-        console.log("User menu toggled via script.js, active:", userMenu.classList.contains("active"));
+        console.log(
+          "User menu toggled via script.js, active:",
+          userMenu.classList.contains("active"),
+        );
       }
     };
   }
@@ -598,6 +611,7 @@ function setupHamburger() {
     const hasInlineHandler = !!hamburger.getAttribute("onclick");
     if (!hasInlineHandler && !hamburger.dataset.bound) {
       hamburger.addEventListener("click", window.toggleMenu);
+      hamburger.addEventListener("touchend", window.toggleMenu);
       hamburger.dataset.bound = "true";
     }
 
@@ -618,8 +632,11 @@ function setupHamburger() {
     ];
     activeMenus.forEach((menu) => {
       const isUserMenu = menu.classList.contains("user-menu");
-      const btn = isUserMenu ? menu : (menu.closest("nav")?.querySelector(".hamburger") || document.querySelector(".hamburger"));
-      
+      const btn = isUserMenu
+        ? menu
+        : menu.closest("nav")?.querySelector(".hamburger") ||
+          document.querySelector(".hamburger");
+
       if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
         btn.classList.remove("active");
         menu.classList.remove("active");
@@ -635,9 +652,9 @@ function setupUserMenu() {
   // Use existing global toggle
   if (!userMenu.dataset.bound) {
     userMenu.addEventListener("click", (e) => {
-        if (typeof window.toggleUserMenu === 'function') {
-            window.toggleUserMenu(e);
-        }
+      if (typeof window.toggleUserMenu === "function") {
+        window.toggleUserMenu(e);
+      }
     });
     userMenu.dataset.bound = "true";
   }
@@ -649,7 +666,16 @@ function setupPasswordToggles() {
 
   toggleButtons.forEach((btn) => {
     if (btn.dataset.bound) return;
-    btn.addEventListener("click", () => {
+
+    let lastToggle = 0;
+    const toggleHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Debounce to prevent double-fire from touch + click on Android
+      const now = Date.now();
+      if (now - lastToggle < 300) return;
+      lastToggle = now;
+
       const targetId = btn.getAttribute("data-target");
       const input = targetId
         ? document.getElementById(targetId)
@@ -670,6 +696,13 @@ function setupPasswordToggles() {
           icon.classList.add("fa-eye");
         }
       }
+    };
+
+    // Add multiple event listeners for better Android support
+    btn.addEventListener("click", toggleHandler);
+    btn.addEventListener("touchend", toggleHandler);
+    btn.addEventListener("touchstart", (e) => {
+      e.preventDefault(); // Prevent default touch behavior
     });
     btn.dataset.bound = "true";
   });
@@ -694,16 +727,17 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutUser();
   });
 
-   // Homepage featured products
+  // Homepage featured products
   getAllProductsLive()
-    .then(prods => {
+    .then((prods) => {
       if (prods && prods.length > 0) {
         renderProducts(prods.slice(0, 8), "featured-products");
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("Homepage product load failed:", err);
-      if (typeof products !== 'undefined') renderProducts(products.slice(0, 8), "featured-products");
+      if (typeof products !== "undefined")
+        renderProducts(products.slice(0, 8), "featured-products");
     });
 
   // Shop page
@@ -712,15 +746,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get("category") || "all";
     getAllProductsLive()
-      .then(prods => {
+      .then((prods) => {
         const productList = Array.isArray(prods) ? prods : [];
-        const filtered = category === "all" ? productList : productList.filter(p => p && p.category === category);
+        const filtered =
+          category === "all"
+            ? productList
+            : productList.filter((p) => p && p.category === category);
         renderProducts(filtered, "product-grid");
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Shop product load failed:", err);
-        if (typeof products !== 'undefined') {
-          const filtered = category === "all" ? products : products.filter(p => p && p.category === category);
+        if (typeof products !== "undefined") {
+          const filtered =
+            category === "all"
+              ? products
+              : products.filter((p) => p && p.category === category);
           renderProducts(filtered, "product-grid");
         }
       });
@@ -741,7 +781,9 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const errorEl = document.getElementById("error") || document.getElementById("login-error");
+      const errorEl =
+        document.getElementById("error") ||
+        document.getElementById("login-error");
       const btn = document.getElementById("login-btn");
 
       if (errorEl) {
@@ -763,7 +805,7 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ email, password }),
         });
         const data = await safeJsonResponse(response);
-        
+
         if (data.success) {
           // Store user data including the MongoDB _id
           setCurrentUser(data.user);
@@ -787,7 +829,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Login error:", error);
         console.log("Login failed for:", email);
-        const errorMessage = error.message || "Unable to login right now. Please check your connection and try again.";
+        const errorMessage =
+          error.message ||
+          "Unable to login right now. Please check your connection and try again.";
         if (errorEl) {
           errorEl.textContent = errorMessage;
           errorEl.style.display = "block";
@@ -838,7 +882,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } catch (error) {
         console.error("Registration error:", error);
-        alert("Unable to register right now. Please check your connection and try again.");
+        alert(
+          "Unable to register right now. Please check your connection and try again.",
+        );
       }
     });
   }
@@ -846,7 +892,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // View local database (call viewDatabase() in console)
 window.viewDatabase = function () {
   console.log("=== LOCAL DATABASE ===");
-  console.log("Legacy Users:", JSON.parse(localStorage.getItem("dondad_users") || "[]"));
+  console.log(
+    "Legacy Users:",
+    JSON.parse(localStorage.getItem("dondad_users") || "[]"),
+  );
   console.log(
     "Current User:",
     JSON.parse(localStorage.getItem("dondad_currentUser") || "null"),

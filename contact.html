@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - Pajay Gadgets</title>
-    <meta name="description" content="Get in touch with Pajay Gadgets for support, inquiries, or business opportunities.">
+    <meta name="description"
+        content="Get in touch with Pajay Gadgets for support, inquiries, or business opportunities.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/simple-page.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/script.js?v=20260312-3" defer></script>
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -33,9 +36,9 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
-                            <a href="profile.html">👤 My Profile</a>
-                            <a href="cart.html">🛒 My Cart</a>
-                            <a href="#" class="logout-btn">🚪 Logout</a>
+                            <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                            <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </div>
                     </div>
                 </div>
@@ -47,47 +50,65 @@
     </header>
 
     <main>
-        <section class="contact-page-section" style="padding-top: 8rem; max-width: 1200px; margin: 0 auto; padding-inline: 1rem;">
+        <section class="contact-page-section"
+            style="padding-top: 8rem; max-width: 1200px; margin: 0 auto; padding-inline: 1rem;">
             <div class="contact-hero" style="text-align: center; margin-bottom: 4rem;">
                 <h1 style="font-size: 3rem; margin-bottom: 1rem;">Get In Touch</h1>
-                <p style="font-size: 1.25rem; color: var(--muted);">Have a question? We're here to help you with your tech needs.</p>
+                <p style="font-size: 1.25rem; color: var(--muted);">Have a question? We're here to help you with your
+                    tech needs.</p>
             </div>
 
-            <div class="contact-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
+            <div class="contact-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem;">
                 <!-- Contact Form -->
-                <div class="contact-form-card" style="background: var(--card); padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border);">
+                <div class="contact-form-card"
+                    style="background: var(--card); padding: 2.5rem; border-radius: 20px; border: 1px solid var(--border);">
                     <h2 style="margin-bottom: 2rem;">Send us a Message</h2>
                     <form id="contact-form" style="display: grid; gap: 1.5rem;">
                         <div class="form-group">
                             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Name</label>
-                            <input type="text" placeholder="Your Name" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);" required>
+                            <input type="text" placeholder="Your Name"
+                                style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);"
+                                required>
                         </div>
                         <div class="form-group">
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Email</label>
-                            <input type="email" placeholder="Your Email" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);" required>
+                            <label
+                                style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Email</label>
+                            <input type="email" placeholder="Your Email"
+                                style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text);"
+                                required>
                         </div>
                         <div class="form-group">
-                            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Message</label>
-                            <textarea rows="5" placeholder="How can we help?" style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); resize: none;" required></textarea>
+                            <label
+                                style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Message</label>
+                            <textarea rows="5" placeholder="How can we help?"
+                                style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); resize: none;"
+                                required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Send Message</button>
+                        <button type="submit" class="btn btn-primary" style="padding: 1rem; font-weight: 600;">Send
+                            Message</button>
                     </form>
                 </div>
 
                 <!-- Contact Info -->
                 <div class="contact-info-wrap" style="display: flex; flex-direction: column; gap: 2rem;">
-                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
-                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                    <div class="info-card"
+                        style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div
+                            style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
                             <i class="fas fa-location-dot"></i>
                         </div>
                         <div>
                             <h3 style="margin-bottom: 0.5rem;">Visit Us</h3>
-                            <p style="color: var(--muted);">Pajay Gadgets Plaza, Alaba International Market, Ojo, Lagos, Nigeria.</p>
+                            <p style="color: var(--muted);">Pajay Gadgets Plaza, Alaba International Market, Ojo, Lagos,
+                                Nigeria.</p>
                         </div>
                     </div>
 
-                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
-                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                    <div class="info-card"
+                        style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div
+                            style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
                             <i class="fas fa-phone"></i>
                         </div>
                         <div>
@@ -96,8 +117,10 @@
                         </div>
                     </div>
 
-                    <div class="info-card" style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
-                        <div style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
+                    <div class="info-card"
+                        style="background: var(--card); padding: 2rem; border-radius: 20px; border: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.5rem;">
+                        <div
+                            style="width: 50px; height: 50px; background: rgba(168, 85, 247, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem;">
                             <i class="fas fa-envelope"></i>
                         </div>
                         <div>
@@ -120,16 +143,18 @@
     </footer>
 
 </body>
+
 </html>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('contact-form');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                alert('Thank you for your message! We will get back to you shortly.');
-                form.reset();
-            });
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('contact-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Thank you for your message! We will get back to you shortly.');
+            form.reset();
         });
-    </script>
+    });
+</script>
 </body>
+
 </html>

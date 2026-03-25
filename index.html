@@ -15,6 +15,7 @@
     <link rel="canonical" href="index.html">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/products.js"></script>
     <script src="js/script.js?v=20260325-3" defer></script>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -25,7 +26,8 @@
 <body class="homepage">
     <header>
         <nav class="navbar">
-            <a href="index.html" class="logo"><img src="images/logo.png" alt="Pajay Gadgets" style="height: 40px; vertical-align: middle; margin-right: 10px;">Pajay Gadgets</a>
+            <a href="index.html" class="logo"><img src="images/logo.png" alt="Pajay Gadgets"
+                    style="height: 40px; vertical-align: middle; margin-right: 10px;">Pajay Gadgets</a>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
@@ -46,12 +48,14 @@
                             <span class="user-name" id="user-name"></span>
                         </div>
                         <div class="user-dropdown">
-                            <a href="profile.html">👤 My Profile</a>
-                            <a href="cart.html">🛒 My Cart</a>
-                            <a href="#" id="logout-btn" class="logout-btn">🚪 Logout</a>
+                            <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                            <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i>
+                                Logout</a>
                         </div>
                     </div>
-                    <a href="cart.html" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</a>
+                    <a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span
+                            id="cart-count">0</span>)</a>
                 </div>
                 <button class="hamburger" aria-label="Toggle menu">
                     <span></span><span></span><span></span>
@@ -64,7 +68,8 @@
         <!-- Search Toolbar -->
         <section class="home-toolbar panel-card">
             <div class="toolbar-search">
-                <input type="text" id="home-search" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
+                <input type="text" id="home-search" placeholder="Search for phones, laptops, accessories..."
+                    aria-label="Search products">
                 <a href="shop.html" class="btn">Browse</a>
             </div>
             <div class="toolbar-tags">
@@ -206,4 +211,5 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 </body>
+
 </html>
