@@ -137,21 +137,28 @@ function setupAutoLogout() {
 const PRODUCTS_KEY = "dondad_products";
 
 // Load products from localStorage or use default from products.js
-// Load products from API directly to ensure live database data is reflected
 async function getAllProductsLive() {
   try {
     const res = await fetch(API_BASE + '/products');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (data.products) {
-      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(data.products));
-      return data.products;
+    
+    // Server returns { products: [...], pagination: {...} } or [...]
+    const productsList = data.products || (Array.isArray(data) ? data : []);
+    
+    if (productsList && productsList.length > 0) {
+      // Background cache the products for offline use
+      localStorage.setItem(PRODUCTS_KEY, JSON.stringify(productsList));
+      return productsList;
     }
   } catch (e) {
     console.error('Live fetch failed, using fallback:', e);
   }
+  
+  // Fallback chain: 1. localStorage, 2. products.js
   const stored = localStorage.getItem(PRODUCTS_KEY);
   if (stored) return JSON.parse(stored);
-  return typeof products !== 'undefined' ? products : [];
+  return (typeof products !== 'undefined' && Array.isArray(products)) ? products : [];
 }
 
 function getAllProducts() {
@@ -672,22 +679,36 @@ document.addEventListener("DOMContentLoaded", () => {
     logoutUser();
   });
 
-  // Homepage featured products
-  getAllProductsLive().then(prods => {
-    if (prods.length > 0) {
-      renderProducts(prods.slice(0, 8), "featured-products");
-    }
-  });
+   // Homepage featured products
+  getAllProductsLive()
+    .then(prods => {
+      if (prods && prods.length > 0) {
+        renderProducts(prods.slice(0, 8), "featured-products");
+      }
+    })
+    .catch(err => {
+      console.error("Homepage product load failed:", err);
+      if (typeof products !== 'undefined') renderProducts(products.slice(0, 8), "featured-products");
+    });
 
   // Shop page
   const productGrid = document.getElementById("product-grid");
   if (productGrid) {
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get("category") || "all";
-    getAllProductsLive().then(prods => {
-       const filtered = category === "all" ? prods : prods.filter(p => p.category === category);
-       renderProducts(filtered, "product-grid");
-    });
+    getAllProductsLive()
+      .then(prods => {
+        const productList = prods || [];
+        const filtered = category === "all" ? productList : productList.filter(p => p && p.category === category);
+        renderProducts(filtered, "product-grid");
+      })
+      .catch(err => {
+        console.error("Shop product load failed:", err);
+        if (typeof products !== 'undefined') {
+          const filtered = category === "all" ? products : products.filter(p => p && p.category === category);
+          renderProducts(filtered, "product-grid");
+        }
+      });
     setupSearch();
     setupCategoryFilter();
   }
