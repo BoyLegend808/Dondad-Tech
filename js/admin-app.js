@@ -111,6 +111,20 @@ function setupNavigation() {
         item.addEventListener('touchend', handler);
     });
 
+    // Logout link in sidebar (Android touch fix)
+    const logoutLinks = document.querySelectorAll('.nav-item[onclick*="handleLogout"]');
+    logoutLinks.forEach(link => {
+        const logoutHandler = (e) => {
+            e.preventDefault();
+            if (!debounceGuard()) return;
+            handleLogout();
+        };
+        link.addEventListener('click', logoutHandler);
+        link.addEventListener('touchend', logoutHandler);
+        // Remove inline onclick to avoid double execution
+        link.removeAttribute('onclick');
+    });
+
     // View All Products button (dashboard)
     const viewAllBtn = document.querySelector('.btn-view-all');
     if (viewAllBtn) {
