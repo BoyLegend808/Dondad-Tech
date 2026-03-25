@@ -328,8 +328,9 @@ async function loadCustomers() {
 }
 
 // --- Login Handler ---
-
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+const adminLoginForm = document.getElementById('admin-login-form') || document.getElementById('login-form');
+if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
@@ -359,6 +360,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         errorEl.style.display = 'block';
     }
 });
+}
 
 // --- Product Management ---
 
