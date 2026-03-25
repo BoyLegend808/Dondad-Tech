@@ -29,9 +29,11 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html" class="active">Shop</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+                <li id="logout-nav-link" style="display:none;"><a href="#" id="logout-btn" class="logout-btn">Logout</a>
+                </li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
-                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div id="auth-links" class="auth-links">
@@ -48,7 +50,6 @@
                         <div class="user-dropdown">
                             <a href="profile.html">👤 My Profile</a>
                             <a href="cart.html">🛒 My Cart</a>
-                            <a href="#" id="logout-btn" class="logout-btn">🚪 Logout</a>
                         </div>
                     </div>
                     <a href="cart.html" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</a>
@@ -67,10 +68,14 @@
             </div>
             <div class="filters">
                 <button class="filter-btn active" data-category="all" onclick="filterProducts('all', this)">All</button>
-                <button class="filter-btn" data-category="phones" onclick="filterProducts('phones', this)">Phones</button>
-                <button class="filter-btn" data-category="laptops" onclick="filterProducts('laptops', this)">Laptops</button>
-                <button class="filter-btn" data-category="tablets" onclick="filterProducts('tablets', this)">Tablets</button>
-                <button class="filter-btn" data-category="accessories" onclick="filterProducts('accessories', this)">Accessories</button>
+                <button class="filter-btn" data-category="phones"
+                    onclick="filterProducts('phones', this)">Phones</button>
+                <button class="filter-btn" data-category="laptops"
+                    onclick="filterProducts('laptops', this)">Laptops</button>
+                <button class="filter-btn" data-category="tablets"
+                    onclick="filterProducts('tablets', this)">Tablets</button>
+                <button class="filter-btn" data-category="accessories"
+                    onclick="filterProducts('accessories', this)">Accessories</button>
             </div>
         </section>
 
@@ -96,4 +101,5 @@
     </footer>
 
 </body>
+
 </html>

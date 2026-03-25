@@ -3,6 +3,10 @@
  * Modularized, clean, and robust for a better developer/user experience.
  */
 
+// API Configuration
+const isNetlify = window.location.hostname.includes("netlify.app");
+const API_BASE = isNetlify ? "/.netlify/functions" : "/api";
+
 // Global State
 let products = [];
 let orders = [];
@@ -100,6 +104,19 @@ function setupNavigation() {
         item.addEventListener('click', handler);
         item.addEventListener('touchend', handler);
     });
+
+    // View All Products button (dashboard)
+    const viewAllBtn = document.querySelector('.btn-view-all');
+    if (viewAllBtn) {
+        const viewHandler = (e) => {
+            e.preventDefault();
+            if (!debounceGuard()) return;
+            const tab = viewAllBtn.getAttribute('data-tab');
+            switchTab(tab);
+        };
+        viewAllBtn.addEventListener('click', viewHandler);
+        viewAllBtn.addEventListener('touchend', viewHandler);
+    }
 
     // Mobile hamburger menu button
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -257,12 +274,34 @@ async function loadProducts() {
                 </td>
                 <td style="text-align: right;">
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                        <button class="btn btn-secondary" onclick="editProduct('${p._id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger" onclick="deleteProduct('${p._id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-secondary btn-edit" data-id="${p._id}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-delete" data-id="${p._id}"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
             </tr>
         `).join('');
+        
+        // Attach event listeners for edit/delete buttons (Android touch fix)
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                editProduct(btn.dataset.id);
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                editProduct(btn.dataset.id);
+            });
+        });
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                deleteProduct(btn.dataset.id);
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                deleteProduct(btn.dataset.id);
+            });
+        });
     } catch (e) {
         list.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--error);">Failed to load products.</td></tr>';
     }

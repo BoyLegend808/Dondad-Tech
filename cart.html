@@ -24,9 +24,11 @@
                     <li><a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a></li>
                     <li><a href="index.html">Home</a></li>
                     <li><a href="shop.html">Shop</a></li>
+                    <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+                    <li id="logout-nav-link" style="display:none;"><a href="#" id="logout-btn"
+                            class="logout-btn">Logout</a></li>
                     <li><a href="index.html#about">About</a></li>
                     <li><a href="contact.html">Contact</a></li>
-                    <li><a href="admin.html" id="admin-link" style="display:none;">Admin Panel</a></li>
                 </ul>
                 <div class="nav-right">
                     <!-- Show user menu by default (will hide if not logged in via JS) -->
@@ -46,8 +48,6 @@
                                     Profile</a>
                                 <a href="cart.html"><span class="dropdown-icon"><i
                                             class="fas fa-shopping-cart"></i></span> My Cart</a>
-                                <a href="#" onclick="logout(); return false;" class="logout-btn"><span
-                                        class="dropdown-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a>
                             </div>
                         </div>
                     </div>

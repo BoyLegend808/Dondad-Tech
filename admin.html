@@ -68,6 +68,12 @@
                     <a href="shop.html" class="nav-item" target="_blank" style="text-decoration: none;">
                         <i class="fas fa-shopping-bag"></i> Shop Demo
                     </a>
+                    <a href="#" class="nav-item" onclick="switchTab('customers'); return false;" style="text-decoration: none;">
+                        <i class="fas fa-user"></i> Admin Users
+                    </a>
+                    <a href="#" class="nav-item" onclick="handleLogout(); return false;" style="text-decoration: none;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </nav>
 
@@ -137,7 +143,7 @@
                         </table>
                     </div>
                     <div style="text-align: right; margin-top: 1rem;">
-                        <button class="btn btn-secondary btn-sm" onclick="switchTab('products')">View All Products →</button>
+                        <button class="btn btn-secondary btn-sm btn-view-all" data-tab="products">View All Products →</button>
                     </div>
                 </div>
 
@@ -358,6 +364,6 @@
         const isNetlify = window.location.hostname.includes('netlify.app');
         const API_BASE = isNetlify ? '/.netlify/functions' : '/api';
     </script>
-    <script src="js/admin-app.js?v=20260325-3"></script>
+    <script src="js/admin-app.js?v=20260325-4"></script>
 </body>
 </html>

@@ -303,6 +303,12 @@ function updateAuthUI() {
         adminLink.style.display = user.role === "admin" ? "block" : "none";
       }
 
+      // Show/Hide logout link
+      const logoutLink = document.getElementById("logout-nav-link");
+      if (logoutLink) {
+        logoutLink.style.display = "block";
+      }
+
       // Legacy support
       if (userGreeting) {
         userGreeting.style.display = "inline";
@@ -316,6 +322,8 @@ function updateAuthUI() {
       if (userMenu) userMenu.style.display = "none";
       const adminLink = document.getElementById("admin-nav-link");
       if (adminLink) adminLink.style.display = "none";
+      const logoutLink = document.getElementById("logout-nav-link");
+      if (logoutLink) logoutLink.style.display = "none";
       if (userGreeting) {
         userGreeting.style.display = "none";
       }

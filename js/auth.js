@@ -1,5 +1,6 @@
 // Authentication JavaScript
-const API_BASE = '';
+const isNetlify = window.location.hostname.includes("netlify.app");
+const API_BASE = isNetlify ? "/.netlify/functions" : "/api";
 
 // Session configuration - use sessionStorage for better security (clears on tab close)
 // Change to localStorage if you want persistence across browser restarts
@@ -201,7 +202,7 @@ function updateAuthNav() {
 async function logoutUser(message = null) {
     try {
         // Call logout API to clear cookies
-        await fetch(`${API_BASE}/api/logout`, { method: 'POST' });
+        await fetch(`${API_BASE}/logout`, { method: 'POST' });
     } catch (e) {
         // Ignore API errors, clear local storage anyway
     }
@@ -261,7 +262,7 @@ async function handleLogin(e) {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch(`${API_BASE}/api/login`, {
+        const response = await fetch(`${API_BASE}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -344,7 +345,7 @@ async function handleRegister(e) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/register`, {
+        const response = await fetch(`${API_BASE}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, phone })

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 </head>
+
 <body>
     <header>
         <nav class="navbar">
@@ -18,9 +20,11 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+                <li id="logout-nav-link" style="display:none;"><a href="#" id="logout-btn" class="logout-btn">Logout</a>
+                </li>
                 <li><a href="index.html#about">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
-                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
             </ul>
             <div class="nav-right">
                 <div class="auth-links" id="auth-links" style="display:none;">
@@ -37,19 +41,19 @@
                         <div class="user-dropdown">
                             <a href="profile.html"><span class="dropdown-icon">👤</span> My Profile</a>
                             <a href="cart.html"><span class="dropdown-icon">🛒</span> My Cart</a>
-                            <a href="#" onclick="logout(); return false;" class="logout-btn"><span class="dropdown-icon">🚪</span> Logout</a>
                         </div>
                     </div>
                 </div>
-                <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
-                    <span>Cart</span>
-                    <span class="cart-count">(<span id="cart-count">0</span>)</span>
-                </a>
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+            </div>
+            <a href="cart.html" class="cart-link" id="cart-link" style="display:none;">
+                <span>Cart</span>
+                <span class="cart-count">(<span id="cart-count">0</span>)</span>
+            </a>
+            <button class="hamburger" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             </div>
         </nav>
     </header>
@@ -64,7 +68,7 @@
                     <h1>My Profile</h1>
                     <p>View your order history</p>
                 </div>
-                
+
                 <!-- User Info -->
                 <div id="user-info" style="margin-bottom: 2rem;">
                     <h3 style="margin-bottom: 1rem;">Account Information</h3>
@@ -72,7 +76,7 @@
                     <p><strong>Email:</strong> <span id="profile-email"></span></p>
                     <p><strong>Phone:</strong> <span id="profile-phone"></span></p>
                 </div>
-                
+
                 <!-- Orders Section -->
                 <div class="orders-section">
                     <h3>My Orders</h3>
@@ -84,7 +88,8 @@
                     </div>
                     <div id="no-orders" style="display: none; text-align: center; padding: 2rem;">
                         <p>You haven't placed any orders yet.</p>
-                        <a href="shop.html" class="btn" style="display: inline-block; margin-top: 1rem;">Start Shopping</a>
+                        <a href="shop.html" class="btn" style="display: inline-block; margin-top: 1rem;">Start
+                            Shopping</a>
                     </div>
                 </div>
             </div>
@@ -104,22 +109,22 @@
     <script>
         let currentUser = null;
 
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             const userStr = sessionStorage.getItem('dondad_currentUser');
             if (!userStr) {
                 window.location.href = 'login.html';
                 return;
             }
-            
+
             currentUser = JSON.parse(userStr);
-            
+
             // Additional profile info display
             if (document.getElementById('profile-name')) {
                 document.getElementById('profile-name').textContent = currentUser.name;
                 document.getElementById('profile-email').textContent = currentUser.email;
                 document.getElementById('profile-phone').textContent = currentUser.phone || 'Not provided';
             }
-            
+
             loadOrders();
         });
 
@@ -133,14 +138,14 @@
                     credentials: "include"
                 });
                 const orders = await response.json();
-                
+
                 document.getElementById('orders-loading').style.display = 'none';
-                
+
                 if (orders.length === 0) {
                     document.getElementById('no-orders').style.display = 'block';
                     return;
                 }
-                
+
                 document.getElementById('orders-list').style.display = 'block';
                 renderOrders(orders);
             } catch (error) {
@@ -151,7 +156,7 @@
 
         function renderOrders(orders) {
             const container = document.getElementById('orders-list');
-            
+
             container.innerHTML = orders.map(order => `
                 <div class="order-card">
                     <div class="order-header">
@@ -194,11 +199,8 @@
             window.location.href = 'index.html';
         }
     </script>
-    
+
 
 </body>
+
 </html>
-
-
-
-
