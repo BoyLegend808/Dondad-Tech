@@ -13,6 +13,7 @@ let orders = [];
 let customers = [];
 let activeTab = 'dashboard';
 let isEditing = false;
+let autoImportRan = false;
 
 // --- Initialization ---
 
@@ -280,6 +281,16 @@ async function loadProducts() {
         }
 
         empty.style.display = 'none';
+
+        if (!autoImportRan && Array.isArray(window.products) && window.products.length > 0) {
+            autoImportRan = true;
+            const existingNames = new Set(products.map((p) => normalizeName(p.name)));
+            const hasMissing = window.products.some((p) => p && p.name && !existingNames.has(normalizeName(p.name)));
+            if (hasMissing) {
+                await importShopProducts({ silent: true });
+                return;
+            }
+        }
         list.innerHTML = products.map(p => `
             <tr>
                 <td><img src="${p.image || 'images/logo.png'}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;"></td>
@@ -325,6 +336,94 @@ async function loadProducts() {
     } catch (e) {
         list.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--error);">Failed to load products.</td></tr>';
     }
+}
+
+function normalizeName(name) {
+    return String(name || '').trim().toLowerCase();
+}
+
+async function importShopProducts({ silent } = { silent: false }) {
+    const importBtn = document.getElementById('import-shop-products');
+    const shopList = Array.isArray(window.products) ? window.products : [];
+
+    if (shopList.length === 0) {
+        if (!silent) showToast('No shop products found to import.', 'error');
+        return;
+    }
+
+    if (!silent) {
+        if (!confirm('Import all shop products into the admin catalog? This will add missing items only.')) {
+            return;
+        }
+    }
+
+    const existingNames = new Set(products.map((p) => normalizeName(p.name)));
+    const toCreate = shopList.filter((p) => p && p.name && !existingNames.has(normalizeName(p.name)));
+
+    if (toCreate.length === 0) {
+        if (!silent) showToast('All shop products are already in the admin catalog.', 'info');
+        return;
+    }
+
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importing...';
+    }
+
+    let created = 0;
+    let failed = 0;
+
+    for (const p of toCreate) {
+        const price = Number(p.price) || 0;
+        if (!p.name || price <= 0) {
+            failed++;
+            continue;
+        }
+
+        const payload = {
+            name: p.name,
+            category: p.category || 'accessories',
+            price,
+            image: p.image || 'images/logo.png',
+            desc: p.desc || '',
+            fullDesc: p.fullDesc || '',
+            stock: Number.isFinite(Number(p.stock)) ? Number(p.stock) : 10
+        };
+
+        try {
+            const res = await fetch(`${ADMIN_API_BASE}/admin/products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                created++;
+            } else {
+                failed++;
+            }
+        } catch (e) {
+            failed++;
+        }
+    }
+
+    if (importBtn) {
+        importBtn.disabled = false;
+        importBtn.innerHTML = '<i class="fas fa-download"></i> Import Shop Products';
+    }
+
+    if (!silent) {
+        if (created > 0) {
+            showToast(`Imported ${created} product${created === 1 ? '' : 's'} from shop.`, 'success');
+        }
+        if (failed > 0) {
+            showToast(`${failed} product${failed === 1 ? '' : 's'} failed to import.`, 'warning');
+        }
+    }
+
+    loadProducts();
+    refreshAllData();
 }
 
 async function loadRecentOrders() {
