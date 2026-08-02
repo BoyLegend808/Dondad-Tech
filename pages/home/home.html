@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rector Hub - Trusted Gadget Store (Pajay Gadgets)</title>
+    <meta name="description"
+        content="Rector Hub offers quality phones, laptops, tablets, and accessories with reliable support and fast delivery updates.">
+    <meta name="keywords" content="Rector Hub, Pajay Gadgets, phones, laptops, tablets, accessories, electronics shop, Abakaliki">
+    <meta property="og:title" content="Rector Hub - Trusted Gadget Store">
+    <meta property="og:description" content="Shop quality gadgets with transparent pricing and responsive support.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../../images/logo.png">
+    <link rel="canonical" href="home.html">
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="home.css">
+
+    <!-- Shared Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/supabase-client.js" defer></script>
+    <script src="../../js/ui-features.js" defer></script>
+    <script src="../../js/products.js"></script>
+    <script src="../../js/script.js?v=20260325-3" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="home.js" defer></script>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="homepage page-wrapper">
+    <header>
+        <nav class="navbar">
+            <a href="home.html" class="navbar-logo">
+                <img src="../../images/logo.png" alt="Rector Hub Logo" onerror="this.style.display='none'">
+                <span>RECTOR <span class="logo-accent">HUB</span></span>
+            </a>
+            <ul class="nav-links">
+                <li class="nav-close-btn" id="nav-close-x" title="Close Menu">&times;</li>
+                <li><a href="home.html" class="active">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+                <li id="admin-nav-link" class="hidden"><a href="../admin/admin.html">Admin</a></li>
+                <li id="logout-nav-link" class="hidden"><a href="#" id="logout-btn" class="logout-btn">Logout</a></li>
+                <li><a href="../about/about.html">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-links" class="auth-links">
+                    <a href="../login/login.html" class="auth-btn">Login</a>
+                    <a href="../register/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" class="hidden">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="../cart/cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="home-shell">
+        <!-- Search Toolbar -->
+        <section class="home-toolbar">
+            <div class="toolbar-search">
+                <input type="text" id="home-search" placeholder="Search for phones, laptops, accessories..." aria-label="Search products">
+                <a href="../shop/shop.html" class="btn btn-primary">Browse</a>
+            </div>
+            <div class="toolbar-tags">
+                <a href="../shop/shop.html?category=phones">Phones</a>
+                <a href="../shop/shop.html?category=laptops">Laptops</a>
+                <a href="../shop/shop.html?category=tablets">Tablets</a>
+                <a href="../shop/shop.html?category=accessories">Accessories</a>
+            </div>
+        </section>
+
+        <!-- Hero / Spotlight -->
+        <section class="home-spotlight">
+            <div class="spotlight-main">
+                <img src="../../images/Airpods-removebg-preview.png" alt="Headset Background" class="hero-headset-bg">
+                <p class="spotlight-kicker">WELCOME TO AUGUST</p>
+                <h1>YOUR FAVOURITE<br><span>GADGET HUB.</span></h1>
+                <p>May this month bring you progress, happiness, and everything you've been hoping for. Shop top tier devices at Rector Hub.</p>
+                <a href="../shop/shop.html" class="btn btn-primary btn-lg">Shop Now</a>
+            </div>
+            <div class="spotlight-side">
+                <article class="side-tile">
+                    <img src="../../images/Airpods-removebg-preview.png" alt="" class="tile-bg-img">
+                    <h3>Noise Cancelling Headsets</h3>
+                    <p>Comfort-first audio picks this week.</p>
+                </article>
+                <article class="side-tile">
+                    <img src="../../images/iphone_113-removebg-preview.png" alt="" class="tile-bg-img">
+                    <h3>Smart Watches & Devices</h3>
+                    <p>Fitness + notifications in one place.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Trust Section -->
+        <section class="trust-section">
+            <div class="yellow-bar"></div>
+            <h2>Why Shop At Rector Hub</h2>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <img src="../../images/iphone_113-removebg-preview.png" alt="" class="tile-bg-img">
+                    <h3>Original Products</h3>
+                    <p>Sourced from trusted suppliers and quality-checked before delivery.</p>
+                </div>
+                <div class="trust-item">
+                    <img src="../../images/hero img.png" alt="" class="tile-bg-img">
+                    <h3>Secure Payments</h3>
+                    <p>Safe payment options with clear order confirmation and support.</p>
+                </div>
+                <div class="trust-item">
+                    <img src="../../images/Airpods-removebg-preview.png" alt="" class="tile-bg-img">
+                    <h3>Fast Support</h3>
+                    <p>Quick help before and after your purchase when you need it.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flagship Device Comparison Section -->
+        <section class="comparison-section">
+            <div class="section-head">
+                <h2>Flagship Device Comparison</h2>
+                <a href="../shop/shop.html">Shop All</a>
+            </div>
+            <div class="compare-strip">
+                <div class="compare-row">
+                    <span class="compare-item-name"><i class="fas fa-mobile-screen-button" style="color: var(--primary);"></i> iPhone 13 Pro Max</span>
+                    <span class="compare-item-spec">A15 Bionic • Triple Camera • 28h Battery</span>
+                    <span class="compare-item-price">₦450,000</span>
+                    <a href="../product/product.html?id=1" class="btn btn-ghost btn-sm">Inspect</a>
+                </div>
+                <div class="compare-row">
+                    <span class="compare-item-name"><i class="fas fa-laptop" style="color: var(--primary);"></i> MacBook Pro 14"</span>
+                    <span class="compare-item-spec">Apple M1 Pro • 16GB RAM • 512GB SSD</span>
+                    <span class="compare-item-price">₦850,000</span>
+                    <a href="../product/product.html?id=9" class="btn btn-ghost btn-sm">Inspect</a>
+                </div>
+                <div class="compare-row">
+                    <span class="compare-item-name"><i class="fas fa-headphones" style="color: var(--primary);"></i> AirPods Pro</span>
+                    <span class="compare-item-spec">Apple H1 • Noise Cancelling • Spatial Audio</span>
+                    <span class="compare-item-price">₦120,000</span>
+                    <a href="../product/product.html?id=18" class="btn btn-ghost btn-sm">Inspect</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="featured">
+            <div class="section-head">
+                <h2>Featured Products</h2>
+                <a href="../shop/shop.html">View all</a>
+            </div>
+            <div class="product-scroll" id="featured-products"></div>
+        </section>
+
+        <!-- Categories -->
+        <section class="categories">
+            <div class="section-head">
+                <h2>Top Categories</h2>
+                <a href="../shop/shop.html">Open shop</a>
+            </div>
+            <div class="category-grid">
+                <a href="../shop/shop.html?category=phones" class="category-card">
+                    <img src="../../images/iphone_113-removebg-preview.png" alt="" class="cat-bg-img">
+                    <img src="../../images/xs.png" alt="Phones" onerror="this.style.display='none'">
+                    <h3>Phones</h3>
+                </a>
+                <a href="../shop/shop.html?category=laptops" class="category-card">
+                    <img src="../../images/hero img.png" alt="" class="cat-bg-img">
+                    <img src="../../images/hero img.png" alt="Laptops" onerror="this.style.display='none'">
+                    <h3>Laptops</h3>
+                </a>
+                <a href="../shop/shop.html?category=tablets" class="category-card">
+                    <img src="../../images/hero img.png" alt="" class="cat-bg-img">
+                    <img src="../../images/xs.png" alt="Tablets" onerror="this.style.display='none'">
+                    <h3>Tablets</h3>
+                </a>
+                <a href="../shop/shop.html?category=accessories" class="category-card">
+                    <img src="../../images/Airpods-removebg-preview.png" alt="" class="cat-bg-img">
+                    <img src="../../images/xs.png" alt="Accessories" onerror="this.style.display='none'">
+                    <h3>Accessories</h3>
+                </a>
+            </div>
+        </section>
+
+        <!-- Flash Sale Banner -->
+        <section class="flash-sale-banner">
+            <div class="flash-sale-content">
+                <p class="flash-sale-kicker">⚡ LIMITED TIME OFFER</p>
+                <h2>August Mega Deal: Up to 25% Off Flagships</h2>
+                <p style="color: var(--text-secondary);">Save big on select iPhones, MacBooks, and AirPods this week at Rector Hub.</p>
+                <div class="flash-sale-timer">
+                    <div class="timer-box"><div class="timer-num">02</div><div class="timer-label">Days</div></div>
+                    <div class="timer-box"><div class="timer-num">14</div><div class="timer-label">Hours</div></div>
+                    <div class="timer-box"><div class="timer-num">38</div><div class="timer-label">Mins</div></div>
+                </div>
+            </div>
+            <a href="../shop/shop.html" class="btn btn-primary btn-lg" style="white-space: nowrap; z-index: 2;">Claim Offer</a>
+        </section>
+
+        <!-- Customer Testimonials -->
+        <section class="testimonials-section">
+            <div class="section-head">
+                <h2>What Our Customers Say</h2>
+                <a href="../about/about.html">About Us</a>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"Bought my iPhone 13 Pro Max from Rector Hub in Abakaliki. Super fast delivery and 100% authentic device with warranty!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">EJ</div>
+                        <div class="author-info">
+                            <h4>Emmanuel J.</h4>
+                            <p>Verified Buyer, Abakaliki</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"Customer support was top notch when picking out my MacBook Air M2. Honest pricing and no hidden costs."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">CO</div>
+                        <div class="author-info">
+                            <h4>Chidi O.</h4>
+                            <p>Verified Buyer, Enugu</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-stars">★★★★★</div>
+                    <p class="testimonial-text">"The best gadget store in Tycoon Plaza! Authentic AirPods Pro and great post-purchase advice."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">AA</div>
+                        <div class="author-info">
+                            <h4>Amaka A.</h4>
+                            <p>Verified Buyer, Abakaliki</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter Subscription Card -->
+        <section class="newsletter-section">
+            <div class="newsletter-card">
+                <div class="yellow-bar"></div>
+                <h2>Stay Updated on New Gadget Drops</h2>
+                <p style="color: var(--text-secondary); max-width: 460px;">Subscribe to get early notifications for new stock, flash sales, and exclusive tech deals at Rector Hub.</p>
+                <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Thank you for subscribing to Rector Hub updates!'); this.reset();">
+                    <input type="email" placeholder="Enter your email address" required>
+                    <button type="submit" class="btn btn-primary">Subscribe</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Location & Contact Preview -->
+        <section class="contact-section">
+            <div class="section-head">
+                <h2>Visit Our Store</h2>
+                <a href="../contact/contact.html">Contact Page</a>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <i class="fas fa-location-dot fa-2x" style="color: var(--primary); margin-bottom: 0.5rem;"></i>
+                    <h3>Rector Hub Store</h3>
+                    <p>3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki</p>
+                </div>
+                <div class="contact-card">
+                    <i class="fas fa-phone fa-2x" style="color: var(--primary); margin-bottom: 0.5rem;"></i>
+                    <h3>Phone</h3>
+                    <p><a href="tel:+2348012345678">+234 801 234 5678</a></p>
+                </div>
+                <div class="contact-card">
+                    <i class="fas fa-envelope fa-2x" style="color: var(--primary); margin-bottom: 0.5rem;"></i>
+                    <h3>Email</h3>
+                    <p><a href="mailto:support@rectorhub.com">support@rectorhub.com</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-yellow-bar"></div>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Rector Hub (Pajay Gadgets). 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki. All rights reserved.</p>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+</body>
+
+</html>

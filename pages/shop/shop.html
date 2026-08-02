@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Rector Hub (Pajay Gadgets)</title>
+    <meta name="description" content="Browse phones, laptops, tablets, and accessories at Rector Hub.">
+    <meta name="keywords" content="shop gadgets, buy phones, laptops, accessories, Rector Hub">
+    <meta property="og:title" content="Shop - Rector Hub">
+    <meta property="og:description" content="Explore gadgets by category and find your next device.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="../../images/logo.png">
+    <link rel="canonical" href="shop.html">
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="shop.css">
+
+    <!-- Shared Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/supabase-client.js" defer></script>
+    <script src="../../js/ui-features.js" defer></script>
+    <script src="../../js/products.js"></script>
+    <script src="../../js/script.js?v=20260325-3" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="shop.js" defer></script>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="shop-page page-wrapper">
+    <header>
+        <nav class="navbar">
+            <a href="../home/home.html" class="navbar-logo">
+                <img src="../../images/logo.png" alt="Rector Hub Logo" onerror="this.style.display='none'">
+                <span>RECTOR <span class="logo-accent">HUB</span></span>
+            </a>
+            <ul class="nav-links">
+                <li class="nav-close-btn" id="nav-close-x" title="Close Menu">&times;</li>
+                <li><a href="../home/home.html">Home</a></li>
+                <li><a href="shop.html" class="active">Shop</a></li>
+                <li id="admin-nav-link" class="hidden"><a href="../admin/admin.html">Admin</a></li>
+                <li id="logout-nav-link" class="hidden"><a href="#" id="logout-btn" class="logout-btn">Logout</a></li>
+                <li><a href="../about/about.html">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-links" class="auth-links">
+                    <a href="../login/login.html" class="auth-btn">Login</a>
+                    <a href="../register/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" class="hidden">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="../cart/cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="shop-shell">
+        <section class="shop-controls-panel">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+                <div class="search-wrap" style="flex: 2; min-width: 240px;">
+                    <input type="text" id="search" placeholder="Search products...">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <select id="sort-select" class="btn btn-secondary" style="width: 100%; border-radius: var(--radius-md); padding: 0.75rem 1rem;">
+                        <option value="default">⚡ All Products</option>
+                        <option value="price-low">💰 Price: Low to High</option>
+                        <option value="price-high">💎 Price: High to Low</option>
+                        <option value="name">🔤 Name: A to Z</option>
+                        <option value="under-200k">🏷️ Under ₦200,000</option>
+                        <option value="200k-500k">🔥 ₦200,000 - ₦500,000</option>
+                        <option value="above-500k">👑 Premium (Above ₦500k)</option>
+                        <option value="featured">⭐ Featured Only</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-category="all">All</button>
+                <button class="filter-btn" data-category="phones">Phones</button>
+                <button class="filter-btn" data-category="laptops">Laptops</button>
+                <button class="filter-btn" data-category="tablets">Tablets</button>
+                <button class="filter-btn" data-category="accessories">Accessories</button>
+            </div>
+        </section>
+
+        <section class="shop-products-panel">
+            <div class="section-head">
+                <h2>Products</h2>
+                <a href="../home/home.html">Back Home</a>
+            </div>
+            <div class="product-grid" id="product-grid">
+                <p style="text-align:center; padding: 2rem; color: var(--text-muted);">Loading products...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-yellow-bar"></div>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Rector Hub (Pajay Gadgets). 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

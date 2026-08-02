@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Rector Hub</title>
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="admin.css">
+
+    <!-- Shared Logic -->
+    <script src="../../js/admin-app.js" defer></script>
+    <script src="../../js/admin.js" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="admin.js" defer></script>
+</head>
+<body class="admin-page">
+
+    <!-- Login Section -->
+    <section id="login-section" class="login-screen hidden">
+        <div class="card login-card" style="max-width: 400px; margin: 4rem auto;">
+            <div class="yellow-bar"></div>
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">
+                <i class="fas fa-shield-halved"></i> Admin Login
+            </h2>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" placeholder="admin@rectorhub.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+                    Sign In
+                </button>
+            </form>
+            <div id="login-error" class="error-message hidden" style="margin-top: 1rem;"></div>
+            <div style="text-align: center; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <a href="../home/home.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+                    <i class="fas fa-arrow-left"></i> Back to Store
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dashboard Layout -->
+    <div id="dashboard-layout" class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-microchip"></i>
+                <span>RECTOR <span style="font-weight: 300; font-size: 1rem; color: var(--text);">Admin</span></span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i class="fas fa-house"></i> Overview
+                </button>
+                <button class="nav-item" data-tab="products">
+                    <i class="fas fa-box"></i> Products
+                </button>
+                <button class="nav-item" data-tab="orders">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </button>
+                <button class="nav-item" data-tab="customers">
+                    <i class="fas fa-users"></i> Customers
+                </button>
+
+                <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <a href="../home/home.html" class="nav-item" target="_blank">
+                        <i class="fas fa-external-link-alt"></i> View Website
+                    </a>
+                    <a href="../shop/shop.html" class="nav-item" target="_blank">
+                        <i class="fas fa-shopping-bag"></i> Shop Demo
+                    </a>
+                    <a href="#" class="nav-item logout-trigger">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary logout-trigger" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header>
+                <h2>Admin Control Center</h2>
+            </header>
+            <div class="stat-grid" style="margin-top: 1.5rem;">
+                <div class="stat-card">
+                    <span>Total Products</span>
+                    <span class="stat-value" id="stat-products">0</span>
+                </div>
+                <div class="stat-card">
+                    <span>Total Orders</span>
+                    <span class="stat-value" id="stat-orders">0</span>
+                </div>
+                <div class="stat-card">
+                    <span>Low Stock Alert</span>
+                    <span class="stat-value" id="stat-stock">0</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

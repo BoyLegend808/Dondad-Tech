@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Rector Hub</title>
+    <meta name="description" content="View product specifications and pricing at Rector Hub.">
+    <link rel="canonical" href="product.html">
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="product.css">
+
+    <!-- Shared Logic -->
+    <script src="../../js/products.js"></script>
+    <script src="../../js/script.js?v=20260325-3" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="product.js" defer></script>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="product-page page-wrapper">
+    <header>
+        <nav class="navbar">
+            <a href="../home/home.html" class="navbar-logo">
+                <img src="../../images/logo.png" alt="Rector Hub Logo" onerror="this.style.display='none'">
+                <span>RECTOR <span class="logo-accent">HUB</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../home/home.html">Home</a></li>
+                <li><a href="../shop/shop.html" class="active">Shop</a></li>
+                <li id="admin-nav-link" class="hidden"><a href="../admin/admin.html">Admin</a></li>
+                <li id="logout-nav-link" class="hidden"><a href="#" id="logout-btn" class="logout-btn">Logout</a></li>
+                <li><a href="../about/about.html">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-links" class="auth-links">
+                    <a href="../login/login.html" class="auth-btn">Login</a>
+                    <a href="../register/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" class="hidden">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="../cart/cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="product-shell">
+        <div class="breadcrumb">
+            <a href="../home/home.html">Home</a>
+            <span class="sep">/</span>
+            <a href="../shop/shop.html">Shop</a>
+            <span class="sep">/</span>
+            <span id="breadcrumb-product-name">Product Details</span>
+        </div>
+
+        <div id="product-detail-container">
+            <p style="text-align:center; padding: 4rem; color: var(--text-muted);">Loading product details...</p>
+        </div>
+
+        <!-- Technical Specifications Table -->
+        <section class="card" style="margin-top: 2rem;">
+            <div class="yellow-bar"></div>
+            <h2>Device Specifications & Warranty</h2>
+            <table class="specs-table">
+                <tbody>
+                    <tr><td>Condition</td><td>100% Brand New (Original Factory Sealed)</td></tr>
+                    <tr><td>Warranty</td><td>1 Year Local Rector Hub Warranty</td></tr>
+                    <tr><td>Delivery</td><td>Fast Nationwide Delivery / Store Pickup Available</td></tr>
+                    <tr><td>Support</td><td>24/7 After-Sales Support & Setup Guidance</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Related Devices -->
+        <section class="related-section" style="margin-top: 2rem;">
+            <div class="section-head">
+                <h2>You Might Also Like</h2>
+                <a href="../shop/shop.html">Explore All</a>
+            </div>
+            <div class="related-products-grid" id="related-products-grid"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-yellow-bar"></div>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Rector Hub (Pajay Gadgets). 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

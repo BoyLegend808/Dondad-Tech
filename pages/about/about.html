@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Rector Hub</title>
+    <meta name="description" content="Learn more about Rector Hub (Pajay Gadgets), your premium source for high-quality electronics and gadgets in Abakaliki.">
+    <link rel="canonical" href="about.html">
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="about.css">
+
+    <!-- Shared Logic -->
+    <script src="../../js/script.js?v=20260312-3" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="about.js" defer></script>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="about-page page-wrapper">
+    <header>
+        <nav class="navbar">
+            <a href="../home/home.html" class="navbar-logo">
+                <img src="../../images/logo.png" alt="Rector Hub Logo" onerror="this.style.display='none'">
+                <span>RECTOR <span class="logo-accent">HUB</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../home/home.html">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+                <li id="admin-nav-link" class="hidden"><a href="../admin/admin.html">Admin</a></li>
+                <li id="logout-nav-link" class="hidden"><a href="#" id="logout-btn" class="logout-btn">Logout</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="../contact/contact.html">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-links" class="auth-links">
+                    <a href="../login/login.html" class="auth-btn">Login</a>
+                    <a href="../register/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" class="hidden">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="../cart/cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="about-shell">
+        <a href="../home/home.html" class="btn btn-secondary" style="width: fit-content;">Back to Home</a>
+
+        <div class="about-hero">
+            <div class="yellow-bar"></div>
+            <h1>Our Mission</h1>
+            <p>Rector Hub is dedicated to bringing the world's best technology to your doorstep with unmatched quality and service.</p>
+        </div>
+
+        <div class="about-content-grid">
+            <div class="about-card">
+                <h2>Who We Are</h2>
+                <p>Located at Rector Hub, 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki, we started with a simple vision: to bridge the gap between premium global electronics and our community.</p>
+                <p>We specialize in high-end smartphones, powerful laptops, versatile tablets, and essential tech accessories. Every product in our shop is hand-picked and verified for authenticity and performance.</p>
+            </div>
+
+            <div class="about-card">
+                <h2>Why Choose Us?</h2>
+                <ul class="about-list">
+                    <li class="about-list-item">
+                        <span class="about-check">✓</span>
+                        <div>
+                            <strong>Authenticity Guaranteed:</strong> We only sell 100% genuine products from official manufacturers.
+                        </div>
+                    </li>
+                    <li class="about-list-item">
+                        <span class="about-check">✓</span>
+                        <div>
+                            <strong>Local Warranty:</strong> All our devices come with reliable local warranty support.
+                        </div>
+                    </li>
+                    <li class="about-list-item">
+                        <span class="about-check">✓</span>
+                        <div>
+                            <strong>Expert Support:</strong> Our team consists of tech enthusiasts who can help you find the perfect device for your needs.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Live Store Statistics -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; text-align: center; margin-top: 1rem;">
+                <div class="card" style="padding: 1.5rem;">
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">2,500+</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Happy Customers</div>
+                </div>
+                <div class="card" style="padding: 1.5rem;">
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">100%</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Genuine Devices</div>
+                </div>
+                <div class="card" style="padding: 1.5rem;">
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">24/7</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Direct Support</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-yellow-bar"></div>
+        <div class="footer-links">
+            <a href="../contact/contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Rector Hub (Pajay Gadgets). 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

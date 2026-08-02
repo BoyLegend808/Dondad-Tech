@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Rector Hub</title>
+    <meta name="description" content="Get in touch with Rector Hub (Pajay Gadgets) for support, inquiries, or device consultation.">
+    <link rel="canonical" href="contact.html">
+    
+    <!-- Shared Design System & Icons -->
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="contact.css">
+
+    <!-- Shared Logic -->
+    <script src="../../js/script.js?v=20260312-3" defer></script>
+    
+    <!-- Page Specific JS -->
+    <script src="contact.js" defer></script>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+
+<body class="contact-page page-wrapper">
+    <header>
+        <nav class="navbar">
+            <a href="../home/home.html" class="navbar-logo">
+                <img src="../../images/logo.png" alt="Rector Hub Logo" onerror="this.style.display='none'">
+                <span>RECTOR <span class="logo-accent">HUB</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../home/home.html">Home</a></li>
+                <li><a href="../shop/shop.html">Shop</a></li>
+                <li id="admin-nav-link" class="hidden"><a href="../admin/admin.html">Admin</a></li>
+                <li id="logout-nav-link" class="hidden"><a href="#" id="logout-btn" class="logout-btn">Logout</a></li>
+                <li><a href="../about/about.html">About</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
+            </ul>
+            <div class="nav-right">
+                <div id="auth-links" class="auth-links">
+                    <a href="../login/login.html" class="auth-btn">Login</a>
+                    <a href="../register/register.html" class="auth-btn register">Register</a>
+                </div>
+                <div id="user-menu" class="hidden">
+                    <div class="user-menu">
+                        <div class="user-avatar" id="user-avatar"></div>
+                        <div class="user-info">
+                            <span class="user-greeting">Welcome back</span>
+                            <span class="user-name" id="user-name"></span>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="../profile/profile.html"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="../cart/cart.html"><i class="fas fa-shopping-cart"></i> My Cart</a>
+                        </div>
+                    </div>
+                    <a href="../cart/cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Cart (<span id="cart-count">0</span>)</a>
+                </div>
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="contact-shell">
+        <div class="contact-hero">
+            <div class="yellow-bar"></div>
+            <h1>Get In Touch</h1>
+            <p>Have a question? We're here to help you with your tech needs.</p>
+        </div>
+
+        <div class="contact-grid">
+            <!-- Contact Form -->
+            <div class="contact-form-card">
+                <h2 style="margin-bottom: 1.5rem;">Send us a Message</h2>
+                <form id="contact-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <div class="form-group">
+                        <label for="contact-name">Name</label>
+                        <input type="text" id="contact-name" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" placeholder="Your Email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">Message</label>
+                        <textarea id="contact-message" rows="5" placeholder="How can we help?" required style="resize: none;"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
+                </form>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="contact-info-wrap">
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <h3>Visit Us</h3>
+                        <p>Rector Hub, 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki.</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div>
+                        <h3>Call Us</h3>
+                        <p>+234 801 234 5678<br>Available Mon-Sat, 9AM-6PM</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h3>Email Us</h3>
+                        <p>support@rectorhub.com<br>Fast response guaranteed</p>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <h3>Opening Hours</h3>
+                        <p>Monday – Saturday: 9:00 AM – 6:00 PM<br><span style="color: var(--primary); font-weight: 700;">Sunday: Closed</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Maps Store Location Embed -->
+        <section class="card" style="margin-top: 2rem; overflow: hidden; padding: 0;">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15858.05370355427!2d8.0935!3d6.3249!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x105b4528148b111%3A0x280e22709e!2sAbakaliki!5e0!3m2!1sen!2sng!4v1700000000000" width="100%" height="320" style="border:0; filter: grayscale(80%) invert(90%);" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-yellow-bar"></div>
+        <div class="footer-links">
+            <a href="contact.html">Contact</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms</a>
+            <a href="../returns/returns.html">Returns</a>
+        </div>
+        <p>&copy; 2024 Rector Hub (Pajay Gadgets). 3rd Floor Tycoon Plaza, Spera N Deo, Abakaliki. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

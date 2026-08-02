@@ -469,17 +469,40 @@ function renderProducts(products, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  const currentPath = window.location.pathname;
+  const isSubfolder = currentPath.includes('/pages/');
+  const pathPrefix = isSubfolder ? '../../' : '';
+
   container.innerHTML = products
     .map(
-      (product) => `
-        <div class="product-card" onclick="window.location.href='product.html?id=${product.id}'">
-            <img src="${product.image}" alt="${product.name}" onerror="this.src='images/logo.png'">
-            <h3>${product.name}</h3>
-            <p>${product.desc}</p>
-            <p class="price">₦${product.price.toLocaleString()}</p>
-            <button class="add-btn" onclick="event.stopPropagation(); addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+      (product) => {
+        let imgSrc = product.image || 'images/logo.png';
+        if (isSubfolder && !imgSrc.startsWith('http') && !imgSrc.startsWith('/')) {
+          imgSrc = pathPrefix + imgSrc;
+        }
+        const isWishlisted = (JSON.parse(localStorage.getItem('rector_wishlist') || '[]')).includes(product.id);
+        return `
+        <div class="product-card" onclick="window.location.href='${productUrl}'">
+            <button class="wishlist-toggle-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist(${product.id}, this);" title="Save to Wishlist">
+              <i class="fas fa-heart"></i>
+            </button>
+            <img class="product-img" src="${imgSrc}" alt="${product.name}" onerror="this.src='${pathPrefix}images/logo.png'">
+            <div class="product-info">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <span class="badge badge-muted" style="font-size: 0.65rem;">${(product.category || 'gadget').toUpperCase()}</span>
+                <span style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">★ 4.9</span>
+              </div>
+              <h3 class="product-name">${product.name}</h3>
+              <p class="product-desc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">${product.desc || ''}</p>
+              <p class="product-price">₦${Number(product.price).toLocaleString()}</p>
+              <div style="display: flex; gap: 0.4rem; margin-top: 0.75rem;">
+                <button class="add-to-cart-btn" style="flex: 3; margin-top: 0;" onclick="event.stopPropagation(); addToCart(${product.id})"><i class="fas fa-cart-plus"></i> Add</button>
+                <button class="btn btn-secondary btn-sm" style="flex: 1; padding: 0.5rem;" onclick="event.stopPropagation(); openQuickView(${product.id})" title="Quick View"><i class="fas fa-eye"></i></button>
+              </div>
+            </div>
         </div>
-    `,
+    `;
+      }
     )
     .join("");
 }
@@ -573,6 +596,7 @@ function setupHamburger() {
     btn.dataset.lastToggleAt = String(now);
     btn.classList.toggle("active");
     menu.classList.toggle("active");
+    menu.classList.toggle("mobile-open");
   };
 
   // Toggle menu function - make it global so onclick works
@@ -623,10 +647,11 @@ function setupHamburger() {
       hamburger.dataset.bound = "true";
     }
 
-    menu.querySelectorAll("a, button").forEach((link) => {
+    menu.querySelectorAll(".nav-close-btn, #nav-close-x, a, button").forEach((link) => {
       link.addEventListener("click", () => {
         hamburger.classList.remove("active");
         menu.classList.remove("active");
+        menu.classList.remove("mobile-open");
       });
     });
   });
