@@ -95,6 +95,11 @@ if (process.env.NODE_ENV === "production" || process.env.RENDER) {
   });
 }
 
+// Serve static files from root project directory
+const projectRoot = path.join(__dirname, "..");
+app.use(express.static(projectRoot));
+
+
 const PORT = process.env.PORT || 3000;
 let dbReady = false;
 
@@ -1935,9 +1940,25 @@ app.use('/api/admin/users', require('../routes/admin/users'));
 app.use('/api/admin/orders', require('../routes/admin/orders'));
 app.use('/api/admin/dashboard', require('../routes/admin/dashboard'));
 console.log('[ROUTES] ✅ All admin routes mounted');
-app.use(express.static(path.join(__dirname, "../pages")));
-app.use(express.static(path.join(__dirname, "..")));
-app.use(express.static(path.join(__dirname, "../images")));
+app.use(express.static(path.join(process.cwd(), "pages")));
+app.use(express.static(process.cwd()));
+app.use(express.static(path.join(process.cwd(), "images")));
+
+// Serve index.html for root path '/'
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "index.html"));
+});
+
+// Fallback to serve static HTML pages (e.g. /shop -> /shop.html)
+app.get("/:page", (req, res, next) => {
+  if (req.params.page.includes(".")) return next();
+  const pagePath = path.join(process.cwd(), `${req.params.page}.html`);
+  res.sendFile(pagePath, (err) => {
+    if (err) next();
+  });
+});
+
+
 // Debug: log all requests to see what's happening (after body parsing)
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
@@ -3758,6 +3779,23 @@ app.get(
 );
 
 
+// Serve index.html for any non-API GET requests that fall through static handler
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) {
+    return next();
+  }
+  const requestedPath = path.join(projectRoot, req.path);
+  if (req.path.endsWith(".html") || req.path === "/") {
+    const filePath = req.path === "/" ? path.join(projectRoot, "index.html") : requestedPath;
+    return res.sendFile(filePath, (err) => {
+      if (err) {
+        res.sendFile(path.join(projectRoot, "index.html"));
+      }
+    });
+  }
+  res.sendFile(path.join(projectRoot, "index.html"));
+});
+
 // Global error handler - returns generic messages to users, logs details server-side
 app.use((err, req, res, next) => {
   // Log the full error details server-side only
@@ -3781,9 +3819,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// Start Server conditionally (only when executed directly, not when required by serverless function)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
+
