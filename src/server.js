@@ -95,9 +95,13 @@ if (process.env.NODE_ENV === "production" || process.env.RENDER) {
   });
 }
 
-// Serve static files from root project directory
+// Serve static files from root project directory (non-Vercel only)
+// On Vercel, static files are served by the CDN via builds config in vercel.json
 const projectRoot = path.join(__dirname, "..");
-app.use(express.static(projectRoot));
+const isVercel = Boolean(process.env.VERCEL);
+if (!isVercel) {
+  app.use(express.static(projectRoot));
+}
 
 
 const PORT = process.env.PORT || 3000;
@@ -3779,26 +3783,29 @@ app.get(
 );
 
 
-// Serve home.html for non-API route fallbacks (only for page navigation, not static assets)
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/api/")) {
-    return next();
-  }
-  const requestedPath = path.join(projectRoot, req.path);
-  if (req.path.endsWith(".html") || req.path === "/") {
-    const filePath = req.path === "/" ? path.join(projectRoot, "pages", "home", "home.html") : requestedPath;
-    return res.sendFile(filePath, (err) => {
-      if (err) {
-        res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
-      }
-    });
-  }
-  // If request has a file extension (e.g. .css, .js, .png), return 404 instead of home.html
-  if (path.extname(req.path)) {
-    return res.status(404).send("File not found");
-  }
-  res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
-});
+// Serve home.html for non-API route fallbacks (non-Vercel only)
+// On Vercel, static files and HTML pages are served directly by the CDN
+if (!isVercel) {
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) {
+      return next();
+    }
+    const requestedPath = path.join(projectRoot, req.path);
+    if (req.path.endsWith(".html") || req.path === "/") {
+      const filePath = req.path === "/" ? path.join(projectRoot, "pages", "home", "home.html") : requestedPath;
+      return res.sendFile(filePath, (err) => {
+        if (err) {
+          res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
+        }
+      });
+    }
+    // If request has a file extension (e.g. .css, .js, .png), return 404 instead of home.html
+    if (path.extname(req.path)) {
+      return res.status(404).send("File not found");
+    }
+    res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
+  });
+}
 
 // Global error handler - returns generic messages to users, logs details server-side
 app.use((err, req, res, next) => {
