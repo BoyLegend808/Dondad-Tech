@@ -3779,25 +3779,25 @@ app.get(
 );
 
 
-// Serve index.html for non-API route fallbacks (only for page navigation, not static assets)
+// Serve home.html for non-API route fallbacks (only for page navigation, not static assets)
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api/")) {
     return next();
   }
   const requestedPath = path.join(projectRoot, req.path);
   if (req.path.endsWith(".html") || req.path === "/") {
-    const filePath = req.path === "/" ? path.join(projectRoot, "index.html") : requestedPath;
+    const filePath = req.path === "/" ? path.join(projectRoot, "pages", "home", "home.html") : requestedPath;
     return res.sendFile(filePath, (err) => {
       if (err) {
-        res.sendFile(path.join(projectRoot, "index.html"));
+        res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
       }
     });
   }
-  // If request has a file extension (e.g. .css, .js, .png), return 404 instead of index.html
+  // If request has a file extension (e.g. .css, .js, .png), return 404 instead of home.html
   if (path.extname(req.path)) {
     return res.status(404).send("File not found");
   }
-  res.sendFile(path.join(projectRoot, "index.html"));
+  res.sendFile(path.join(projectRoot, "pages", "home", "home.html"));
 });
 
 // Global error handler - returns generic messages to users, logs details server-side

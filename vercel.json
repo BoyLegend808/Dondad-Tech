@@ -7,7 +7,7 @@
     },
     {
       "source": "/((?!api/|.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/pages/home/home.html"
     }
   ]
 }
