@@ -3779,7 +3779,7 @@ app.get(
 );
 
 
-// Serve index.html for any non-API GET requests that fall through static handler
+// Serve index.html for non-API route fallbacks (only for page navigation, not static assets)
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api/")) {
     return next();
@@ -3792,6 +3792,10 @@ app.get("*", (req, res, next) => {
         res.sendFile(path.join(projectRoot, "index.html"));
       }
     });
+  }
+  // If request has a file extension (e.g. .css, .js, .png), return 404 instead of index.html
+  if (path.extname(req.path)) {
+    return res.status(404).send("File not found");
   }
   res.sendFile(path.join(projectRoot, "index.html"));
 });
