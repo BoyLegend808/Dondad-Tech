@@ -481,6 +481,9 @@ function renderProducts(products, containerId) {
           imgSrc = pathPrefix + imgSrc;
         }
         const isWishlisted = (JSON.parse(localStorage.getItem('rector_wishlist') || '[]')).includes(product.id);
+        const productUrl = isSubfolder
+          ? `../product/product.html?id=${product.id || product._id}`
+          : `pages/product/product.html?id=${product.id || product._id}`;
         return `
         <div class="product-card" onclick="window.location.href='${productUrl}'">
             <button class="wishlist-toggle-btn ${isWishlisted ? 'active' : ''}" onclick="event.stopPropagation(); toggleWishlist(${product.id}, this);" title="Save to Wishlist">
