@@ -6,14 +6,14 @@
 (function () {
   'use strict';
 
-  // Read environment variables or fallback placeholders
-  const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://your-project.supabase.co';
-  const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || 'your-anon-key';
+  // Supabase credentials
+  const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://ftswypapxmvqemxwwclj.supabase.co';
+  const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || 'sb_publishable_Ds8__ewXBIC3MuFppnfceQ_rFZWumfN';
 
   let supabaseClient = null;
 
-  // Initialize client if library exists and credentials configured
-  if (typeof supabase !== 'undefined' && window.ENV_SUPABASE_URL && window.ENV_SUPABASE_ANON_KEY) {
+  // Initialize client if library exists
+  if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_ANON_KEY) {
     try {
       supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log('⚡ Supabase client initialized successfully.');
