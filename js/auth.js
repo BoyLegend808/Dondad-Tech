@@ -316,9 +316,9 @@ async function handleLogin(e) {
             }
 
             if (user.role === 'admin') {
-                window.location.href = 'admin.html';
+                window.location.href = '/pages/admin/admin.html';
             } else {
-                window.location.href = 'index.html';
+                window.location.href = '/pages/home/home.html';
             }
             return;
         }
