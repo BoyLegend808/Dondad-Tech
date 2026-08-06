@@ -320,8 +320,7 @@ header {
 }
 
 .navbar-logo img {
-  height: 36px;
-  width: auto;
+  display: none;
 }
 
 .nav-close-btn {
