@@ -262,26 +262,37 @@ async function handleLogin(e) {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await fetch(`${API_BASE}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ email, password })
-        });
+        let user = null;
+        if (window.RectorDB && typeof window.RectorDB.loginUser === 'function') {
+            try {
+                user = await window.RectorDB.loginUser(email, password);
+            } catch (supaErr) {
+                console.warn('Supabase login failed, checking legacy API:', supaErr);
+            }
+        }
 
-        const data = await response.json();
+        if (!user) {
+            const response = await fetch(`${API_BASE}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email, password })
+            });
 
-        if (response.ok) {
-            // Normalize user payload from server (support { success, user } or raw user)
-            const user = (data && data.user) ? data.user : (data && typeof data === 'object' ? data : null);
-            if (!user) {
+            const data = await response.json();
+
+            if (response.ok) {
+                user = (data && data.user) ? data.user : (data && typeof data === 'object' ? data : null);
+            } else {
                 if (errorEl) {
-                    errorEl.textContent = 'Login succeeded but user data is missing';
+                    errorEl.textContent = (data && data.error) ? data.error : 'Invalid credentials';
                     errorEl.classList.add('visible');
                 }
                 return;
             }
+        }
 
+        if (user) {
             // Persist session in sessionStorage and localStorage (so validateSession works)
             try {
                 sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
@@ -310,11 +321,6 @@ async function handleLogin(e) {
                 window.location.href = 'index.html';
             }
             return;
-        } else {
-            if (errorEl) {
-                errorEl.textContent = (data && data.error) ? data.error : 'Invalid credentials';
-                errorEl.classList.add('visible');
-            }
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -345,26 +351,40 @@ async function handleRegister(e) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password, phone })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            window.location.href = 'login.html';
-        } else {
-            errorEl.textContent = data.error || 'Registration failed. Please try again.';
-            errorEl.classList.add('visible');
+        let registered = false;
+        if (window.RectorDB && typeof window.RectorDB.registerUser === 'function') {
+            try {
+                await window.RectorDB.registerUser({ name, email, password, phone });
+                registered = true;
+            } catch (supaErr) {
+                console.warn('Supabase register failed, falling back to legacy api:', supaErr);
+            }
         }
+
+        if (!registered) {
+            const response = await fetch(`${API_BASE}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, phone })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                errorEl.textContent = data.error || 'Registration failed. Please try again.';
+                errorEl.classList.add('visible');
+                return;
+            }
+        }
+
+        window.location.href = 'login.html';
     } catch (error) {
         console.error('Registration error:', error);
         errorEl.textContent = 'Connection error. Please try again.';
         errorEl.classList.add('visible');
     }
 }
+
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
