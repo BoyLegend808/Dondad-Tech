@@ -339,7 +339,8 @@ function addToCart(productId, qty = 1) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
     alert("Please login to add items to cart. Redirecting to login page...");
-    window.location.href = "login.html";
+    const isSubfolder = window.location.pathname.includes('/pages/');
+    window.location.href = isSubfolder ? "../login/login.html" : "pages/login/login.html";
     return;
   }
 
