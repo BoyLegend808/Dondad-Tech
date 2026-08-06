@@ -19,7 +19,7 @@
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="shop.html">Shop</a></li>
-                <li id="admin-nav-link" style="display:none;"><a href="admin.html">Admin</a></li>
+                <li id="admin-nav-link" style="display:none;"><a href="/pages/admin/admin.html">Admin</a></li>
                 <li id="logout-nav-link" style="display:none;"><a href="#" id="logout-btn" class="logout-btn">Logout</a>
                 </li>
                 <li><a href="index.html#about">About</a></li>
@@ -106,9 +106,10 @@
     <script>
         // Check login state
         document.addEventListener('DOMContentLoaded', function () {
-            const userStr = sessionStorage.getItem('dondad_currentUser');
+            const userStr = sessionStorage.getItem('dondad_currentUser') || localStorage.getItem('dondad_currentUser');
             if (!userStr) {
-                window.location.href = 'login.html';
+                const isSubfolder = window.location.pathname.includes('/pages/');
+                window.location.href = isSubfolder ? '../login/login.html' : 'pages/login/login.html';
                 return;
             }
         });

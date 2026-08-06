@@ -255,7 +255,8 @@ function logoutUser(message = null) {
   if (message) {
     alert(message);
   }
-  window.location.href = "index.html";
+  const isSubfolder = window.location.pathname.includes('/pages/');
+  window.location.href = isSubfolder ? "../home/home.html" : "pages/home/home.html";
 }
 
 // Alias for logout
@@ -849,10 +850,10 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log("Login successful for:", data.user.email);
           if (data.user.role === "admin") {
             alert("Admin login successful! Redirecting to admin panel...");
-            window.location.href = "admin.html";
+            window.location.href = "/pages/admin/admin.html";
           } else {
             alert("Login successful! Welcome back, " + data.user.name);
-            window.location.href = "index.html";
+            window.location.href = "/pages/home/home.html";
           }
         } else {
           console.log("Login failed for:", email);
