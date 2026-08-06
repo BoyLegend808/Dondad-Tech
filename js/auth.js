@@ -207,7 +207,7 @@ async function logoutUser(message = null) {
         // Ignore API errors, clear local storage anyway
     }
     clearSession();
-    window.location.href = 'index.html';
+    window.location.href = '/pages/home/home.html';
 }
 
 // Update cart count
