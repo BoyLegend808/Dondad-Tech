@@ -22,7 +22,21 @@
         }
       });
     });
+
+    // Make utility forms and variant builders globally accessible from admin.html inline triggers
+    window.addVariant = function(type, data) {
+      if (typeof window.addVariant === 'function' && window.addVariant !== addVariant) {
+        window.addVariant(type, data);
+      } else if (document.getElementById('storage-container')) {
+        // Fallback or binding reference to helper inside admin-app.js
+        const appModuleAdd = window.addVariant;
+        if (appModuleAdd && appModuleAdd.name !== 'addVariant') {
+          appModuleAdd(type, data);
+        }
+      }
+    };
   }
 
   ready(initAdminEvents);
 })();
+

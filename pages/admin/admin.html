@@ -89,28 +89,274 @@
             <div class="sidebar-footer">
                 <button class="btn btn-secondary logout-trigger" style="width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
-        </aside>
-
-        <!-- Main Content Area -->
+        </aside>        <!-- Main Content Area -->
         <main class="main-content">
-            <header>
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h2>Admin Control Center</h2>
+                <span id="last-updated" style="font-size: 0.85rem; color: var(--text-muted);">Last update: N/A</span>
             </header>
-            <div class="stat-grid" style="margin-top: 1.5rem;">
-                <div class="stat-card">
-                    <span>Total Products</span>
-                    <span class="stat-value" id="stat-products">0</span>
+
+            <!-- TAB: Dashboard -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <span>Total Products</span>
+                        <span class="stat-value" id="stat-products">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span>Total Orders</span>
+                        <span class="stat-value" id="stat-orders">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span>Low Stock Alert</span>
+                        <span class="stat-value" id="stat-stock">0</span>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <span>Total Orders</span>
-                    <span class="stat-value" id="stat-orders">0</span>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: var(--space-xl); margin-top: 2rem;">
+                    <!-- Recent Orders Panel -->
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3>Recent Orders</h3>
+                            <button class="btn btn-secondary btn-sm btn-view-all" data-tab="orders">View All</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="text-align: left; border-bottom: 1.5px solid var(--border);">
+                                        <th style="padding: 0.75rem;">ID</th>
+                                        <th style="padding: 0.75rem;">Customer</th>
+                                        <th style="padding: 0.75rem;">Date</th>
+                                        <th style="padding: 0.75rem;">Total</th>
+                                        <th style="padding: 0.75rem;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-orders-list">
+                                    <tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading recent orders...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock/Recent Products Panel -->
+                    <div class="card">
+                        <h3>Catalog Highlights</h3>
+                        <div class="table-wrap" style="margin-top: 1.5rem;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="text-align: left; border-bottom: 1.5px solid var(--border);">
+                                        <th style="padding: 0.75rem;">Product</th>
+                                        <th style="padding: 0.75rem;">Price</th>
+                                        <th style="padding: 0.75rem;">Stock</th>
+                                        <th style="padding: 0.75rem;">Category</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-products-list">
+                                    <tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading highlights...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <span>Low Stock Alert</span>
-                    <span class="stat-value" id="stat-stock">0</span>
+            </div>
+
+            <!-- TAB: Products -->
+            <div id="tab-products" class="tab-content" style="display: none;">
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div style="display: flex; gap: 0.75rem; flex: 1; max-width: 500px;">
+                            <input type="text" id="searchInput" placeholder="Search catalog..." style="padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg); color: var(--text); flex: 1;">
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button class="btn btn-secondary" id="import-shop-products" onclick="importShopProducts()"><i class="fas fa-download"></i> Sync Static Catalog</button>
+                            <button class="btn btn-primary" onclick="showProductForm()"><i class="fas fa-plus"></i> New Product</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrap">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 1.5px solid var(--border);">
+                                    <th style="padding: 1rem 0.75rem;">Image</th>
+                                    <th style="padding: 1rem 0.75rem;">Details</th>
+                                    <th style="padding: 1rem 0.75rem;">Category</th>
+                                    <th style="padding: 1rem 0.75rem;">Price</th>
+                                    <th style="padding: 1rem 0.75rem;">Stock</th>
+                                    <th style="padding: 1rem 0.75rem; text-align: right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-list">
+                                <tr><td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">Loading products...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="products-empty" class="hidden" style="text-align: center; padding: 4rem 2rem;">
+                        <i class="fas fa-box-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1.5rem;"></i>
+                        <h4>Your Catalog is Empty</h4>
+                        <p class="text-muted" style="margin-bottom: 1.5rem;">There are no products in your database yet.</p>
+                        <button class="btn btn-primary" onclick="showProductForm()">Add First Product</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Orders -->
+            <div id="tab-orders" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h3>All Orders</h3>
+                    <div class="table-wrap" style="margin-top: 1.5rem;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 1.5px solid var(--border);">
+                                    <th style="padding: 1rem 0.75rem;">Order ID</th>
+                                    <th style="padding: 1rem 0.75rem;">Customer</th>
+                                    <th style="padding: 1rem 0.75rem;">Date</th>
+                                    <th style="padding: 1rem 0.75rem;">Total</th>
+                                    <th style="padding: 1rem 0.75rem;">Status</th>
+                                    <th style="padding: 1rem 0.75rem; text-align: right;">View</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-orders-list">
+                                <tr><td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">Loading history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Customers -->
+            <div id="tab-customers" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h3>Registered Accounts</h3>
+                    <div class="table-wrap" style="margin-top: 1.5rem;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="text-align: left; border-bottom: 1.5px solid var(--border);">
+                                    <th style="padding: 1rem 0.75rem;">Customer Name</th>
+                                    <th style="padding: 1rem 0.75rem;">Email Address</th>
+                                    <th style="padding: 1rem 0.75rem;">Date Joined</th>
+                                    <th style="padding: 1rem 0.75rem;">Orders placed</th>
+                                    <th style="padding: 1rem 0.75rem;">Total spent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-list-tbody">
+                                <tr><td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">Loading customer records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 10000; display: flex; flex-direction: column; gap: 0.75rem;"></div>
+
+    <!-- Product Form Modal Dialog -->
+    <div id="product-modal" class="modal hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; overflow-y: auto; padding: 2rem 1rem;">
+        <div class="card modal-card" style="max-width: 700px; margin: 2rem auto; position: relative;">
+            <div class="yellow-bar"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 id="modal-title">Create New Product</h3>
+                <button class="btn btn-secondary btn-close-modal" type="button" style="padding: 0.5rem 0.75rem;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <form id="product-form">
+                <input type="hidden" id="edit-id">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="p-name">Product Name *</label>
+                        <input type="text" id="p-name" required placeholder="iPhone 14 Pro">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-category">Category *</label>
+                        <select id="p-category" required>
+                            <option value="phones">Phones</option>
+                            <option value="laptops">Laptops</option>
+                            <option value="tablets">Tablets</option>
+                            <option value="accessories">Accessories</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="p-price">Base Price (₦) *</label>
+                        <input type="number" id="p-price" required placeholder="450000">
+                    </div>
+                    <div class="form-group">
+                        <label for="p-stock">Available Stock *</label>
+                        <input type="number" id="p-stock" required placeholder="15">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="p-desc">Short Description (Sub-header) *</label>
+                    <input type="text" id="p-desc" required placeholder="256GB Space Black, 5G Network">
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="p-fulldesc">Product Full Description</label>
+                    <textarea id="p-fulldesc" rows="3" placeholder="Write comprehensive details, shipping notes or device parameters..."></textarea>
+                </div>
+
+                <!-- Variant Selection Grid -->
+                <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700;">
+                            <input type="checkbox" id="has-variants" style="width: auto;">
+                            Enable Multi-Variants (Storage/RAM/Color Modifiers)
+                        </label>
+                    </div>
+                    <div id="variants-editor" style="display: none; padding-left: 1.5rem;">
+                        <!-- Storage Variations -->
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                                <strong style="font-size:0.8rem; color:var(--primary);">Storage Options</strong>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addVariant('storage')">+ Storage</button>
+                            </div>
+                            <div id="storage-container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                        </div>
+                        <!-- RAM Variations -->
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                                <strong style="font-size:0.8rem; color:var(--primary);">RAM Configurations</strong>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addVariant('ram')">+ RAM</button>
+                            </div>
+                            <div id="ram-container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                        </div>
+                        <!-- Color Variations -->
+                        <div style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;">
+                                <strong style="font-size:0.8rem; color:var(--primary);">Color Finishes</strong>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addVariant('color')">+ Color</button>
+                            </div>
+                            <div id="color-container" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drag and Drop Image Upload -->
+                <div class="form-group" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <label>Product Display Image</label>
+                    <div id="image-drop-zone" style="border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 2rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                        <i class="fas fa-cloud-arrow-up" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+                        <p style="margin-bottom: 0.25rem;">Drag & drop image here or click to browse</p>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Supports PNG, JPG, JPEG, WEBP formats</span>
+                        <input type="file" id="p-image-input" accept="image/*" style="display: none;">
+                    </div>
+                    <input type="hidden" id="p-image-base64">
+                    <img id="p-image-preview" class="hidden" style="max-width: 150px; border-radius: 8px; margin-top: 1rem; border: 1px solid var(--border); display: none;">
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-btn">Save Product</button>
+                </div>
+            </form>
+        </div>
     </div>
 
 </body>
